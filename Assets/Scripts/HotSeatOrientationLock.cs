@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class HotSeatOrientationLock : MonoBehaviour
 {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void LockPortraitBeforeFirstScene()
+    {
+        LockPortrait();
+    }
+
     private void Awake()
     {
         LockPortrait();
@@ -12,7 +18,7 @@ public class HotSeatOrientationLock : MonoBehaviour
         LockPortrait();
     }
 
-    private void LockPortrait()
+    public static void LockPortrait()
     {
         Screen.orientation = ScreenOrientation.Portrait;
 
