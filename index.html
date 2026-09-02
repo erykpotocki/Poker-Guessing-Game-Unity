@@ -9,56 +9,68 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Poker Zgadywany" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
     <title>Poker Zgadywany</title>
     <style>
       html, body { margin: 0; min-height: 100%; background: #020b06; color: #fff; font-family: Arial, sans-serif; }
       body { min-height: 100dvh; display: grid; place-items: center; overflow: hidden; }
       #unity-container { width: 100%; height: 100dvh; max-width: 620px; background: #020b06; position: relative; }
       #unity-canvas { width: 100%; height: 100%; display: block; background: #020b06; }
-      #loading { position: absolute; inset: 0; display: grid; place-items: center; padding: 32px; text-align: center; background: radial-gradient(ellipse at center, #124b2b 0%, #020b06 72%); }
-      #loading-card { width: min(100%, 330px); }
-      #loading h1 { color: #f2c15c; font-size: 28px; margin: 0 0 22px; }
-      #loading p { font-weight: bold; letter-spacing: .04em; }
-      #progress { height: 10px; overflow: hidden; border: 1px solid #e3b957; border-radius: 99px; background: #07150d; }
-      #progress-value { width: 0%; height: 100%; background: linear-gradient(90deg, #c88a1e, #ffe79a); transition: width .2s; }
-      #install { display: none; margin-top: 22px; width: 100%; border: 1px solid #f2c15c; border-radius: 10px; padding: 13px; color: #fff8dd; background: #7a4f0a; font-weight: bold; font-size: 15px; }
-      #error { color: #ffb3a8; white-space: pre-wrap; }
+      #error { position: fixed; inset: auto 20px 20px; z-index: 2; color: #ffb3a8; white-space: pre-wrap; text-align: center; }
+      #update-notice { position: fixed; inset: 0; z-index: 5; display: none; place-items: center; padding: 24px; background: rgba(0, 0, 0, .66); }
+      #update-notice.visible { display: grid; }
+      #update-card { width: min(100%, 360px); border: 1px solid #e6bd62; border-radius: 18px; padding: 24px; color: #fff8de; background: linear-gradient(145deg, #0d4b2d, #062817); box-shadow: 0 18px 42px #000; text-align: center; }
+      #update-card h2 { margin: 0 0 10px; color: #f2c15c; font-size: 23px; }
+      #update-card p { margin: 0 0 14px; font-weight: bold; }
+      #update-changes { margin: 0 0 20px; padding-left: 22px; text-align: left; line-height: 1.35; }
+      #update-changes li + li { margin-top: 8px; }
+      #update-close { width: 100%; border: 1px solid #f2c15c; border-radius: 10px; padding: 12px; color: #fff8de; background: #9a6410; font-weight: bold; font-size: 15px; }
     </style>
   </head>
   <body>
-    <div id="unity-container">
-      <canvas id="unity-canvas" tabindex="-1"></canvas>
-      <div id="loading">
-        <div id="loading-card">
-          <h1>POKER ZGADYWANY</h1>
-          <p id="loading-text">ŁADOWANIE GRY…</p>
-          <div id="progress"><div id="progress-value"></div></div>
-          <button id="install" type="button">ZAINSTALUJ NA TELEFONIE</button>
-          <p id="error" hidden></p>
-        </div>
-      </div>
+      <div id="unity-container">
+        <canvas id="unity-canvas" tabindex="-1"></canvas>
+        <p id="error" hidden></p>
+        <section id="update-notice" aria-live="polite" aria-modal="true" role="dialog" aria-labelledby="update-title">
+          <div id="update-card">
+            <h2 id="update-title">Nowa wersja gry</h2>
+            <p>Co się zmieniło:</p>
+            <ul id="update-changes"></ul>
+            <button id="update-close" type="button">ROZUMIEM</button>
+          </div>
+        </section>
     </div>
     <script>
       const canvas = document.querySelector('#unity-canvas');
-      const loading = document.querySelector('#loading');
-      const progress = document.querySelector('#progress-value');
       const error = document.querySelector('#error');
-      const installButton = document.querySelector('#install');
-      let installPrompt;
+      const updateNotice = document.querySelector('#update-notice');
+      const updateTitle = document.querySelector('#update-title');
+      const updateChanges = document.querySelector('#update-changes');
+      document.querySelector('#update-close').addEventListener('click', () => updateNotice.classList.remove('visible'));
 
-      window.addEventListener('beforeinstallprompt', event => {
-        event.preventDefault();
-        installPrompt = event;
-        installButton.style.display = 'block';
-      });
-      installButton.addEventListener('click', async () => {
-        if (!installPrompt) return;
-        installPrompt.prompt();
-        await installPrompt.userChoice;
-        installPrompt = null;
-        installButton.style.display = 'none';
-      });
+      async function checkForNewVersion() {
+        try {
+          const response = await fetch('release-notes.json', { cache: 'no-store' });
+          if (!response.ok) return;
+          const release = await response.json();
+          const storageKey = 'poker-zgadywany-last-release';
+          const previousVersion = localStorage.getItem(storageKey);
+          if (previousVersion !== release.version) {
+            updateTitle.textContent = release.title || 'Nowa wersja gry';
+            updateChanges.replaceChildren(...(release.changes || []).map(change => {
+              const item = document.createElement('li');
+              item.textContent = change;
+              return item;
+            }));
+            updateNotice.classList.add('visible');
+          }
+          localStorage.setItem(storageKey, release.version);
+        } catch (_) {
+          // Offline mode still works; update information is optional.
+        }
+      }
+
+      checkForNewVersion();
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
       }
@@ -76,11 +88,7 @@
       };
       const script = document.createElement('script');
       script.src = buildUrl + '/PWA.loader.js';
-      script.onload = () => createUnityInstance(canvas, config, value => {
-        progress.style.width = `${Math.round(value * 100)}%`;
-      }).then(() => {
-        loading.remove();
-      }).catch(message => {
+      script.onload = () => createUnityInstance(canvas, config).catch(message => {
         error.hidden = false;
         error.textContent = `Nie udało się uruchomić gry.\n${message}`;
       });
