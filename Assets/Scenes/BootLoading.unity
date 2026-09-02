@@ -1266,16 +1266,16 @@ MonoBehaviour:
   logoPulse: {fileID: 154319396}
   chipSpinner: {fileID: 1651677373}
   nextSceneName: MainMenu
-  fadeInDuration: 2
-  loadingAnimationTime: 1
-  stopAnimationsDuration: 2
-  continueTextFadeInDuration: 2
-  continueUnlockDelay: 0.5
-  continueTextFadeOutDuration: 0.8
-  fadeOutDuration: 2
+  fadeInDuration: 0.4
+  loadingAnimationTime: 0.25
+  stopAnimationsDuration: 0.5
+  continueTextFadeInDuration: 0.25
+  continueUnlockDelay: 0
+  continueTextFadeOutDuration: 0.2
+  fadeOutDuration: 0.25
   chipSpinReturnDuration: 0
   waitForPhotonReady: 1
-  maxPhotonWaitSeconds: 30
+  maxPhotonWaitSeconds: 6
   continuePulseSpeed: 0.4
   continueMinAlpha: 0.8
   continueMaxAlpha: 1

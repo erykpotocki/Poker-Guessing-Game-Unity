@@ -88,7 +88,7 @@ public class BootLoadingController : MonoBehaviour
             yield return null;
         }
 
-        if (waitForPhotonReady)
+        if (ShouldWaitForPhoton())
         {
             float photonTimer = 0f;
 
@@ -110,6 +110,18 @@ public class BootLoadingController : MonoBehaviour
         }
 
         canContinue = true;
+    }
+
+    private bool ShouldWaitForPhoton()
+    {
+        if (!waitForPhotonReady || PhotonNetwork.IsConnectedAndReady)
+            return false;
+
+        return PhotonNetwork.PhotonServerSettings != null &&
+               PhotonNetwork.PhotonServerSettings.AppSettings != null &&
+               !string.IsNullOrWhiteSpace(
+                   PhotonNetwork.PhotonServerSettings.AppSettings.AppIdRealtime
+               );
     }
 
     private IEnumerator ContinueToMenu()
