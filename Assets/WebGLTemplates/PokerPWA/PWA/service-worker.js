@@ -7,11 +7,21 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(
-    keys.filter(key => key.startsWith('poker-zgadywany-') && key !== CACHE_NAME)
-      .map(key => caches.delete(key))
-  )));
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    const hadPreviousCache = keys.some(key => key.startsWith('poker-zgadywany-') && key !== CACHE_NAME);
+    await Promise.all(
+      keys.filter(key => key.startsWith('poker-zgadywany-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    );
+    await self.clients.claim();
+    if (!hadPreviousCache) return;
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    await Promise.all(windows.map(client => {
+      const freshUrl = new URL('./?pwa-updated=' + Date.now(), self.registration.scope);
+      return client.navigate(freshUrl.href);
+    }));
+  })());
 });
 
 self.addEventListener('fetch', event => {
