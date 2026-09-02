@@ -1,4 +1,4 @@
-const CACHE_NAME = 'poker-zgadywany-639239555844053346';
+const CACHE_NAME = 'poker-zgadywany-639239574257236609';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
@@ -17,14 +17,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
   if (new URL(event.request.url).pathname.endsWith('/release-notes.json')) {
-    event.respondWith(fetch(event.request));
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
-  event.respondWith(caches.match(event.request).then(cached => {
-    if (cached) return cached;
-    return fetch(event.request).then(response => {
-      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
-      return response;
-    });
-  }));
+  event.respondWith(fetch(event.request).then(response => {
+    if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+    return response;
+  }).catch(() => caches.match(event.request)));
 });
