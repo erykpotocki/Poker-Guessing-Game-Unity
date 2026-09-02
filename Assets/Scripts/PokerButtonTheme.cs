@@ -31,34 +31,35 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
     private void Awake()
     {
-        Texture2D texture = Resources.Load<Texture2D>(ButtonTexturePath);
+        Sprite[] importedSprites =
+            Resources.LoadAll<Sprite>(ButtonTexturePath);
 
-        if (texture == null)
+        float largestArea = 0f;
+        foreach (Sprite importedSprite in importedSprites)
         {
-            Sprite[] importedSprites =
-                Resources.LoadAll<Sprite>("PokerUI");
+            if (importedSprite == null)
+                continue;
 
-            foreach (Sprite importedSprite in importedSprites)
+            float area = importedSprite.rect.width * importedSprite.rect.height;
+            if (area > largestArea)
             {
-                if (importedSprite != null &&
-                    importedSprite.name.StartsWith("PokerButtonWoodRect"))
-                {
-                    texture = importedSprite.texture;
-                    break;
-                }
+                largestArea = area;
+                buttonSprite = importedSprite;
             }
         }
-        if (texture != null)
+
+        if (buttonSprite == null)
         {
-            buttonSprite = Sprite.Create(
-                texture,
-                new Rect(0, 0, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f),
-                100f,
-                0,
-                SpriteMeshType.FullRect,
-                new Vector4(106f, 106f, 106f, 106f)
-            );
+            Texture2D texture = Resources.Load<Texture2D>(ButtonTexturePath);
+            if (texture != null)
+            {
+                buttonSprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f
+                );
+            }
         }
 
         SceneManager.sceneLoaded += HandleSceneLoaded;
@@ -78,9 +79,6 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
     private void ApplyThemeToAllButtons()
     {
-        if (buttonSprite == null)
-            return;
-
         foreach (Button button in FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             if (button == null || IsExcludedFromWoodTheme(button))
@@ -93,22 +91,36 @@ public sealed class PokerButtonTheme : MonoBehaviour
             if (background == null)
                 continue;
 
-            if (background.sprite != buttonSprite)
+            if (buttonSprite != null && background.sprite != buttonSprite)
             {
                 background.sprite = buttonSprite;
-                background.type = Image.Type.Sliced;
+                background.type = Image.Type.Simple;
                 background.preserveAspect = false;
-                background.color = Color.white;
-
-                ColorBlock colors = button.colors;
-                colors.normalColor = Color.white;
-                colors.highlightedColor = new Color(1f, 0.91f, 0.63f);
-                colors.pressedColor = new Color(0.78f, 0.63f, 0.36f);
-                colors.selectedColor = new Color(1f, 0.86f, 0.48f);
-                colors.disabledColor = new Color(0.42f, 0.42f, 0.42f, 0.75f);
-                colors.colorMultiplier = 1f;
-                button.colors = colors;
             }
+
+            background.enabled = true;
+            background.material = null;
+            background.color = buttonSprite != null
+                ? Color.white
+                : new Color(0.42f, 0.06f, 0.035f, 1f);
+            background.canvasRenderer.SetAlpha(1f);
+
+            Outline outline = background.GetComponent<Outline>();
+            if (outline == null)
+                outline = background.gameObject.AddComponent<Outline>();
+
+            outline.effectColor = new Color(0.92f, 0.67f, 0.20f, 1f);
+            outline.effectDistance = new Vector2(2.5f, -2.5f);
+            outline.useGraphicAlpha = true;
+
+            ColorBlock colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1f, 0.91f, 0.63f);
+            colors.pressedColor = new Color(0.78f, 0.63f, 0.36f);
+            colors.selectedColor = new Color(1f, 0.86f, 0.48f);
+            colors.disabledColor = new Color(0.42f, 0.42f, 0.42f, 0.75f);
+            colors.colorMultiplier = 1f;
+            button.colors = colors;
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)

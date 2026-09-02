@@ -148,6 +148,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
         ResolveReferences();
         CreateCancelSelectionButton();
+        ConfigureResponsiveLayout();
         RefreshStaticButtonLabels();
         BindButtons();
         CacheOriginalButtonColors();
@@ -474,7 +475,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0f);
         rect.anchorMax = new Vector2(0.5f, 0f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, 78f);
+        rect.anchoredPosition = new Vector2(0f, 128f);
         rect.sizeDelta = new Vector2(360f, 66f);
 
         GameObject labelObject = new GameObject(
@@ -501,6 +502,52 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
         cancelSelectionButton = buttonObject.GetComponent<Button>();
         cancelSelectionButton.targetGraphic = buttonObject.GetComponent<Image>();
+    }
+
+    private void ConfigureResponsiveLayout()
+    {
+        if (handRankTitle != null)
+        {
+            RectTransform titleRect = handRankTitle.rectTransform;
+            titleRect.anchorMin = new Vector2(0f, 1f);
+            titleRect.anchorMax = new Vector2(1f, 1f);
+            titleRect.pivot = new Vector2(0.5f, 1f);
+            titleRect.anchoredPosition = new Vector2(0f, -18f);
+            titleRect.sizeDelta = new Vector2(-48f, 64f);
+
+            handRankTitle.alignment = TextAlignmentOptions.Center;
+            handRankTitle.textWrappingMode = TextWrappingModes.NoWrap;
+            handRankTitle.enableAutoSizing = true;
+            handRankTitle.fontSizeMin = 24f;
+            handRankTitle.fontSizeMax = 36f;
+        }
+
+        Transform scrollView = FindDirectChild(transform, "RankScrollView");
+        if (scrollView is RectTransform scrollRect)
+        {
+            scrollRect.anchorMin = Vector2.zero;
+            scrollRect.anchorMax = Vector2.one;
+            scrollRect.offsetMin = new Vector2(20f, 178f);
+            scrollRect.offsetMax = new Vector2(-20f, -94f);
+        }
+
+        if (actionButton != null && actionButton.transform is RectTransform actionRect)
+        {
+            actionRect.anchorMin = new Vector2(0f, 0f);
+            actionRect.anchorMax = new Vector2(1f, 0f);
+            actionRect.pivot = new Vector2(0.5f, 0f);
+            actionRect.anchoredPosition = new Vector2(0f, 20f);
+            actionRect.sizeDelta = new Vector2(-40f, 76f);
+        }
+
+        if (cancelSelectionButton != null && cancelSelectionButton.transform is RectTransform cancelRect)
+        {
+            cancelRect.anchorMin = new Vector2(0.5f, 0f);
+            cancelRect.anchorMax = new Vector2(0.5f, 0f);
+            cancelRect.pivot = new Vector2(0.5f, 0.5f);
+            cancelRect.anchoredPosition = new Vector2(0f, 132f);
+            cancelRect.sizeDelta = new Vector2(360f, 62f);
+        }
     }
 
     private void HandleCancelSelectionClicked()
