@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// </summary>
 public sealed class PokerButtonTheme : MonoBehaviour
 {
-    private const string ButtonTexturePath = "PokerUI/PokerButtonWood";
+    private const string ButtonTexturePath = "PokerUI/PokerButtonWoodRect";
     private static readonly Color LabelColor = new Color(1f, 0.94f, 0.73f);
     private Sprite buttonSprite;
 
@@ -41,7 +41,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
             foreach (Sprite importedSprite in importedSprites)
             {
                 if (importedSprite != null &&
-                    importedSprite.name.StartsWith("PokerButtonWood"))
+                    importedSprite.name.StartsWith("PokerButtonWoodRect"))
                 {
                     texture = importedSprite.texture;
                     break;
@@ -57,7 +57,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
                 100f,
                 0,
                 SpriteMeshType.FullRect,
-                new Vector4(82f, 82f, 82f, 82f)
+                new Vector4(106f, 106f, 106f, 106f)
             );
         }
 
