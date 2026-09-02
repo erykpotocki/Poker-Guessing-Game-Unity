@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#072816" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Poker Zgadywany" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #020b06; color: #fff; font-family: Arial, sans-serif; }
+      body { min-height: 100dvh; display: grid; place-items: center; overflow: hidden; }
+      #unity-container { width: 100%; height: 100dvh; max-width: 620px; background: #020b06; position: relative; }
+      #unity-canvas { width: 100%; height: 100%; display: block; background: #020b06; }
+      #loading { position: absolute; inset: 0; display: grid; place-items: center; padding: 32px; text-align: center; background: radial-gradient(ellipse at center, #124b2b 0%, #020b06 72%); }
+      #loading-card { width: min(100%, 330px); }
+      #loading h1 { color: #f2c15c; font-size: 28px; margin: 0 0 22px; }
+      #loading p { font-weight: bold; letter-spacing: .04em; }
+      #progress { height: 10px; overflow: hidden; border: 1px solid #e3b957; border-radius: 99px; background: #07150d; }
+      #progress-value { width: 0%; height: 100%; background: linear-gradient(90deg, #c88a1e, #ffe79a); transition: width .2s; }
+      #install { display: none; margin-top: 22px; width: 100%; border: 1px solid #f2c15c; border-radius: 10px; padding: 13px; color: #fff8dd; background: #7a4f0a; font-weight: bold; font-size: 15px; }
+      #error { color: #ffb3a8; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="loading">
+        <div id="loading-card">
+          <h1>POKER ZGADYWANY</h1>
+          <p id="loading-text">ŁADOWANIE GRY…</p>
+          <div id="progress"><div id="progress-value"></div></div>
+          <button id="install" type="button">ZAINSTALUJ NA TELEFONIE</button>
+          <p id="error" hidden></p>
+        </div>
+      </div>
+    </div>
+    <script>
+      const canvas = document.querySelector('#unity-canvas');
+      const loading = document.querySelector('#loading');
+      const progress = document.querySelector('#progress-value');
+      const error = document.querySelector('#error');
+      const installButton = document.querySelector('#install');
+      let installPrompt;
+
+      window.addEventListener('beforeinstallprompt', event => {
+        event.preventDefault();
+        installPrompt = event;
+        installButton.style.display = 'block';
+      });
+      installButton.addEventListener('click', async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        await installPrompt.userChoice;
+        installPrompt = null;
+        installButton.style.display = 'none';
+      });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+      }
+
+      const buildUrl = 'Build';
+      const config = {
+        dataUrl: buildUrl + '/{{{ DATA_FILENAME }}}',
+        frameworkUrl: buildUrl + '/{{{ FRAMEWORK_FILENAME }}}',
+        codeUrl: buildUrl + '/{{{ CODE_FILENAME }}}',
+        streamingAssetsUrl: 'StreamingAssets',
+        companyName: '{{{ COMPANY_NAME }}}',
+        productName: '{{{ PRODUCT_NAME }}}',
+        productVersion: '{{{ PRODUCT_VERSION }}}',
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+      };
+      const script = document.createElement('script');
+      script.src = buildUrl + '/{{{ LOADER_FILENAME }}}';
+      script.onload = () => createUnityInstance(canvas, config, value => {
+        progress.style.width = `${Math.round(value * 100)}%`;
+      }).then(() => {
+        loading.remove();
+      }).catch(message => {
+        error.hidden = false;
+        error.textContent = `Nie udało się uruchomić gry.\n${message}`;
+      });
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
