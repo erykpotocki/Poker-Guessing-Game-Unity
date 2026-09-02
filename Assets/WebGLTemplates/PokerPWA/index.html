@@ -48,14 +48,10 @@
         updateTitle.textContent = title;
         updateMessage.textContent = message;
         updateClose.textContent = 'URUCHOM PONOWNIE';
-        updateClose.onclick = async () => {
+        updateClose.onclick = () => {
           updateClose.disabled = true;
           if (version) localStorage.setItem('poker-zgadywany-last-release', version);
-          if ('caches' in window) {
-            const keys = await caches.keys();
-            await Promise.all(keys.filter(key => key.startsWith('poker-zgadywany-')).map(key => caches.delete(key)));
-          }
-          window.location.reload();
+          window.location.replace('reset.html?v=' + Date.now());
         };
         updateNotice.classList.add('visible');
       }
