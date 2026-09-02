@@ -72,6 +72,8 @@ public class HotSeatSetupUI : MonoBehaviour
     private readonly List<Image> extraCardImages =
         new List<Image>();
 
+    private Button multiCardTouchButton;
+
     private readonly List<GameObject> roundResultObjects =
         new List<GameObject>();
 
@@ -84,9 +86,14 @@ public class HotSeatSetupUI : MonoBehaviour
     private int firstPreviewCount;
     private int lastDeclarerIndex = -1;
     private bool cardVisible;
+    private bool waitingForCardReveal;
+    private bool pendingCanCheck;
+    private bool pendingBeginNewRound;
 
     private void Start()
     {
+        PokerButtonTheme.EnsureController();
+
         addPlayerButton.onClick.AddListener(AddPlayer);
         startButton.onClick.AddListener(StartHotSeat);
         cardButton.onClick.AddListener(OnCardClicked);
@@ -231,6 +238,8 @@ public class HotSeatSetupUI : MonoBehaviour
 
         players.Clear();
 
+        ChooseCardBackForThisGame();
+
         for (int i = 0; i < playerInputs.Count; i++)
         {
             string playerName =
@@ -353,6 +362,7 @@ public class HotSeatSetupUI : MonoBehaviour
                 Color.black
             );
 
+            EnableTurnActionsAfterCardReveal();
             return;
         }
 
@@ -364,6 +374,7 @@ public class HotSeatSetupUI : MonoBehaviour
                 "ZAPAMIĘTAJ SWOJE KARTY\n" +
                 "NACIŚNIJ PONOWNIE, ŻEBY ZAKRYĆ";
 
+            EnableTurnActionsAfterCardReveal();
             return;
         }
 
@@ -388,6 +399,8 @@ public class HotSeatSetupUI : MonoBehaviour
         instructionText.text =
             "ZAPAMIĘTAJ SWOJĄ KARTĘ\n" +
             "NACIŚNIJ PONOWNIE, ŻEBY ZAKRYĆ";
+
+        EnableTurnActionsAfterCardReveal();
     }
 
     private void ShowCardSprite(
@@ -419,23 +432,20 @@ public class HotSeatSetupUI : MonoBehaviour
         cardText.color = fallbackTextColor;
     }
 
-    // Przy karach gracz może mieć więcej niż jedną kartę. Układ pionowy
-    // pozwala zobaczyć każdą z nich w całości na wąskim ekranie telefonu.
+    // A compact fan keeps the player name visible and lets the player
+    // recognise every card without filling the entire portrait screen.
     private void ShowPlayerCardSprites(HotSeatPlayer player)
     {
         ClearExtraCardImages();
         EnsureCardText();
 
         int cardCount = player.Cards.Count;
-        float scale = cardCount == 2 ? 0.36f : 0.30f;
+        float scale = cardCount == 2 ? 0.38f : 0.34f;
         float cardWidth = 650f * scale;
         float cardHeight = 900f * scale;
-        float spacing = cardHeight + 24f;
-        float firstY = 224f + spacing * (cardCount - 1) * 0.5f;
-
-        RectTransform mainRect = cardImage.rectTransform;
-        mainRect.sizeDelta = new Vector2(cardWidth, cardHeight);
-        mainRect.anchoredPosition = new Vector2(0f, firstY);
+        const float horizontalStep = 58f;
+        const float verticalStep = 12f;
+        const float rotationStep = 7f;
 
         cardText.text = "";
         cardText.gameObject.SetActive(false);
@@ -450,9 +460,18 @@ public class HotSeatSetupUI : MonoBehaviour
 
             Image image = i == 0 ? cardImage : CreateExtraCardImage();
             RectTransform rect = image.rectTransform;
+            float centeredIndex = i - (cardCount - 1) * 0.5f;
 
             rect.sizeDelta = new Vector2(cardWidth, cardHeight);
-            rect.anchoredPosition = new Vector2(0f, firstY - spacing * i);
+            rect.anchoredPosition = new Vector2(
+                centeredIndex * horizontalStep,
+                -32f - Mathf.Abs(centeredIndex) * verticalStep
+            );
+            rect.localRotation = Quaternion.Euler(
+                0f,
+                0f,
+                -centeredIndex * rotationStep
+            );
             image.sprite = sprite;
             image.color = sprite != null ? Color.white : cardFrontColor;
             image.preserveAspect = true;
@@ -460,6 +479,41 @@ public class HotSeatSetupUI : MonoBehaviour
             if (i > 0)
                 extraCardImages.Add(image);
         }
+
+        ShowMultiCardTouchArea(
+            cardWidth + horizontalStep * (cardCount - 1) + 40f,
+            cardHeight + 48f
+        );
+    }
+
+    private void ShowMultiCardTouchArea(float width, float height)
+    {
+        if (multiCardTouchButton == null)
+        {
+            GameObject touchObject = new GameObject(
+                "CardTouchArea",
+                typeof(RectTransform),
+                typeof(Image),
+                typeof(Button)
+            );
+            touchObject.transform.SetParent(cardImage.transform.parent, false);
+
+            Image image = touchObject.GetComponent<Image>();
+            image.color = Color.clear;
+
+            multiCardTouchButton = touchObject.GetComponent<Button>();
+            multiCardTouchButton.targetGraphic = image;
+            multiCardTouchButton.onClick.AddListener(OnCardClicked);
+        }
+
+        RectTransform rect = multiCardTouchButton.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0f, -32f);
+        rect.sizeDelta = new Vector2(width, height);
+        multiCardTouchButton.gameObject.SetActive(true);
+        multiCardTouchButton.transform.SetAsLastSibling();
     }
 
     private Image CreateExtraCardImage()
@@ -475,6 +529,9 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void ClearExtraCardImages()
     {
+        if (multiCardTouchButton != null)
+            multiCardTouchButton.gameObject.SetActive(false);
+
         foreach (Image image in extraCardImages)
         {
             if (image != null)
@@ -488,6 +545,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
         RectTransform rect = cardImage.rectTransform;
         rect.sizeDelta = new Vector2(650f, 900f);
+        rect.localRotation = Quaternion.identity;
         rect.anchoredPosition = new Vector2(0f, 224f);
     }
 
@@ -739,21 +797,43 @@ public class HotSeatSetupUI : MonoBehaviour
     {
         currentPhase = HotSeatPhase.TurnLoop;
         cardVisible = false;
+        waitingForCardReveal = true;
+        pendingCanCheck = canCheck;
+        pendingBeginNewRound = beginNewRound;
         cardPanel.SetActive(true);
         ShowCardBack();
+    }
+
+    private void EnableTurnActionsAfterCardReveal()
+    {
+        if (currentPhase != HotSeatPhase.TurnLoop ||
+            !waitingForCardReveal)
+            return;
+
+        waitingForCardReveal = false;
 
         if (bidController != null)
         {
-            if (beginNewRound)
+            if (pendingBeginNewRound)
                 bidController.BeginNewRound();
             else
-                bidController.BeginTurn(canCheck);
+                bidController.BeginTurn(pendingCanCheck);
 
             return;
         }
 
         if (turnManager != null)
-            turnManager.BeginTurn(canCheck, "");
+            turnManager.BeginTurn(pendingCanCheck, "");
+    }
+
+    private void ChooseCardBackForThisGame()
+    {
+        int backCount = cardBackDatabase != null
+            ? cardBackDatabase.BackCount
+            : 0;
+
+        if (backCount > 0)
+            cardBackIndex = Random.Range(0, backCount);
     }
 
     private bool ApplyLoss(HotSeatPlayer player)

@@ -65,6 +65,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
     private Button actionButton;
     private TMP_Text actionButtonText;
     private Image actionButtonVisual;
+    private Button cancelSelectionButton;
 
     private Button categoryButtonHighCard;
     private Button categoryButtonPair;
@@ -107,6 +108,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
     public event Action<string> RaiseChosen;
     public event Action CheckChosen;
+    public event Action CancelChosen;
 
     private void Awake()
     {
@@ -145,6 +147,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             return;
 
         ResolveReferences();
+        CreateCancelSelectionButton();
         RefreshStaticButtonLabels();
         BindButtons();
         CacheOriginalButtonColors();
@@ -446,6 +449,67 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         );
 
         AddClick(actionButton, HandleActionButtonClicked);
+        AddClick(cancelSelectionButton, HandleCancelSelectionClicked);
+    }
+
+    private void CreateCancelSelectionButton()
+    {
+        Transform existing = FindDirectChild(transform, "CancelSelectionButton");
+        if (existing != null)
+        {
+            cancelSelectionButton = existing.GetComponent<Button>();
+            return;
+        }
+
+        GameObject buttonObject = new GameObject(
+            "CancelSelectionButton",
+            typeof(RectTransform),
+            typeof(Image),
+            typeof(Button)
+        );
+
+        buttonObject.transform.SetParent(transform, false);
+
+        RectTransform rect = buttonObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0f);
+        rect.anchorMax = new Vector2(0.5f, 0f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0f, 78f);
+        rect.sizeDelta = new Vector2(360f, 66f);
+
+        GameObject labelObject = new GameObject(
+            "Label",
+            typeof(RectTransform),
+            typeof(TextMeshProUGUI)
+        );
+
+        labelObject.transform.SetParent(buttonObject.transform, false);
+
+        RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = Vector2.zero;
+        labelRect.offsetMax = Vector2.zero;
+
+        TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+        label.text = "WRÓĆ DO KARTY";
+        label.alignment = TextAlignmentOptions.Center;
+        label.fontSize = 26f;
+        label.fontStyle = FontStyles.Bold;
+        label.color = Color.white;
+        label.raycastTarget = false;
+
+        cancelSelectionButton = buttonObject.GetComponent<Button>();
+        cancelSelectionButton.targetGraphic = buttonObject.GetComponent<Image>();
+    }
+
+    private void HandleCancelSelectionClicked()
+    {
+        if (inputLocked)
+            return;
+
+        Close();
+        CancelChosen?.Invoke();
     }
 
     private void RefreshStaticButtonLabels()

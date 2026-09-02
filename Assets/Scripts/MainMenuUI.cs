@@ -3,6 +3,11 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuUI : MonoBehaviour
 {
+    private void Awake()
+    {
+        PokerButtonTheme.EnsureController();
+    }
+
     public void GoCreateRoom()
     {
         SceneManager.LoadScene("GameModeSelect");

@@ -27,6 +27,7 @@ public class HotSeatBidController : MonoBehaviour
         {
             handRankPanel.RaiseChosen += HandleRaiseChosen;
             handRankPanel.CheckChosen += HandleCheckRequested;
+            handRankPanel.CancelChosen += HandleCancelChosen;
             handRankPanel.Close();
         }
     }
@@ -81,6 +82,17 @@ public class HotSeatBidController : MonoBehaviour
         CheckConfirmed?.Invoke();
     }
 
+    private void HandleCancelChosen()
+    {
+        if (turnManager == null)
+            return;
+
+        turnManager.BeginTurn(
+            canCheckCurrentTurn,
+            currentBid
+        );
+    }
+
     private void OnDestroy()
     {
         if (turnManager != null)
@@ -93,6 +105,7 @@ public class HotSeatBidController : MonoBehaviour
         {
             handRankPanel.RaiseChosen -= HandleRaiseChosen;
             handRankPanel.CheckChosen -= HandleCheckRequested;
+            handRankPanel.CancelChosen -= HandleCancelChosen;
         }
     }
 }
