@@ -1,9 +1,9 @@
 {
-  "version": "1.1.0",
-  "title": "Nowa wersja gry",
+  "version": "1.2.0",
+  "title": "Dostępna aktualizacja",
   "changes": [
-    "Dodano prawidłową ikonę aplikacji na ekranie telefonu.",
-    "Skrócono ekran ładowania i pominięto oczekiwanie na Photon, gdy nie jest skonfigurowany.",
-    "Gra otwiera się od razu przez ekran Unity, a następnie przez własny ekran startowy."
+    "Poprawiono bezpieczne aktualizowanie plików gry.",
+    "Ukryto techniczne komunikaty błędów.",
+    "Dostosowano komunikaty do szerokości ekranu telefonu."
   ]
 }
