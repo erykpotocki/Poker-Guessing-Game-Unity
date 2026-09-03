@@ -22,12 +22,16 @@ public class HotSeatTurnUI : MonoBehaviour
 
     private RectTransform raiseRect;
     private RectTransform checkRect;
+    private TextMeshProUGUI checkPromptText;
 
     private void Awake()
     {
         Hide();
 
         ConfigureResponsiveLayout();
+
+        PokerButtonTheme.ApplyTo(raiseButton);
+        PokerButtonTheme.ApplyTo(checkButton);
 
         if (raiseButton != null)
             raiseButton.onClick.AddListener(HandleRaiseClicked);
@@ -75,8 +79,7 @@ public class HotSeatTurnUI : MonoBehaviour
 
         currentBidText.text = string.IsNullOrWhiteSpace(bidName)
             ? "BRAK POPRZEDNIEJ DEKLARACJI"
-            : "POPRZEDNI GRACZ WSKAZAŁ:\n" + bidName.ToUpper() +
-              "\nCZY CHCESZ SPRAWDZIĆ?";
+            : "POPRZEDNI GRACZ WSKAZAŁ:\n" + bidName.ToUpper();
     }
 
     public void SetCheckAvailable(bool available)
@@ -85,7 +88,10 @@ public class HotSeatTurnUI : MonoBehaviour
             checkButton.gameObject.SetActive(available);
 
         if (checkSeparatorText != null)
-            checkSeparatorText.SetActive(false);
+            checkSeparatorText.SetActive(available);
+
+        if (checkPromptText != null)
+            checkPromptText.text = "CZY CHCESZ SPRAWDZIĆ?";
 
         SetButtonLabel(
             raiseButton,
@@ -161,6 +167,30 @@ public class HotSeatTurnUI : MonoBehaviour
 
         ConfigureBottomButton(raiseRect);
         ConfigureBottomButton(checkRect);
+
+        if (checkSeparatorText != null)
+        {
+            checkPromptText = checkSeparatorText.GetComponent<TextMeshProUGUI>();
+
+            if (checkSeparatorText.transform is RectTransform promptRect)
+            {
+                promptRect.anchorMin = new Vector2(0.5f, 0f);
+                promptRect.anchorMax = new Vector2(0.5f, 0f);
+                promptRect.pivot = new Vector2(0.5f, 0f);
+                promptRect.anchoredPosition = new Vector2(0f, 202f);
+                promptRect.sizeDelta = new Vector2(820f, 64f);
+            }
+
+            if (checkPromptText != null)
+            {
+                checkPromptText.text = "CZY CHCESZ SPRAWDZIĆ?";
+                checkPromptText.alignment = TextAlignmentOptions.Center;
+                checkPromptText.enableAutoSizing = true;
+                checkPromptText.fontSizeMin = 24f;
+                checkPromptText.fontSizeMax = 34f;
+                checkPromptText.fontStyle = FontStyles.Bold;
+            }
+        }
     }
 
     private static void ConfigureBottomButton(RectTransform rect)

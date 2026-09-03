@@ -211,6 +211,11 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
                 actionButtonVisual =
                     visualTransform.GetComponent<Image>();
 
+                // The prefab keeps its visible background on a child object.
+                // Make that image the actual target so the shared theme replaces
+                // the old white/legacy action-button artwork as well.
+                if (actionButton != null && actionButtonVisual != null)
+                    actionButton.targetGraphic = actionButtonVisual;
             }
         }
 
@@ -599,7 +604,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
         VerticalLayoutGroup layout = listObject.GetComponent<VerticalLayoutGroup>();
         if (layout != null)
-            layout.spacing = 12f;
+            layout.spacing = 14f;
 
         foreach (Button button in listObject.GetComponentsInChildren<Button>(true))
         {
@@ -609,8 +614,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
             element.enabled = true;
 
-            element.minHeight = 92f;
-            element.preferredHeight = 92f;
+            element.minHeight = 82f;
+            element.preferredHeight = 82f;
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
@@ -1237,8 +1242,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
                 visibleButtons++;
         }
 
-        const float buttonHeight = 92f;
-        const float spacing = 12f;
+        const float buttonHeight = 82f;
+        const float spacing = 14f;
         float viewportHeight = rankViewportRect != null
             ? rankViewportRect.rect.height
             : 0f;

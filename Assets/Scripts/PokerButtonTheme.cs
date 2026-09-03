@@ -112,7 +112,6 @@ public sealed class PokerButtonTheme : MonoBehaviour
             DisableLegacyOutline(background);
             ConfigureShadow(background);
             ConfigureButtonTransitions(button);
-            ConfigureTouchSize(button);
         }
 
         TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
@@ -122,10 +121,10 @@ public sealed class PokerButtonTheme : MonoBehaviour
         label.color = button.interactable ? LabelColor : DisabledLabelColor;
         label.fontStyle = FontStyles.Bold;
         label.enableAutoSizing = true;
-        label.fontSizeMin = 22f;
-        label.fontSizeMax = 38f;
-        label.characterSpacing = 1.5f;
-        label.margin = new Vector4(24f, 8f, 24f, 8f);
+        label.fontSizeMin = 18f;
+        label.fontSizeMax = 28f;
+        label.characterSpacing = 1f;
+        label.margin = new Vector4(18f, 6f, 18f, 6f);
 
         Shadow textShadow = GetExactShadow(label.gameObject);
         if (textShadow == null)
@@ -149,30 +148,6 @@ public sealed class PokerButtonTheme : MonoBehaviour
         colors.colorMultiplier = 1f;
         colors.fadeDuration = 0.1f;
         button.colors = colors;
-    }
-
-    private static void ConfigureTouchSize(Button button)
-    {
-        RectTransform rect = button.transform as RectTransform;
-        if (rect == null || IsCompactControl(button))
-            return;
-
-        LayoutElement layout = button.GetComponent<LayoutElement>();
-        if (layout != null && layout.enabled)
-        {
-            layout.minHeight = Mathf.Max(layout.minHeight, 92f);
-            layout.preferredHeight = Mathf.Max(layout.preferredHeight, 92f);
-            return;
-        }
-
-        if (rect.anchorMin == rect.anchorMax)
-        {
-            Vector2 size = rect.sizeDelta;
-            size.y = Mathf.Max(size.y, 112f);
-            if (size.x > 840f)
-                size.x = 820f;
-            rect.sizeDelta = size;
-        }
     }
 
     private static void DisableLegacyOutline(Image background)
@@ -280,17 +255,6 @@ public sealed class PokerButtonTheme : MonoBehaviour
         Vector2 outside = new Vector2(Mathf.Max(corner.x, 0f), Mathf.Max(corner.y, 0f));
         float distance = outside.magnitude + Mathf.Min(Mathf.Max(corner.x, corner.y), 0f) - localRadius;
         return Mathf.Clamp01(0.5f - distance);
-    }
-
-    private static bool IsCompactControl(Button button)
-    {
-        string name = button.name.ToLowerInvariant();
-        return name.Contains("close") ||
-               name.Contains("cancel") ||
-               name.Contains("back") ||
-               name.Contains("wyjdź") ||
-               name.Contains("wroc") ||
-               name.Contains("wróć");
     }
 
     private static bool IsExcludedFromTheme(Button button)
