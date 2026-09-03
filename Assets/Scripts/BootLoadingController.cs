@@ -48,6 +48,7 @@ public class BootLoadingController : MonoBehaviour
     private Color continueTextBaseColor = Color.white;
     private Vector3 continueTextBaseScale = Vector3.one;
     private float continuePulseTimer = 0f;
+    private AsyncOperation nextSceneLoad;
 
     private void Start()
     {
@@ -79,24 +80,30 @@ public class BootLoadingController : MonoBehaviour
 
     private IEnumerator BootFlow()
     {
+        nextSceneLoad = SceneManager.LoadSceneAsync(nextSceneName);
+        if (nextSceneLoad != null)
+            nextSceneLoad.allowSceneActivation = false;
+
         yield return FadeOverlay(1f, 0f, fadeInDuration);
 
-        float timer = 0f;
-        while (timer < loadingAnimationTime)
+        float minimumTimer = 0f;
+        float photonTimer = 0f;
+        while (true)
         {
-            timer += Time.unscaledDeltaTime;
-            yield return null;
-        }
+            minimumTimer += Time.unscaledDeltaTime;
 
-        if (ShouldWaitForPhoton())
-        {
-            float photonTimer = 0f;
+            bool minimumElapsed = minimumTimer >= loadingAnimationTime;
+            bool sceneReady = nextSceneLoad == null || nextSceneLoad.progress >= 0.9f;
+            bool photonReady = !ShouldWaitForPhoton();
 
-            while (!PhotonNetwork.IsConnectedAndReady && photonTimer < maxPhotonWaitSeconds)
-            {
+            if (!photonReady)
                 photonTimer += Time.unscaledDeltaTime;
-                yield return null;
-            }
+
+            bool photonWaitFinished = photonReady || photonTimer >= maxPhotonWaitSeconds;
+            if (minimumElapsed && sceneReady && photonWaitFinished)
+                break;
+
+            yield return null;
         }
 
         yield return StopLoadingAnimationsSmoothly();
@@ -136,7 +143,15 @@ public class BootLoadingController : MonoBehaviour
         yield return HideContinuePrompt();
         yield return FadeOverlay(0f, 1f, fadeOutDuration);
 
-        SceneManager.LoadScene(nextSceneName);
+        if (nextSceneLoad != null)
+        {
+            nextSceneLoad.allowSceneActivation = true;
+            yield return nextSceneLoad;
+        }
+        else
+        {
+            SceneManager.LoadScene(nextSceneName);
+        }
     }
 
     private IEnumerator StopLoadingAnimationsSmoothly()

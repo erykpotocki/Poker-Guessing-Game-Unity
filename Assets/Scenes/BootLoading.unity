@@ -927,7 +927,7 @@ MonoBehaviour:
   chipSpinner: {fileID: 1651677373}
   nextSceneName: MainMenu
   fadeInDuration: 0.4
-  loadingAnimationTime: 0.25
+  loadingAnimationTime: 1.25
   stopAnimationsDuration: 0.5
   continueTextFadeInDuration: 0.25
   continueUnlockDelay: 0
