@@ -122,9 +122,9 @@ public sealed class PokerButtonTheme : MonoBehaviour
         label.fontStyle = FontStyles.Bold;
         label.enableAutoSizing = true;
         bool isMainMenu = button.gameObject.scene.name == "MainMenu";
-        label.fontSizeMin = isMainMenu ? 15f : 18f;
-        label.fontSizeMax = isMainMenu ? 23f : 28f;
-        label.characterSpacing = 1f;
+        label.fontSizeMin = isMainMenu ? 10f : 18f;
+        label.fontSizeMax = isMainMenu ? 14f : 28f;
+        label.characterSpacing = isMainMenu ? 0.5f : 1f;
         label.margin = isMainMenu
             ? new Vector4(14f, 6f, 14f, 6f)
             : new Vector4(18f, 6f, 18f, 6f);

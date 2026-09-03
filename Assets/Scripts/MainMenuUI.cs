@@ -7,7 +7,36 @@ public class MainMenuUI : MonoBehaviour
     private void Awake()
     {
         PokerButtonTheme.EnsureController();
+        NormalizeMenuButtonGroup();
         IncreaseVerticalButtonSpacing();
+    }
+
+    private void NormalizeMenuButtonGroup()
+    {
+        Button[] buttons = FindObjectsByType<Button>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None
+        );
+
+        Transform group = null;
+        foreach (Button button in buttons)
+        {
+            if (button != null &&
+                button.transform.parent != null &&
+                button.transform.parent.name.StartsWith("Panel przycisk"))
+            {
+                group = button.transform.parent;
+                break;
+            }
+        }
+
+        if (group == null)
+            return;
+
+        // The scene group was authored with a very large non-uniform scale.
+        // Keep a slightly more decorative menu variant, but bring its real
+        // footprint much closer to the compact Hot Seat controls.
+        group.localScale = new Vector3(3.25f, 2.5f, 1f);
     }
 
     private void IncreaseVerticalButtonSpacing()
