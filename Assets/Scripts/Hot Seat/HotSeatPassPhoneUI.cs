@@ -14,6 +14,8 @@ public class HotSeatPassPhoneUI : MonoBehaviour
 
     private void Awake()
     {
+        ConfigureVisuals();
+
         if (passPhonePanel != null)
             passPhonePanel.SetActive(false);
 
@@ -52,9 +54,9 @@ public class HotSeatPassPhoneUI : MonoBehaviour
         if (passPhoneText != null)
         {
             passPhoneText.text =
-                title + "\n\n" +
-                message + "\n\n" +
-                playerName;
+                "<color=#F4C75E><size=125%>" + title + "</size></color>\n\n" +
+                "<size=82%>" + message + "</size>\n\n" +
+                "<color=#FFF0C2><size=112%>" + playerName.ToUpper() + "</size></color>";
         }
 
         if (passPhonePanel != null)
@@ -65,6 +67,45 @@ public class HotSeatPassPhoneUI : MonoBehaviour
     {
         if (passPhonePanel != null)
             passPhonePanel.SetActive(false);
+    }
+
+    private void ConfigureVisuals()
+    {
+        if (passPhonePanel != null)
+        {
+            Image background = passPhonePanel.GetComponent<Image>();
+            if (background != null)
+                background.color = new Color(0.005f, 0.055f, 0.032f, 0.94f);
+        }
+
+        if (passPhoneText != null)
+        {
+            RectTransform textRect = passPhoneText.rectTransform;
+            textRect.anchorMin = new Vector2(0.5f, 0.5f);
+            textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.pivot = new Vector2(0.5f, 0.5f);
+            textRect.anchoredPosition = new Vector2(0f, 80f);
+            textRect.sizeDelta = new Vector2(820f, 520f);
+
+            passPhoneText.alignment = TextAlignmentOptions.Center;
+            passPhoneText.textWrappingMode = TextWrappingModes.Normal;
+            passPhoneText.enableAutoSizing = true;
+            passPhoneText.fontSizeMin = 24f;
+            passPhoneText.fontSizeMax = 39f;
+            passPhoneText.lineSpacing = 8f;
+            passPhoneText.color = Color.white;
+        }
+
+        if (startTurnButton != null)
+        {
+            if (startTurnButton.transform is RectTransform buttonRect)
+            {
+                buttonRect.anchoredPosition = new Vector2(0f, 250f);
+                buttonRect.sizeDelta = new Vector2(720f, 112f);
+            }
+
+            PokerButtonTheme.ApplyTo(startTurnButton);
+        }
     }
 
     private void HandleStartTurnClicked()

@@ -119,6 +119,7 @@ public class HotSeatSetupUI : MonoBehaviour
             cardImage.preserveAspect = false;
 
         ApplySetupStyle();
+        ApplyCardScreenStyle();
         RefreshButtons();
     }
 
@@ -940,7 +941,7 @@ public class HotSeatSetupUI : MonoBehaviour
             ? players[starter].Name
             : "BRAK GRACZA";
 
-        currentPlayerNameText.text = "PRZERWA MIĘDZY RUNDAMI";
+        currentPlayerNameText.text = "PRZERWA";
         ShowCardSprite(
             null,
             "NASTĘPNĄ RUNDĘ\nROZPOCZYNA\n" + starterName.ToUpper(),
@@ -1456,6 +1457,39 @@ public class HotSeatSetupUI : MonoBehaviour
 
         StyleButton(addPlayerButton);
         StyleButton(startButton);
+    }
+
+    private void ApplyCardScreenStyle()
+    {
+        if (cardPanel == null)
+            return;
+
+        Image background = cardPanel.GetComponent<Image>();
+        if (background != null)
+            background.color = new Color(0.005f, 0.05f, 0.03f, 0.93f);
+
+        if (currentPlayerNameText != null)
+        {
+            RectTransform nameRect = currentPlayerNameText.rectTransform;
+            nameRect.anchoredPosition = new Vector2(0f, -390f);
+            nameRect.sizeDelta = new Vector2(820f, 100f);
+
+            currentPlayerNameText.color = new Color(1f, 0.84f, 0.38f, 1f);
+            currentPlayerNameText.enableAutoSizing = true;
+            currentPlayerNameText.fontSizeMin = 28f;
+            currentPlayerNameText.fontSizeMax = 44f;
+            currentPlayerNameText.fontStyle = FontStyles.Bold;
+        }
+
+        if (instructionText != null)
+        {
+            instructionText.color = new Color(1f, 0.95f, 0.82f, 1f);
+            instructionText.enableAutoSizing = true;
+            instructionText.fontSizeMin = 25f;
+            instructionText.fontSizeMax = 38f;
+            instructionText.fontStyle = FontStyles.Bold;
+            instructionText.lineSpacing = 5f;
+        }
     }
 
     private void StyleButton(Button button)

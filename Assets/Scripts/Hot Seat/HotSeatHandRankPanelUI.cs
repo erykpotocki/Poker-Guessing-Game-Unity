@@ -505,7 +505,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             panelRect.anchorMax = new Vector2(0.5f, 0f);
             panelRect.pivot = new Vector2(0.5f, 0f);
             panelRect.anchoredPosition = new Vector2(0f, 42f);
-            panelRect.sizeDelta = new Vector2(940f, 740f);
+            panelRect.sizeDelta = new Vector2(940f, 800f);
         }
 
         if (handRankTitle != null)
@@ -528,7 +528,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         {
             rankScrollViewRect.anchorMin = Vector2.zero;
             rankScrollViewRect.anchorMax = Vector2.one;
-            rankScrollViewRect.offsetMin = new Vector2(70f, 178f);
+            rankScrollViewRect.offsetMin = new Vector2(70f, 226f);
             rankScrollViewRect.offsetMax = new Vector2(-70f, -112f);
         }
 
@@ -569,7 +569,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             actionRect.anchorMin = new Vector2(0f, 0f);
             actionRect.anchorMax = new Vector2(1f, 0f);
             actionRect.pivot = new Vector2(0.5f, 0f);
-            actionRect.anchoredPosition = new Vector2(0f, 20f);
+            actionRect.anchoredPosition = new Vector2(0f, 24f);
             actionRect.sizeDelta = new Vector2(-40f, 76f);
         }
 
@@ -578,7 +578,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             cancelRect.anchorMin = new Vector2(0.5f, 0f);
             cancelRect.anchorMax = new Vector2(0.5f, 0f);
             cancelRect.pivot = new Vector2(0.5f, 0.5f);
-            cancelRect.anchoredPosition = new Vector2(0f, 132f);
+            cancelRect.anchoredPosition = new Vector2(0f, 164f);
             cancelRect.sizeDelta = new Vector2(320f, 62f);
         }
 
