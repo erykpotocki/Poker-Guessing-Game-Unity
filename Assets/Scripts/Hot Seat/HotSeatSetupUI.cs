@@ -1442,11 +1442,7 @@ public class HotSeatSetupUI : MonoBehaviour
         TMP_Text startLabel =
             startButton.GetComponentInChildren<TMP_Text>(true);
         if (startLabel != null)
-        {
-            startLabel.text = startButton.interactable
-                ? "START"
-                : "DODAJ MIN. " + minPlayers + " GRACZY";
-        }
+            startLabel.text = "START";
     }
 
     private void ApplySetupStyle()

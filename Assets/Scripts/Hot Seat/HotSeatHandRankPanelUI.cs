@@ -63,6 +63,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
     private RectTransform rankScrollViewRect;
     private RectTransform rankViewportRect;
     private RectTransform rankContentRect;
+    private ScrollRect rankScrollRect;
 
     private TMP_Text handRankTitle;
 
@@ -167,7 +168,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         if (background == null)
             background = gameObject.AddComponent<Image>();
 
-        background.color = new Color(0.015f, 0.09f, 0.052f, 0.94f);
+        background.color = new Color(0.015f, 0.09f, 0.052f, 1f);
         background.raycastTarget = true;
 
         foreach (Button button in GetComponentsInChildren<Button>(true))
@@ -243,6 +244,9 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             FindDirectChild(transform, "RankScrollView");
 
         rankScrollViewRect = scrollView as RectTransform;
+        rankScrollRect = scrollView != null
+            ? scrollView.GetComponent<ScrollRect>()
+            : null;
 
         Transform viewport = scrollView != null
             ? FindDirectChild(scrollView, "Viewport")
@@ -537,16 +541,27 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             handRankTitle.alignment = TextAlignmentOptions.Center;
             handRankTitle.textWrappingMode = TextWrappingModes.NoWrap;
             handRankTitle.enableAutoSizing = true;
-            handRankTitle.fontSizeMin = 24f;
-            handRankTitle.fontSizeMax = 36f;
+            handRankTitle.fontSizeMin = 20f;
+            handRankTitle.fontSizeMax = 31f;
         }
 
         if (rankScrollViewRect != null)
         {
             rankScrollViewRect.anchorMin = Vector2.zero;
             rankScrollViewRect.anchorMax = Vector2.one;
-            rankScrollViewRect.offsetMin = new Vector2(20f, 178f);
-            rankScrollViewRect.offsetMax = new Vector2(-20f, -94f);
+            rankScrollViewRect.offsetMin = new Vector2(70f, 178f);
+            rankScrollViewRect.offsetMax = new Vector2(-70f, -112f);
+        }
+
+        if (rankScrollRect != null)
+        {
+            rankScrollRect.content = rankContentRect;
+            rankScrollRect.viewport = rankViewportRect;
+            rankScrollRect.horizontal = false;
+            rankScrollRect.vertical = true;
+            rankScrollRect.movementType = ScrollRect.MovementType.Clamped;
+            rankScrollRect.inertia = true;
+            rankScrollRect.scrollSensitivity = 55f;
         }
 
         // The scene used to override the prefab viewport with a large negative
@@ -585,7 +600,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             cancelRect.anchorMax = new Vector2(0.5f, 0f);
             cancelRect.pivot = new Vector2(0.5f, 0.5f);
             cancelRect.anchoredPosition = new Vector2(0f, 132f);
-            cancelRect.sizeDelta = new Vector2(360f, 62f);
+            cancelRect.sizeDelta = new Vector2(320f, 62f);
         }
 
         ConfigureOptionButtons(categoryList);
@@ -698,7 +713,9 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
     private void ShowCategories()
     {
         ClearSelectedRank();
-        SetTitle("Podbij:");
+        SetTitle(string.IsNullOrWhiteSpace(currentBidText)
+            ? "WYBIERZ UKŁAD"
+            : "WYBIERZ WYŻSZY UKŁAD");
         SetOnlyOneListActive(categoryList);
     }
 
@@ -789,6 +806,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             fullDetailList,
             BuildFullOptions(tripleRank)
         );
+        RefreshScrollLayout(fullDetailList);
     }
 
     private void ShowRankOptions(
@@ -799,6 +817,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         SetTitle(title);
         SetOnlyOneListActive(rankOptionList);
         FillOptionList(rankOptionList, options);
+        RefreshScrollLayout(rankOptionList);
     }
 
     private void FillOptionList(
@@ -1219,12 +1238,58 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             fullDetailList.SetActive(
                 target == fullDetailList
             );
+
+        RefreshScrollLayout(target);
     }
 
     private void SetTitle(string value)
     {
         if (handRankTitle != null)
-            handRankTitle.text = value;
+        {
+            string declaration = string.IsNullOrWhiteSpace(currentBidText)
+                ? "BRAK POPRZEDNIEJ DEKLARACJI"
+                : "POPRZEDNIA DEKLARACJA: " + currentBidText.ToUpper();
+
+            handRankTitle.text = declaration + "\n" + value.ToUpper();
+        }
+    }
+
+    private void RefreshScrollLayout(GameObject activeList)
+    {
+        if (activeList == null || rankContentRect == null)
+            return;
+
+        Canvas.ForceUpdateCanvases();
+
+        int visibleButtons = 0;
+        foreach (Button button in activeList.GetComponentsInChildren<Button>(true))
+        {
+            if (button.gameObject.activeSelf)
+                visibleButtons++;
+        }
+
+        const float buttonHeight = 64f;
+        const float spacing = 10f;
+        float viewportHeight = rankViewportRect != null
+            ? rankViewportRect.rect.height
+            : 0f;
+        float listHeight = Mathf.Max(
+            viewportHeight,
+            visibleButtons * buttonHeight +
+            Mathf.Max(0, visibleButtons - 1) * spacing
+        );
+
+        if (activeList.transform is RectTransform listRect)
+            listRect.sizeDelta = new Vector2(0f, listHeight);
+
+        rankContentRect.sizeDelta = new Vector2(0f, listHeight);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(rankContentRect);
+
+        if (rankScrollRect != null)
+        {
+            rankScrollRect.StopMovement();
+            rankScrollRect.verticalNormalizedPosition = 1f;
+        }
     }
 
     private string NormalizeText(string value)
