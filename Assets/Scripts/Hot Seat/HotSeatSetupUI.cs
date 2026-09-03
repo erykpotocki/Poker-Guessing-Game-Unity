@@ -149,6 +149,7 @@ public class HotSeatSetupUI : MonoBehaviour
         });
 
         CreateRemovePlayerButton(row, input);
+        StylePlayerInput(input);
         playerInputs.Add(input);
         RefreshButtons();
     }
@@ -1489,6 +1490,52 @@ public class HotSeatSetupUI : MonoBehaviour
             label.color = Color.white;
             label.fontStyle = FontStyles.Bold;
         }
+    }
+
+    private void StylePlayerInput(TMP_InputField input)
+    {
+        if (input == null)
+            return;
+
+        Image background = input.targetGraphic as Image;
+        if (background == null)
+            background = input.GetComponent<Image>();
+
+        if (background != null)
+        {
+            if (pokerButtonSprite != null)
+            {
+                background.sprite = pokerButtonSprite;
+                background.type = Image.Type.Simple;
+                background.preserveAspect = false;
+            }
+
+            background.color = new Color(0.34f, 0.055f, 0.035f, 0.98f);
+
+            Outline outline = background.GetComponent<Outline>();
+            if (outline == null)
+                outline = background.gameObject.AddComponent<Outline>();
+
+            outline.effectColor = new Color(0.92f, 0.67f, 0.20f, 1f);
+            outline.effectDistance = new Vector2(2f, -2f);
+        }
+
+        if (input.textComponent != null)
+        {
+            input.textComponent.color = new Color(1f, 0.94f, 0.76f, 1f);
+            input.textComponent.fontStyle = FontStyles.Bold;
+            input.textComponent.alignment = TextAlignmentOptions.Center;
+            input.textComponent.enableAutoSizing = true;
+            input.textComponent.fontSizeMin = 27f;
+            input.textComponent.fontSizeMax = 39f;
+        }
+
+        if (input.placeholder is TMP_Text placeholder)
+            placeholder.color = new Color(0.78f, 0.70f, 0.58f, 0.65f);
+
+        input.customCaretColor = true;
+        input.caretColor = new Color(1f, 0.82f, 0.30f, 1f);
+        input.selectionColor = new Color(0.72f, 0.49f, 0.08f, 0.55f);
     }
 
     private void EnsureCardText()

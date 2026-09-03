@@ -60,6 +60,10 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
     private GameObject fullGroupList;
     private GameObject fullDetailList;
 
+    private RectTransform rankScrollViewRect;
+    private RectTransform rankViewportRect;
+    private RectTransform rankContentRect;
+
     private TMP_Text handRankTitle;
 
     private Button actionButton;
@@ -238,13 +242,19 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         Transform scrollView =
             FindDirectChild(transform, "RankScrollView");
 
+        rankScrollViewRect = scrollView as RectTransform;
+
         Transform viewport = scrollView != null
             ? FindDirectChild(scrollView, "Viewport")
             : null;
 
+        rankViewportRect = viewport as RectTransform;
+
         Transform content = viewport != null
             ? FindDirectChild(viewport, "Content")
             : null;
+
+        rankContentRect = content as RectTransform;
 
         if (content == null)
         {
@@ -531,13 +541,33 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             handRankTitle.fontSizeMax = 36f;
         }
 
-        Transform scrollView = FindDirectChild(transform, "RankScrollView");
-        if (scrollView is RectTransform scrollRect)
+        if (rankScrollViewRect != null)
         {
-            scrollRect.anchorMin = Vector2.zero;
-            scrollRect.anchorMax = Vector2.one;
-            scrollRect.offsetMin = new Vector2(20f, 178f);
-            scrollRect.offsetMax = new Vector2(-20f, -94f);
+            rankScrollViewRect.anchorMin = Vector2.zero;
+            rankScrollViewRect.anchorMax = Vector2.one;
+            rankScrollViewRect.offsetMin = new Vector2(20f, 178f);
+            rankScrollViewRect.offsetMax = new Vector2(-20f, -94f);
+        }
+
+        // The scene used to override the prefab viewport with a large negative
+        // position. After making the panel compact that pushed every option
+        // outside the mask, leaving only the cancel button visible.
+        if (rankViewportRect != null)
+        {
+            rankViewportRect.anchorMin = Vector2.zero;
+            rankViewportRect.anchorMax = Vector2.one;
+            rankViewportRect.offsetMin = Vector2.zero;
+            rankViewportRect.offsetMax = Vector2.zero;
+            rankViewportRect.pivot = new Vector2(0.5f, 0.5f);
+        }
+
+        if (rankContentRect != null)
+        {
+            rankContentRect.anchorMin = new Vector2(0f, 1f);
+            rankContentRect.anchorMax = new Vector2(1f, 1f);
+            rankContentRect.pivot = new Vector2(0.5f, 1f);
+            rankContentRect.anchoredPosition = Vector2.zero;
+            rankContentRect.sizeDelta = new Vector2(0f, 720f);
         }
 
         if (actionButton != null && actionButton.transform is RectTransform actionRect)
@@ -568,6 +598,15 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
     {
         if (listObject == null)
             return;
+
+        if (listObject.transform is RectTransform listRect)
+        {
+            listRect.anchorMin = new Vector2(0f, 1f);
+            listRect.anchorMax = new Vector2(1f, 1f);
+            listRect.pivot = new Vector2(0.5f, 1f);
+            listRect.anchoredPosition = Vector2.zero;
+            listRect.sizeDelta = new Vector2(0f, 720f);
+        }
 
         VerticalLayoutGroup layout = listObject.GetComponent<VerticalLayoutGroup>();
         if (layout != null)
