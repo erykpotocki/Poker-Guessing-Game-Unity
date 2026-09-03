@@ -1463,19 +1463,6 @@ public class HotSeatSetupUI : MonoBehaviour
         if (button == null)
             return;
 
-        Image image = button.targetGraphic as Image;
-        if (image != null)
-        {
-            if (pokerButtonSprite != null)
-            {
-                image.sprite = pokerButtonSprite;
-                image.type = Image.Type.Simple;
-                image.preserveAspect = true;
-            }
-
-            image.color = Color.white;
-        }
-
         RectTransform rect = button.transform as RectTransform;
         if (rect != null)
             rect.sizeDelta = new Vector2(720f, 126f);
@@ -1486,6 +1473,8 @@ public class HotSeatSetupUI : MonoBehaviour
             label.color = Color.white;
             label.fontStyle = FontStyles.Bold;
         }
+
+        PokerButtonTheme.ApplyTo(button);
     }
 
     private void StylePlayerInput(TMP_InputField input)

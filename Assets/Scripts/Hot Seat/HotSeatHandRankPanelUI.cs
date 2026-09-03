@@ -17,10 +17,6 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
     [SerializeField] private float invalidFlashDuration = 1f;
 
-    [Header("Action button")]
-    [SerializeField] private Color raiseButtonColor =
-        new Color32(255, 209, 51, 255);
-
     private static readonly string[] RankOrder =
     {
         "9", "10", "J", "Q", "K", "A"
@@ -101,8 +97,6 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
     private CanvasGroup panelCanvasGroup;
 
-    private Color originalActionButtonColor = Color.white;
-
     private Button selectedOptionButton;
     private string selectedRankText;
     private string currentBidText;
@@ -156,8 +150,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         ConfigureResponsiveLayout();
         RefreshStaticButtonLabels();
         BindButtons();
-        CacheOriginalButtonColors();
         ApplyPokerTheme();
+        CacheOriginalButtonColors();
 
         initialized = true;
     }
@@ -172,22 +166,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         background.raycastTarget = true;
 
         foreach (Button button in GetComponentsInChildren<Button>(true))
-        {
-            Image image = button.targetGraphic as Image;
-            if (image != null)
-            {
-                image.color = button == actionButton
-                    ? new Color(0.72f, 0.49f, 0.08f)
-                    : new Color(0.10f, 0.34f, 0.19f);
-            }
-
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null)
-            {
-                label.color = Color.white;
-                label.fontStyle = FontStyles.Bold;
-            }
-        }
+            PokerButtonTheme.ApplyTo(button);
 
         if (handRankTitle != null)
         {
@@ -232,11 +211,6 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
                 actionButtonVisual =
                     visualTransform.GetComponent<Image>();
 
-                if (actionButtonVisual != null)
-                {
-                    originalActionButtonColor =
-                        actionButtonVisual.color;
-                }
             }
         }
 
@@ -625,7 +599,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
         VerticalLayoutGroup layout = listObject.GetComponent<VerticalLayoutGroup>();
         if (layout != null)
-            layout.spacing = 10f;
+            layout.spacing = 12f;
 
         foreach (Button button in listObject.GetComponentsInChildren<Button>(true))
         {
@@ -635,8 +609,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
             element.enabled = true;
 
-            element.minHeight = 64f;
-            element.preferredHeight = 64f;
+            element.minHeight = 92f;
+            element.preferredHeight = 92f;
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
@@ -1029,12 +1003,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         }
 
         if (actionButtonVisual != null)
-        {
-            actionButtonVisual.color =
-                hasSelection
-                    ? raiseButtonColor
-                    : originalActionButtonColor;
-        }
+            actionButtonVisual.color = Color.white;
 
         actionButton.interactable =
             shouldBeVisible && !inputLocked;
@@ -1268,8 +1237,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
                 visibleButtons++;
         }
 
-        const float buttonHeight = 64f;
-        const float spacing = 10f;
+        const float buttonHeight = 92f;
+        const float spacing = 12f;
         float viewportHeight = rankViewportRect != null
             ? rankViewportRect.rect.height
             : 0f;

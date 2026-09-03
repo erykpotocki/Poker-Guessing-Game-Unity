@@ -4,14 +4,19 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// Applies the shared wood-and-gold visual language to every Unity UI button.
-/// It is created automatically, so dynamic Hot Seat buttons receive the theme too.
+/// Applies one scalable, touch-friendly visual language to horizontal UI buttons.
+/// The background is generated at runtime, so it stays crisp without stretching
+/// the old ornamental artwork.
 /// </summary>
 public sealed class PokerButtonTheme : MonoBehaviour
 {
-    private const string ButtonTexturePath = "PokerUI/PokerButtonWoodRect";
-    private static readonly Color LabelColor = new Color(1f, 0.94f, 0.73f);
+    private static readonly Color LabelColor = new Color(1f, 0.94f, 0.76f);
+    private static readonly Color DisabledLabelColor = new Color(0.67f, 0.62f, 0.54f, 0.72f);
+
+    private static PokerButtonTheme instance;
+
     private Sprite buttonSprite;
+    private Texture2D buttonTexture;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void CreateThemeController()
@@ -21,55 +26,53 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
     public static void EnsureController()
     {
-        if (FindFirstObjectByType<PokerButtonTheme>() != null)
+        if (instance != null)
+            return;
+
+        instance = FindFirstObjectByType<PokerButtonTheme>();
+        if (instance != null)
             return;
 
         GameObject controller = new GameObject("PokerButtonTheme");
         DontDestroyOnLoad(controller);
-        controller.AddComponent<PokerButtonTheme>();
+        instance = controller.AddComponent<PokerButtonTheme>();
+    }
+
+    public static void ApplyTo(Button button)
+    {
+        EnsureController();
+        if (instance != null)
+            instance.ApplyTheme(button);
     }
 
     private void Awake()
     {
-        Sprite[] importedSprites =
-            Resources.LoadAll<Sprite>(ButtonTexturePath);
-
-        float largestArea = 0f;
-        foreach (Sprite importedSprite in importedSprites)
+        if (instance != null && instance != this)
         {
-            if (importedSprite == null)
-                continue;
-
-            float area = importedSprite.rect.width * importedSprite.rect.height;
-            if (area > largestArea)
-            {
-                largestArea = area;
-                buttonSprite = importedSprite;
-            }
+            Destroy(gameObject);
+            return;
         }
 
-        if (buttonSprite == null)
-        {
-            Texture2D texture = Resources.Load<Texture2D>(ButtonTexturePath);
-            if (texture != null)
-            {
-                buttonSprite = Sprite.Create(
-                    texture,
-                    new Rect(0, 0, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f),
-                    100f
-                );
-            }
-        }
+        instance = this;
+        buttonSprite = CreateModernButtonSprite();
 
         SceneManager.sceneLoaded += HandleSceneLoaded;
         ApplyThemeToAllButtons();
-        InvokeRepeating(nameof(ApplyThemeToAllButtons), 0.4f, 0.8f);
+        InvokeRepeating(nameof(ApplyThemeToAllButtons), 0.25f, 0.75f);
     }
 
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= HandleSceneLoaded;
+
+        if (instance == this)
+            instance = null;
+
+        if (buttonSprite != null)
+            Destroy(buttonSprite);
+
+        if (buttonTexture != null)
+            Destroy(buttonTexture);
     }
 
     private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -80,64 +83,220 @@ public sealed class PokerButtonTheme : MonoBehaviour
     private void ApplyThemeToAllButtons()
     {
         foreach (Button button in FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            ApplyTheme(button);
+    }
+
+    private void ApplyTheme(Button button)
+    {
+        if (button == null || IsExcludedFromTheme(button))
+            return;
+
+        Image background = button.targetGraphic as Image;
+        if (background == null)
+            background = button.GetComponent<Image>();
+
+        if (background == null)
+            return;
+
+        bool firstApplication = background.sprite != buttonSprite;
+        if (firstApplication)
         {
-            if (button == null || IsExcludedFromWoodTheme(button))
-                continue;
-
-            Image background = button.targetGraphic as Image;
-            if (background == null)
-                background = button.GetComponent<Image>();
-
-            if (background == null)
-                continue;
-
-            if (buttonSprite != null && background.sprite != buttonSprite)
-            {
-                background.sprite = buttonSprite;
-                background.type = Image.Type.Simple;
-                background.preserveAspect = false;
-            }
-
-            background.enabled = true;
+            background.sprite = buttonSprite;
+            background.type = Image.Type.Sliced;
+            background.preserveAspect = false;
+            background.fillCenter = true;
             background.material = null;
-            background.color = buttonSprite != null
-                ? Color.white
-                : new Color(0.42f, 0.06f, 0.035f, 1f);
-            background.canvasRenderer.SetAlpha(1f);
+            background.color = Color.white;
+            background.raycastTarget = true;
 
-            Outline outline = background.GetComponent<Outline>();
-            if (outline == null)
-                outline = background.gameObject.AddComponent<Outline>();
+            DisableLegacyOutline(background);
+            ConfigureShadow(background);
+            ConfigureButtonTransitions(button);
+            ConfigureTouchSize(button);
+        }
 
-            outline.effectColor = new Color(0.92f, 0.67f, 0.20f, 1f);
-            outline.effectDistance = new Vector2(2.5f, -2.5f);
-            outline.useGraphicAlpha = true;
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
+            return;
 
-            ColorBlock colors = button.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1f, 0.91f, 0.63f);
-            colors.pressedColor = new Color(0.78f, 0.63f, 0.36f);
-            colors.selectedColor = new Color(1f, 0.86f, 0.48f);
-            colors.disabledColor = new Color(0.42f, 0.42f, 0.42f, 0.75f);
-            colors.colorMultiplier = 1f;
-            button.colors = colors;
+        label.color = button.interactable ? LabelColor : DisabledLabelColor;
+        label.fontStyle = FontStyles.Bold;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 22f;
+        label.fontSizeMax = 38f;
+        label.characterSpacing = 1.5f;
+        label.margin = new Vector4(24f, 8f, 24f, 8f);
 
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null)
-            {
-                label.color = button.interactable
-                    ? LabelColor
-                    : new Color(0.62f, 0.59f, 0.52f, 0.72f);
-                label.fontStyle = FontStyles.Bold;
-            }
+        Shadow textShadow = GetExactShadow(label.gameObject);
+        if (textShadow == null)
+            textShadow = label.gameObject.AddComponent<Shadow>();
+
+        textShadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
+        textShadow.effectDistance = new Vector2(1.5f, -1.5f);
+        textShadow.useGraphicAlpha = true;
+    }
+
+    private static void ConfigureButtonTransitions(Button button)
+    {
+        button.transition = Selectable.Transition.ColorTint;
+
+        ColorBlock colors = button.colors;
+        colors.normalColor = Color.white;
+        colors.highlightedColor = new Color(1f, 0.94f, 0.82f, 1f);
+        colors.pressedColor = new Color(0.72f, 0.66f, 0.60f, 1f);
+        colors.selectedColor = new Color(1f, 0.88f, 0.66f, 1f);
+        colors.disabledColor = new Color(0.43f, 0.40f, 0.38f, 0.82f);
+        colors.colorMultiplier = 1f;
+        colors.fadeDuration = 0.1f;
+        button.colors = colors;
+    }
+
+    private static void ConfigureTouchSize(Button button)
+    {
+        RectTransform rect = button.transform as RectTransform;
+        if (rect == null || IsCompactControl(button))
+            return;
+
+        LayoutElement layout = button.GetComponent<LayoutElement>();
+        if (layout != null && layout.enabled)
+        {
+            layout.minHeight = Mathf.Max(layout.minHeight, 92f);
+            layout.preferredHeight = Mathf.Max(layout.preferredHeight, 92f);
+            return;
+        }
+
+        if (rect.anchorMin == rect.anchorMax)
+        {
+            Vector2 size = rect.sizeDelta;
+            size.y = Mathf.Max(size.y, 112f);
+            if (size.x > 840f)
+                size.x = 820f;
+            rect.sizeDelta = size;
         }
     }
 
-    private static bool IsExcludedFromWoodTheme(Button button)
+    private static void DisableLegacyOutline(Image background)
+    {
+        Outline outline = background.GetComponent<Outline>();
+        if (outline != null)
+            outline.enabled = false;
+    }
+
+    private static void ConfigureShadow(Image background)
+    {
+        Shadow shadow = GetExactShadow(background.gameObject);
+        if (shadow == null)
+            shadow = background.gameObject.AddComponent<Shadow>();
+
+        shadow.effectColor = new Color(0f, 0f, 0f, 0.52f);
+        shadow.effectDistance = new Vector2(0f, -5f);
+        shadow.useGraphicAlpha = true;
+    }
+
+    private static Shadow GetExactShadow(GameObject target)
+    {
+        foreach (Shadow effect in target.GetComponents<Shadow>())
+        {
+            if (effect != null && effect.GetType() == typeof(Shadow))
+                return effect;
+        }
+
+        return null;
+    }
+
+    private Sprite CreateModernButtonSprite()
+    {
+        const int size = 96;
+        const float radius = 23f;
+        const float border = 3.5f;
+
+        buttonTexture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            name = "PokerButtonModern",
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp,
+            hideFlags = HideFlags.HideAndDontSave
+        };
+
+        Color topFill = new Color(0.40f, 0.075f, 0.055f, 1f);
+        Color bottomFill = new Color(0.17f, 0.018f, 0.018f, 1f);
+        Color topBorder = new Color(1f, 0.80f, 0.34f, 1f);
+        Color bottomBorder = new Color(0.62f, 0.34f, 0.07f, 1f);
+
+        for (int y = 0; y < size; y++)
+        {
+            float vertical = y / (size - 1f);
+            Color fill = Color.Lerp(bottomFill, topFill, vertical);
+            Color gold = Color.Lerp(bottomBorder, topBorder, vertical);
+
+            for (int x = 0; x < size; x++)
+            {
+                float outerCoverage = RoundedRectCoverage(x, y, size, radius, 0f);
+                float innerCoverage = RoundedRectCoverage(x, y, size, radius, border);
+                float borderCoverage = Mathf.Clamp01(outerCoverage - innerCoverage);
+
+                Color pixel = Color.Lerp(fill, gold, borderCoverage);
+                pixel.a = outerCoverage;
+
+                float highlight = Mathf.SmoothStep(0f, 1f, vertical) * innerCoverage * 0.08f;
+                pixel.r = Mathf.Clamp01(pixel.r + highlight);
+                pixel.g = Mathf.Clamp01(pixel.g + highlight * 0.75f);
+                pixel.b = Mathf.Clamp01(pixel.b + highlight * 0.35f);
+
+                buttonTexture.SetPixel(x, y, pixel);
+            }
+        }
+
+        buttonTexture.Apply(false, true);
+
+        Sprite sprite = Sprite.Create(
+            buttonTexture,
+            new Rect(0f, 0f, size, size),
+            new Vector2(0.5f, 0.5f),
+            100f,
+            0,
+            SpriteMeshType.FullRect,
+            new Vector4(28f, 28f, 28f, 28f)
+        );
+        sprite.name = "PokerButtonModern";
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        return sprite;
+    }
+
+    private static float RoundedRectCoverage(
+        float x,
+        float y,
+        float size,
+        float radius,
+        float inset)
+    {
+        float half = size * 0.5f - inset;
+        float localRadius = Mathf.Max(1f, radius - inset);
+        Vector2 point = new Vector2(
+            Mathf.Abs(x + 0.5f - size * 0.5f),
+            Mathf.Abs(y + 0.5f - size * 0.5f)
+        );
+        Vector2 corner = point - new Vector2(half - localRadius, half - localRadius);
+        Vector2 outside = new Vector2(Mathf.Max(corner.x, 0f), Mathf.Max(corner.y, 0f));
+        float distance = outside.magnitude + Mathf.Min(Mathf.Max(corner.x, corner.y), 0f) - localRadius;
+        return Mathf.Clamp01(0.5f - distance);
+    }
+
+    private static bool IsCompactControl(Button button)
+    {
+        string name = button.name.ToLowerInvariant();
+        return name.Contains("close") ||
+               name.Contains("cancel") ||
+               name.Contains("back") ||
+               name.Contains("wyjdź") ||
+               name.Contains("wroc") ||
+               name.Contains("wróć");
+    }
+
+    private static bool IsExcludedFromTheme(Button button)
     {
         string name = button.name.ToLowerInvariant();
 
-        // Compact destructive controls stay immediately recognisable.
         if (name.Contains("removeplayer") ||
             name.Contains("delete") ||
             name.Contains("usun"))
@@ -157,7 +316,6 @@ public sealed class PokerButtonTheme : MonoBehaviour
         if (rect == null)
             return false;
 
-        // Poker cards are tall touch areas. Decorative and menu buttons are horizontal.
         return rect.rect.height > rect.rect.width * 1.15f;
     }
 }
