@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -75,8 +76,22 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private Button multiCardTouchButton;
 
+    private sealed class RoundRevealCard
+    {
+        public CardSpriteEntry Card;
+        public Sprite FrontSprite;
+        public Image Image;
+        public Outline Outline;
+    }
+
     private readonly List<GameObject> roundResultObjects =
         new List<GameObject>();
+
+    private readonly List<RoundRevealCard> roundRevealCards =
+        new List<RoundRevealCard>();
+
+    private Coroutine roundRevealCoroutine;
+    private bool roundRevealInProgress;
 
     private readonly List<HotSeatPlayer> players =
         new List<HotSeatPlayer>();
@@ -300,6 +315,9 @@ public class HotSeatSetupUI : MonoBehaviour
     {
         if (currentPhase == HotSeatPhase.RoundResult)
         {
+            if (roundRevealInProgress)
+                return;
+
             ShowRoundPause();
             return;
         }
@@ -598,6 +616,15 @@ public class HotSeatSetupUI : MonoBehaviour
                 resultPlayers.Add(player);
         }
 
+        int totalCards = 0;
+        foreach (HotSeatPlayer player in resultPlayers)
+            totalCards += Mathf.Min(player.Cards.Count, 3);
+
+        float cardWidth = totalCards <= 6 ? 150f :
+            totalCards <= 10 ? 118f : 94f;
+        float cardHeight = cardWidth * 1.39f;
+        float spacing = cardWidth * 0.78f;
+
         for (int row = 0; row < resultPlayers.Count; row++)
         {
             HotSeatPlayer player = resultPlayers[row];
@@ -607,11 +634,10 @@ public class HotSeatSetupUI : MonoBehaviour
             );
             CreateRoundResultLabel(
                 player.Name,
-                seatPosition + new Vector2(0f, 54f)
+                seatPosition + new Vector2(0f, cardHeight * 0.62f)
             );
 
             int visibleCards = Mathf.Min(player.Cards.Count, 3);
-            float spacing = 82f;
             float firstX = -spacing * (visibleCards - 1) * 0.5f;
 
             for (int i = 0; i < visibleCards; i++)
@@ -623,8 +649,10 @@ public class HotSeatSetupUI : MonoBehaviour
                     sprite = cardDatabase.GetCardSprite(card.suit, card.rank);
 
                 CreateRoundResultCard(
+                    card,
                     sprite,
-                    seatPosition + new Vector2(firstX + spacing * i, -22f)
+                    seatPosition + new Vector2(firstX + spacing * i, -28f),
+                    new Vector2(cardWidth, cardHeight)
                 );
             }
         }
@@ -652,7 +680,7 @@ public class HotSeatSetupUI : MonoBehaviour
         RectTransform rect = tableObject.AddComponent<RectTransform>();
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(620f, 430f);
+        rect.sizeDelta = new Vector2(700f, 480f);
 
         Image image = tableObject.AddComponent<Image>();
         image.sprite = resultTableSprite;
@@ -684,7 +712,11 @@ public class HotSeatSetupUI : MonoBehaviour
         roundResultObjects.Add(labelObject);
     }
 
-    private void CreateRoundResultCard(Sprite sprite, Vector2 position)
+    private void CreateRoundResultCard(
+        CardSpriteEntry card,
+        Sprite frontSprite,
+        Vector2 position,
+        Vector2 size)
     {
         GameObject cardObject = new GameObject("HS_ResultCard");
         cardObject.transform.SetParent(cardImage.transform, false);
@@ -692,20 +724,143 @@ public class HotSeatSetupUI : MonoBehaviour
         RectTransform rect = cardObject.AddComponent<RectTransform>();
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(96f, 132f);
+        rect.sizeDelta = size;
         rect.anchoredPosition = position;
 
         Image image = cardObject.AddComponent<Image>();
-        image.sprite = sprite;
-        image.color = sprite != null ? Color.white : cardFrontColor;
-        image.preserveAspect = true;
+        Sprite backSprite = cardBackDatabase != null
+            ? cardBackDatabase.GetBackSprite(cardBackIndex)
+            : null;
+        image.sprite = backSprite;
+        image.color = backSprite != null ? Color.white : cardBackColor;
+        image.preserveAspect = false;
         image.raycastTarget = false;
+
+        Outline outline = cardObject.AddComponent<Outline>();
+        outline.effectColor = new Color(1f, 0.75f, 0.12f, 1f);
+        outline.effectDistance = new Vector2(6f, -6f);
+        outline.useGraphicAlpha = true;
+
+        roundRevealCards.Add(new RoundRevealCard
+        {
+            Card = card,
+            FrontSprite = frontSprite,
+            Image = image,
+            Outline = outline
+        });
 
         roundResultObjects.Add(cardObject);
     }
 
+    private IEnumerator RevealCheckedHandRoutine(
+        string handId,
+        string declaredRank,
+        bool declaredRankExists,
+        string result)
+    {
+        List<int> order = new List<int>();
+        for (int i = 0; i < roundRevealCards.Count; i++)
+            order.Add(i);
+
+        ShuffleIndexes(order);
+
+        List<CardSpriteEntry> revealedCards = new List<CardSpriteEntry>();
+        yield return new WaitForSeconds(0.45f);
+
+        bool confirmed = false;
+        for (int step = 0; step < order.Count; step++)
+        {
+            RoundRevealCard reveal = roundRevealCards[order[step]];
+            RevealResultCard(
+                reveal,
+                handId,
+                new Color(1f, 0.75f, 0.12f, 1f)
+            );
+            revealedCards.Add(reveal.Card);
+
+            if (EvaluateCardsForHand(handId, revealedCards))
+            {
+                confirmed = true;
+                Color success = new Color(0.22f, 0.9f, 0.38f, 1f);
+
+                foreach (RoundRevealCard remaining in roundRevealCards)
+                    RevealResultCard(remaining, handId, success);
+
+                break;
+            }
+
+            yield return new WaitForSeconds(0.42f);
+        }
+
+        Color finalColor = confirmed
+            ? new Color(0.22f, 0.9f, 0.38f, 1f)
+            : new Color(1f, 0.25f, 0.22f, 1f);
+
+        foreach (RoundRevealCard reveal in roundRevealCards)
+        {
+            if (reveal.Outline != null &&
+                IsCardRelevantToHand(handId, reveal.Card))
+            {
+                reveal.Outline.enabled = true;
+                reveal.Outline.effectColor = finalColor;
+            }
+        }
+
+        string verdict = declaredRankExists
+            ? "<color=#57E878>UKŁAD JEST NA STOLE</color>"
+            : "<color=#FF6660>UKŁADU NIE MA NA STOLE</color>";
+
+        instructionText.text =
+            "SPRAWDZONO: <color=#F2C14E>" +
+            declaredRank.ToUpper() + "</color>\n" + verdict +
+            "\n\n" + result +
+            "\n\nDOTKNIJ, ABY PRZEJŚĆ DALEJ";
+
+        roundRevealInProgress = false;
+        roundRevealCoroutine = null;
+    }
+
+    private void RevealResultCard(
+        RoundRevealCard reveal,
+        string handId,
+        Color matchColor)
+    {
+        if (reveal == null || reveal.Image == null)
+            return;
+
+        reveal.Image.sprite = reveal.FrontSprite;
+        reveal.Image.color = reveal.FrontSprite != null
+            ? Color.white
+            : cardFrontColor;
+
+        bool relevant = IsCardRelevantToHand(handId, reveal.Card);
+        if (reveal.Outline != null)
+        {
+            reveal.Outline.enabled = relevant;
+            reveal.Outline.effectColor = matchColor;
+        }
+    }
+
+    private static void ShuffleIndexes(List<int> values)
+    {
+        for (int i = 0; i < values.Count; i++)
+        {
+            int randomIndex = Random.Range(i, values.Count);
+            int temporary = values[i];
+            values[i] = values[randomIndex];
+            values[randomIndex] = temporary;
+        }
+    }
+
     private void ClearRoundResultObjects()
     {
+        if (roundRevealCoroutine != null)
+        {
+            StopCoroutine(roundRevealCoroutine);
+            roundRevealCoroutine = null;
+            roundRevealInProgress = false;
+        }
+
         foreach (GameObject resultObject in roundResultObjects)
         {
             if (resultObject != null)
@@ -713,6 +868,7 @@ public class HotSeatSetupUI : MonoBehaviour
         }
 
         roundResultObjects.Clear();
+        roundRevealCards.Clear();
     }
 
     private void HideCardAndContinuePreview()
@@ -819,14 +975,9 @@ public class HotSeatSetupUI : MonoBehaviour
         }
 
         HotSeatPlayer roundWinner = players[winnerIndex];
-        string reason = declaredRankExists
-            ? "Deklarowany układ istnieje."
-            : "Deklarowanego układu nie ma.";
-
         string result =
             "<color=#F2C14E>WYGRYWA: " + roundWinner.Name.ToUpper() + "</color>\n" +
-            "<color=#FF6B6B>PRZEGRYWA: " + loser.Name.ToUpper() + "</color>\n" +
-            reason;
+            "<color=#FF6B6B>PRZEGRYWA: " + loser.Name.ToUpper() + "</color>";
 
         if (eliminated)
             result += "\n" + loser.Name + " odpada z gry.";
@@ -836,7 +987,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
         currentPlayerIndex = loserIndex;
         pendingNextRoundStarterIndex = GetNextRoundStarterIndex();
-        ShowRoundResult(result);
+        ShowRoundResult(result, declaredRank, declaredRankExists);
     }
 
     private void BeginTurnForCurrentPlayer(
@@ -910,7 +1061,10 @@ public class HotSeatSetupUI : MonoBehaviour
         return true;
     }
 
-    private void ShowRoundResult(string result)
+    private void ShowRoundResult(
+        string result,
+        string declaredRank,
+        bool declaredRankExists)
     {
         currentPhase = HotSeatPhase.RoundResult;
         cardVisible = false;
@@ -924,10 +1078,24 @@ public class HotSeatSetupUI : MonoBehaviour
             Color.black
         );
 
+        string handId = FindHandId(declaredRank);
         ShowRoundCards();
         cardImage.color = new Color(0.04f, 0.22f, 0.12f, 1f);
-        instructionText.text = result +
-            "\n\nDOTKNIJ, ABY PRZEJŚĆ DALEJ";
+
+        instructionText.text =
+            "SPRAWDZANY UKŁAD:\n" +
+            "<color=#F2C14E>" + declaredRank.ToUpper() + "</color>\n\n" +
+            "ODKRYWAM KARTY…";
+
+        roundRevealInProgress = true;
+        roundRevealCoroutine = StartCoroutine(
+            RevealCheckedHandRoutine(
+                handId,
+                declaredRank,
+                declaredRankExists,
+                result
+            )
+        );
     }
 
     private void ShowRoundPause()
@@ -1068,31 +1236,45 @@ public class HotSeatSetupUI : MonoBehaviour
         if (string.IsNullOrEmpty(handId))
             return false;
 
-        Dictionary<CardRank, int> rankCounts =
-            new Dictionary<CardRank, int>();
-        Dictionary<CardSuit, HashSet<CardRank>> suitRanks =
-            new Dictionary<CardSuit, HashSet<CardRank>>();
+        List<CardSpriteEntry> allCards = new List<CardSpriteEntry>();
 
         foreach (HotSeatPlayer player in players)
         {
             if (player.Eliminated)
                 continue;
 
-            foreach (CardSpriteEntry card in player.Cards)
-            {
-                if (card == null)
-                    continue;
+            allCards.AddRange(player.Cards);
+        }
 
-                if (!rankCounts.ContainsKey(card.rank))
-                    rankCounts[card.rank] = 0;
+        return EvaluateCardsForHand(handId, allCards);
+    }
 
-                rankCounts[card.rank]++;
+    private bool EvaluateCardsForHand(
+        string handId,
+        IEnumerable<CardSpriteEntry> cards)
+    {
+        if (string.IsNullOrEmpty(handId) || cards == null)
+            return false;
 
-                if (!suitRanks.ContainsKey(card.suit))
-                    suitRanks[card.suit] = new HashSet<CardRank>();
+        Dictionary<CardRank, int> rankCounts =
+            new Dictionary<CardRank, int>();
+        Dictionary<CardSuit, HashSet<CardRank>> suitRanks =
+            new Dictionary<CardSuit, HashSet<CardRank>>();
 
-                suitRanks[card.suit].Add(card.rank);
-            }
+        foreach (CardSpriteEntry card in cards)
+        {
+            if (card == null)
+                continue;
+
+            if (!rankCounts.ContainsKey(card.rank))
+                rankCounts[card.rank] = 0;
+
+            rankCounts[card.rank]++;
+
+            if (!suitRanks.ContainsKey(card.suit))
+                suitRanks[card.suit] = new HashSet<CardRank>();
+
+            suitRanks[card.suit].Add(card.rank);
         }
 
         if (handId.StartsWith("HIGH_"))
@@ -1145,6 +1327,76 @@ public class HotSeatSetupUI : MonoBehaviour
                 GetSuit(handId.Substring(10)), CardRank.Ten,
                 CardRank.Jack, CardRank.Queen, CardRank.King,
                 CardRank.Ace);
+
+        return false;
+    }
+
+    private bool IsCardRelevantToHand(
+        string handId,
+        CardSpriteEntry card)
+    {
+        if (string.IsNullOrEmpty(handId) || card == null)
+            return false;
+
+        if (handId.StartsWith("HIGH_") ||
+            handId.StartsWith("PAIR_") ||
+            handId.StartsWith("TRIPS_") ||
+            handId.StartsWith("QUADS_"))
+        {
+            int separator = handId.IndexOf('_');
+            CardRank? rank = GetRank(handId.Substring(separator + 1));
+            return rank.HasValue && card.rank == rank.Value;
+        }
+
+        if (handId.StartsWith("TWOPAIR_") || handId.StartsWith("FULL_"))
+        {
+            string[] parts = handId.Split('_');
+            if (parts.Length != 3)
+                return false;
+
+            CardRank? first = GetRank(parts[1]);
+            CardRank? second = GetRank(parts[2]);
+            return (first.HasValue && card.rank == first.Value) ||
+                   (second.HasValue && card.rank == second.Value);
+        }
+
+        if (handId == "STRAIGHT_SMALL")
+        {
+            return card.rank == CardRank.Nine ||
+                   card.rank == CardRank.Ten ||
+                   card.rank == CardRank.Jack ||
+                   card.rank == CardRank.Queen ||
+                   card.rank == CardRank.King;
+        }
+
+        if (handId == "STRAIGHT_BIG")
+        {
+            return card.rank == CardRank.Ten ||
+                   card.rank == CardRank.Jack ||
+                   card.rank == CardRank.Queen ||
+                   card.rank == CardRank.King ||
+                   card.rank == CardRank.Ace;
+        }
+
+        if (handId.StartsWith("FLUSH_"))
+        {
+            CardSuit? suit = GetSuit(handId.Substring(6));
+            return suit.HasValue && card.suit == suit.Value;
+        }
+
+        bool smallPoker = handId.StartsWith("POKER_SMALL_");
+        bool bigPoker = handId.StartsWith("POKER_BIG_");
+        if (smallPoker || bigPoker)
+        {
+            int suitOffset = smallPoker ? 12 : 10;
+            CardSuit? suit = GetSuit(handId.Substring(suitOffset));
+            if (!suit.HasValue || card.suit != suit.Value)
+                return false;
+
+            return smallPoker
+                ? card.rank != CardRank.Ace
+                : card.rank != CardRank.Nine;
+        }
 
         return false;
     }
