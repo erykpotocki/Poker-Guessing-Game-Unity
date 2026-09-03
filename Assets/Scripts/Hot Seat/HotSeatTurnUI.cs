@@ -20,9 +20,14 @@ public class HotSeatTurnUI : MonoBehaviour
     private UnityAction raiseAction;
     private UnityAction checkAction;
 
+    private RectTransform raiseRect;
+    private RectTransform checkRect;
+
     private void Awake()
     {
         Hide();
+
+        ConfigureResponsiveLayout();
 
         if (raiseButton != null)
             raiseButton.onClick.AddListener(HandleRaiseClicked);
@@ -69,8 +74,9 @@ public class HotSeatTurnUI : MonoBehaviour
             return;
 
         currentBidText.text = string.IsNullOrWhiteSpace(bidName)
-            ? "BRAK DEKLARACJI"
-            : bidName.ToUpper();
+            ? "BRAK POPRZEDNIEJ DEKLARACJI"
+            : "POPRZEDNI GRACZ WSKAZAŁ:\n" + bidName.ToUpper() +
+              "\nCZY CHCESZ SPRAWDZIĆ?";
     }
 
     public void SetCheckAvailable(bool available)
@@ -79,7 +85,92 @@ public class HotSeatTurnUI : MonoBehaviour
             checkButton.gameObject.SetActive(available);
 
         if (checkSeparatorText != null)
-            checkSeparatorText.SetActive(available);
+            checkSeparatorText.SetActive(false);
+
+        SetButtonLabel(
+            raiseButton,
+            available ? "NIE — PODBIJAM WYŻEJ" : "WSKAŻ UKŁAD"
+        );
+        SetButtonLabel(checkButton, "TAK — SPRAWDZAM");
+
+        if (raiseRect != null)
+        {
+            raiseRect.anchoredPosition = available
+                ? new Vector2(-215f, 74f)
+                : new Vector2(0f, 74f);
+            raiseRect.sizeDelta = available
+                ? new Vector2(390f, 104f)
+                : new Vector2(820f, 104f);
+        }
+
+        if (checkRect != null)
+        {
+            checkRect.anchoredPosition = new Vector2(215f, 74f);
+            checkRect.sizeDelta = new Vector2(390f, 104f);
+        }
+    }
+
+    private static void SetButtonLabel(Button button, string value)
+    {
+        if (button == null)
+            return;
+
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            label.text = value;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 24f;
+            label.fontSizeMax = 34f;
+            label.fontStyle = FontStyles.Bold;
+        }
+    }
+
+    private void ConfigureResponsiveLayout()
+    {
+        if (turnControlsRoot != null &&
+            turnControlsRoot.transform is RectTransform rootRect)
+        {
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = Vector2.zero;
+            rootRect.offsetMax = Vector2.zero;
+        }
+
+        if (currentBidText != null)
+        {
+            RectTransform bidRect = currentBidText.rectTransform;
+            bidRect.anchorMin = new Vector2(0.5f, 1f);
+            bidRect.anchorMax = new Vector2(0.5f, 1f);
+            bidRect.pivot = new Vector2(0.5f, 1f);
+            bidRect.anchoredPosition = new Vector2(0f, -205f);
+            bidRect.sizeDelta = new Vector2(880f, 110f);
+            currentBidText.alignment = TextAlignmentOptions.Center;
+            currentBidText.enableAutoSizing = true;
+            currentBidText.fontSizeMin = 28f;
+            currentBidText.fontSizeMax = 40f;
+            currentBidText.fontStyle = FontStyles.Bold;
+        }
+
+        raiseRect = raiseButton != null
+            ? raiseButton.transform as RectTransform
+            : null;
+        checkRect = checkButton != null
+            ? checkButton.transform as RectTransform
+            : null;
+
+        ConfigureBottomButton(raiseRect);
+        ConfigureBottomButton(checkRect);
+    }
+
+    private static void ConfigureBottomButton(RectTransform rect)
+    {
+        if (rect == null)
+            return;
+
+        rect.anchorMin = new Vector2(0.5f, 0f);
+        rect.anchorMax = new Vector2(0.5f, 0f);
+        rect.pivot = new Vector2(0.5f, 0f);
     }
 
     public void SetButtonsInteractable(bool interactable)

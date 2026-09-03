@@ -11,6 +11,7 @@ public class HotSeatSetupUI : MonoBehaviour
         FirstCardPreview,
         TurnLoop,
         RoundResult,
+        RoundPause,
         GameOver
     }
 
@@ -89,6 +90,7 @@ public class HotSeatSetupUI : MonoBehaviour
     private bool waitingForCardReveal;
     private bool pendingCanCheck;
     private bool pendingBeginNewRound;
+    private int pendingNextRoundStarterIndex = -1;
 
     private void Start()
     {
@@ -114,7 +116,7 @@ public class HotSeatSetupUI : MonoBehaviour
             turnManager.StopTurn();
 
         if (cardImage != null)
-            cardImage.preserveAspect = true;
+            cardImage.preserveAspect = false;
 
         ApplySetupStyle();
         RefreshButtons();
@@ -136,7 +138,7 @@ public class HotSeatSetupUI : MonoBehaviour
             row.GetComponentInChildren<TMP_InputField>();
 
         input.characterLimit = maxNameLength;
-        input.text = "GRACZ" + playerNumber;
+        input.text = GetDefaultPlayerName(playerNumber);
 
         input.onValueChanged.AddListener(value =>
         {
@@ -201,13 +203,12 @@ public class HotSeatSetupUI : MonoBehaviour
 
         for (int i = 0; i < playerInputs.Count; i++)
         {
-            string currentName = playerInputs[i].text;
-            string suffix = currentName.StartsWith("GRACZ")
-                ? currentName.Substring(5)
-                : string.Empty;
-
-            if (int.TryParse(suffix, out _))
-                playerInputs[i].SetTextWithoutNotify("GRACZ" + (i + 1));
+            if (IsDefaultPlayerName(playerInputs[i].text))
+            {
+                playerInputs[i].SetTextWithoutNotify(
+                    GetDefaultPlayerName(i + 1)
+                );
+            }
         }
 
         RefreshButtons();
@@ -246,7 +247,7 @@ public class HotSeatSetupUI : MonoBehaviour
                 CleanName(playerInputs[i].text);
 
             if (string.IsNullOrWhiteSpace(playerName))
-                playerName = "GRACZ" + (i + 1);
+                playerName = GetDefaultPlayerName(i + 1);
 
             players.Add(new HotSeatPlayer
             {
@@ -297,7 +298,13 @@ public class HotSeatSetupUI : MonoBehaviour
     {
         if (currentPhase == HotSeatPhase.RoundResult)
         {
-            StartNewRound(GetNextRoundStarterIndex());
+            ShowRoundPause();
+            return;
+        }
+
+        if (currentPhase == HotSeatPhase.RoundPause)
+        {
+            StartNewRound(pendingNextRoundStarterIndex);
             return;
         }
 
@@ -333,12 +340,15 @@ public class HotSeatSetupUI : MonoBehaviour
         Sprite backSprite =
             cardBackDatabase.GetBackSprite(cardBackIndex);
 
-        ShowCardSprite(
-            backSprite,
-            "REWERS",
-            cardBackColor,
-            Color.white
-        );
+        if (player.CardCount > 1 && backSprite != null)
+            ShowPlayerCardBacks(player.CardCount, backSprite);
+        else
+            ShowCardSprite(
+                backSprite,
+                "REWERS",
+                cardBackColor,
+                Color.white
+            );
 
         instructionText.text =
             "UPEWNIJ SIĘ, ŻE NIKT NIE PATRZY\n" +
@@ -416,7 +426,10 @@ public class HotSeatSetupUI : MonoBehaviour
         cardText.fontSize = 70;
 
         cardImage.sprite = sprite;
-        cardImage.preserveAspect = true;
+        // Every front and back fills the same physical card rectangle.
+        // Source images have different aspect ratios and transparent margins,
+        // so preserveAspect made the ornate back visibly narrower.
+        cardImage.preserveAspect = false;
 
         if (sprite != null)
         {
@@ -436,27 +449,49 @@ public class HotSeatSetupUI : MonoBehaviour
     // recognise every card without filling the entire portrait screen.
     private void ShowPlayerCardSprites(HotSeatPlayer player)
     {
+        List<Sprite> sprites = new List<Sprite>();
+        foreach (CardSpriteEntry card in player.Cards)
+        {
+            Sprite sprite = card.sprite;
+
+            if (sprite == null && cardDatabase != null)
+                sprite = cardDatabase.GetCardSprite(card.suit, card.rank);
+
+            sprites.Add(sprite);
+        }
+
+        ShowCardFan(sprites);
+    }
+
+    private void ShowPlayerCardBacks(int cardCount, Sprite backSprite)
+    {
+        List<Sprite> sprites = new List<Sprite>();
+        for (int i = 0; i < cardCount; i++)
+            sprites.Add(backSprite);
+
+        ShowCardFan(sprites);
+    }
+
+    private void ShowCardFan(List<Sprite> sprites)
+    {
+        ClearRoundResultObjects();
         ClearExtraCardImages();
         EnsureCardText();
 
-        int cardCount = player.Cards.Count;
-        float scale = cardCount == 2 ? 0.38f : 0.34f;
-        float cardWidth = 650f * scale;
-        float cardHeight = 900f * scale;
-        const float horizontalStep = 58f;
-        const float verticalStep = 12f;
-        const float rotationStep = 7f;
+        int cardCount = Mathf.Clamp(sprites.Count, 1, 3);
+        float scale = cardCount == 2 ? 0.76f : 0.64f;
+        float cardWidth = 690f * scale;
+        float cardHeight = 960f * scale;
+        float horizontalStep = cardCount == 2 ? 145f : 120f;
+        const float verticalStep = 22f;
+        const float rotationStep = 8f;
 
         cardText.text = "";
         cardText.gameObject.SetActive(false);
 
         for (int i = 0; i < cardCount; i++)
         {
-            CardSpriteEntry card = player.Cards[i];
-            Sprite sprite = card.sprite;
-
-            if (sprite == null && cardDatabase != null)
-                sprite = cardDatabase.GetCardSprite(card.suit, card.rank);
+            Sprite sprite = sprites[i];
 
             Image image = i == 0 ? cardImage : CreateExtraCardImage();
             RectTransform rect = image.rectTransform;
@@ -465,7 +500,7 @@ public class HotSeatSetupUI : MonoBehaviour
             rect.sizeDelta = new Vector2(cardWidth, cardHeight);
             rect.anchoredPosition = new Vector2(
                 centeredIndex * horizontalStep,
-                -32f - Mathf.Abs(centeredIndex) * verticalStep
+                165f - Mathf.Abs(centeredIndex) * verticalStep
             );
             rect.localRotation = Quaternion.Euler(
                 0f,
@@ -474,7 +509,7 @@ public class HotSeatSetupUI : MonoBehaviour
             );
             image.sprite = sprite;
             image.color = sprite != null ? Color.white : cardFrontColor;
-            image.preserveAspect = true;
+            image.preserveAspect = false;
 
             if (i > 0)
                 extraCardImages.Add(image);
@@ -510,7 +545,7 @@ public class HotSeatSetupUI : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, -32f);
+        rect.anchoredPosition = new Vector2(0f, 150f);
         rect.sizeDelta = new Vector2(width, height);
         multiCardTouchButton.gameObject.SetActive(true);
         multiCardTouchButton.transform.SetAsLastSibling();
@@ -544,9 +579,9 @@ public class HotSeatSetupUI : MonoBehaviour
             return;
 
         RectTransform rect = cardImage.rectTransform;
-        rect.sizeDelta = new Vector2(650f, 900f);
+        rect.sizeDelta = new Vector2(690f, 960f);
         rect.localRotation = Quaternion.identity;
-        rect.anchoredPosition = new Vector2(0f, 224f);
+        rect.anchoredPosition = new Vector2(0f, 185f);
     }
 
     private void ShowRoundCards()
@@ -768,6 +803,10 @@ public class HotSeatSetupUI : MonoBehaviour
             ? currentPlayerIndex
             : lastDeclarerIndex;
 
+        int winnerIndex = declaredRankExists
+            ? lastDeclarerIndex
+            : currentPlayerIndex;
+
         HotSeatPlayer loser = players[loserIndex];
         bool eliminated = ApplyLoss(loser);
 
@@ -777,9 +816,15 @@ public class HotSeatSetupUI : MonoBehaviour
             return;
         }
 
-        string result = declaredRankExists
-            ? loser.Name + " przegrywa — układ istnieje."
-            : loser.Name + " przegrywa — układu nie ma.";
+        HotSeatPlayer roundWinner = players[winnerIndex];
+        string reason = declaredRankExists
+            ? "Deklarowany układ istnieje."
+            : "Deklarowanego układu nie ma.";
+
+        string result =
+            "<color=#F2C14E>WYGRYWA: " + roundWinner.Name.ToUpper() + "</color>\n" +
+            "<color=#FF6B6B>PRZEGRYWA: " + loser.Name.ToUpper() + "</color>\n" +
+            reason;
 
         if (eliminated)
             result += "\n" + loser.Name + " odpada z gry.";
@@ -788,6 +833,7 @@ public class HotSeatSetupUI : MonoBehaviour
                       GetCardCountMessage(loser);
 
         currentPlayerIndex = loserIndex;
+        pendingNextRoundStarterIndex = GetNextRoundStarterIndex();
         ShowRoundResult(result);
     }
 
@@ -879,7 +925,31 @@ public class HotSeatSetupUI : MonoBehaviour
         ShowRoundCards();
         cardImage.color = new Color(0.04f, 0.22f, 0.12f, 1f);
         instructionText.text = result +
-            "\n\nDOTKNIJ EKRANU\nABY ZACZĄĆ KOLEJNĄ RUNDĘ";
+            "\n\nDOTKNIJ, ABY PRZEJŚĆ DALEJ";
+    }
+
+    private void ShowRoundPause()
+    {
+        currentPhase = HotSeatPhase.RoundPause;
+        cardVisible = false;
+        cardPanel.SetActive(true);
+
+        int starter = pendingNextRoundStarterIndex;
+        string starterName = starter >= 0 && starter < players.Count
+            ? players[starter].Name
+            : "BRAK GRACZA";
+
+        currentPlayerNameText.text = "PRZERWA MIĘDZY RUNDAMI";
+        ShowCardSprite(
+            null,
+            "NASTĘPNĄ RUNDĘ\nROZPOCZYNA\n" + starterName.ToUpper(),
+            new Color(0.04f, 0.22f, 0.12f, 1f),
+            new Color(1f, 0.88f, 0.48f, 1f)
+        );
+
+        instructionText.text =
+            "ROZPOCZYNAMY NASTĘPNĄ RUNDĘ?\n" +
+            "DOTKNIJ KARTY, ABY ZACZĄĆ";
     }
 
     private void ShowGameOver()
@@ -1330,16 +1400,34 @@ public class HotSeatSetupUI : MonoBehaviour
     {
         string result = "";
 
-        foreach (char character in value.ToUpper())
+        foreach (char character in value)
         {
-            if (char.IsLetterOrDigit(character))
+            if (char.IsLetterOrDigit(character) ||
+                character == ' ' || character == '-')
+            {
                 result += character;
+            }
 
             if (result.Length >= maxNameLength)
                 break;
         }
 
         return result;
+    }
+
+    private static string GetDefaultPlayerName(int playerNumber)
+    {
+        return "Gracz " + playerNumber;
+    }
+
+    private static bool IsDefaultPlayerName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        string compact = value.Replace(" ", "").ToUpperInvariant();
+        return compact.StartsWith("GRACZ") &&
+            int.TryParse(compact.Substring(5), out _);
     }
 
     private void RefreshButtons()
@@ -1349,6 +1437,15 @@ public class HotSeatSetupUI : MonoBehaviour
 
         startButton.interactable =
             playerInputs.Count >= minPlayers;
+
+        TMP_Text startLabel =
+            startButton.GetComponentInChildren<TMP_Text>(true);
+        if (startLabel != null)
+        {
+            startLabel.text = startButton.interactable
+                ? "START"
+                : "DODAJ MIN. " + minPlayers + " GRACZY";
+        }
     }
 
     private void ApplySetupStyle()

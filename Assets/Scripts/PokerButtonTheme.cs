@@ -124,7 +124,12 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
-                label.color = LabelColor;
+            {
+                label.color = button.interactable
+                    ? LabelColor
+                    : new Color(0.62f, 0.59f, 0.52f, 0.72f);
+                label.fontStyle = FontStyles.Bold;
+            }
         }
     }
 

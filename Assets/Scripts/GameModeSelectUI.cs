@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro;
 
 public class GameModeSelectUI : MonoBehaviour
 {
@@ -9,6 +11,24 @@ public class GameModeSelectUI : MonoBehaviour
     public const string ClassicModeName = "Klasyczny";
     public const string FastModeName = "Przyśpieszony";
     public const string Mode420Name = "420";
+
+    private RectTransform closeButtonRect;
+    private Vector2 closeButtonBasePosition;
+    private Rect lastSafeArea;
+
+    private void Start()
+    {
+        PokerButtonTheme.EnsureController();
+        ConfigureModeButtons();
+        ResolveCloseButton();
+        ApplySafeArea();
+    }
+
+    private void Update()
+    {
+        if (Screen.safeArea != lastSafeArea)
+            ApplySafeArea();
+    }
 
     public void SelectBeginnerMode()
     {
@@ -46,5 +66,68 @@ public class GameModeSelectUI : MonoBehaviour
         PlayerPrefs.Save();
 
         SceneManager.LoadScene("CreateRoom");
+    }
+
+    private void ConfigureModeButtons()
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (!button.name.StartsWith("Mode"))
+                continue;
+
+            button.enabled = true;
+            button.interactable = true;
+
+            LayoutElement layout = button.GetComponent<LayoutElement>();
+            if (layout == null)
+                layout = button.gameObject.AddComponent<LayoutElement>();
+
+            layout.enabled = true;
+
+            layout.minWidth = 720f;
+            layout.preferredWidth = 780f;
+            layout.minHeight = 118f;
+            layout.preferredHeight = 118f;
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.fontStyle = FontStyles.Bold;
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 30f;
+                label.fontSizeMax = 44f;
+            }
+        }
+    }
+
+    private void ResolveCloseButton()
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (button.name == "Wyjdź" ||
+                button.name.ToLowerInvariant().Contains("close"))
+            {
+                closeButtonRect = button.transform as RectTransform;
+                if (closeButtonRect != null)
+                    closeButtonBasePosition = closeButtonRect.anchoredPosition;
+                break;
+            }
+        }
+    }
+
+    private void ApplySafeArea()
+    {
+        lastSafeArea = Screen.safeArea;
+        if (closeButtonRect == null)
+            return;
+
+        Canvas canvas = closeButtonRect.GetComponentInParent<Canvas>();
+        float canvasScale = canvas != null
+            ? Mathf.Max(0.01f, canvas.scaleFactor)
+            : 1f;
+        float topInset = Mathf.Max(0f, Screen.height - Screen.safeArea.yMax);
+
+        closeButtonRect.anchoredPosition = closeButtonBasePosition +
+            Vector2.down * (topInset / canvasScale + 22f);
     }
 }

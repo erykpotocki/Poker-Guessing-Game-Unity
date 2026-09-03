@@ -163,7 +163,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         if (background == null)
             background = gameObject.AddComponent<Image>();
 
-        background.color = new Color(0.025f, 0.12f, 0.07f, 0.96f);
+        background.color = new Color(0.015f, 0.09f, 0.052f, 0.94f);
         background.raycastTarget = true;
 
         foreach (Button button in GetComponentsInChildren<Button>(true))
@@ -506,6 +506,15 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
     private void ConfigureResponsiveLayout()
     {
+        if (transform is RectTransform panelRect)
+        {
+            panelRect.anchorMin = new Vector2(0.5f, 0f);
+            panelRect.anchorMax = new Vector2(0.5f, 0f);
+            panelRect.pivot = new Vector2(0.5f, 0f);
+            panelRect.anchoredPosition = new Vector2(0f, 42f);
+            panelRect.sizeDelta = new Vector2(940f, 740f);
+        }
+
         if (handRankTitle != null)
         {
             RectTransform titleRect = handRankTitle.rectTransform;
@@ -547,6 +556,41 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             cancelRect.pivot = new Vector2(0.5f, 0.5f);
             cancelRect.anchoredPosition = new Vector2(0f, 132f);
             cancelRect.sizeDelta = new Vector2(360f, 62f);
+        }
+
+        ConfigureOptionButtons(categoryList);
+        ConfigureOptionButtons(rankOptionList);
+        ConfigureOptionButtons(fullGroupList);
+        ConfigureOptionButtons(fullDetailList);
+    }
+
+    private static void ConfigureOptionButtons(GameObject listObject)
+    {
+        if (listObject == null)
+            return;
+
+        VerticalLayoutGroup layout = listObject.GetComponent<VerticalLayoutGroup>();
+        if (layout != null)
+            layout.spacing = 10f;
+
+        foreach (Button button in listObject.GetComponentsInChildren<Button>(true))
+        {
+            LayoutElement element = button.GetComponent<LayoutElement>();
+            if (element == null)
+                element = button.gameObject.AddComponent<LayoutElement>();
+
+            element.enabled = true;
+
+            element.minHeight = 64f;
+            element.preferredHeight = 64f;
+
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 24f;
+                label.fontSizeMax = 32f;
+            }
         }
     }
 
