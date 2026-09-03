@@ -10,10 +10,10 @@ public static class BuildPokerPwa
     private const string PwaFilesPath =
         "Assets/WebGLTemplates/PokerPWA/PWA";
 
-    [MenuItem("Build/Poker Zgadywany PWA (WebGL)")]
+    [MenuItem("Build/Poker zgadywany PWA (WebGL)")]
     public static void Build()
     {
-        PlayerSettings.productName = "Poker Zgadywany";
+        PlayerSettings.productName = "Poker zgadywany";
         PlayerSettings.WebGL.template = "PROJECT:PokerPWA";
         PlayerSettings.WebGL.dataCaching = true;
         PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
