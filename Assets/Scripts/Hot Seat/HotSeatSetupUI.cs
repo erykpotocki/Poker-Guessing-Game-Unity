@@ -1709,6 +1709,18 @@ public class HotSeatSetupUI : MonoBehaviour
 
         StyleButton(addPlayerButton);
         StyleButton(startButton);
+
+        // Align the add action with the 900-unit player rows. Matching outer
+        // edges makes the heading read as part of the same centered column.
+        if (addPlayerButton != null &&
+            addPlayerButton.transform is RectTransform addRect)
+        {
+            addRect.sizeDelta = new Vector2(900f, 126f);
+            addRect.anchoredPosition = new Vector2(0f, addRect.anchoredPosition.y);
+        }
+
+        if (playerListRoot is RectTransform listRect)
+            listRect.anchoredPosition = new Vector2(0f, listRect.anchoredPosition.y);
     }
 
     private void ApplyCardScreenStyle()
