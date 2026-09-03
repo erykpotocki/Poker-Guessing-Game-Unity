@@ -7,22 +7,30 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Poker Zgadywany" />
-    <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
-    <title>Poker Zgadywany</title>
+    <meta name="application-name" content="Poker zgadywany" />
+    <meta name="apple-mobile-web-app-title" content="Poker zgadywany" />
+    <link rel="manifest" href="manifest.webmanifest?v=3" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=3" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=3" />
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icon-180.png?v=3" />
+    <title>Poker zgadywany</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
       html, body { margin: 0; min-height: 100%; background: #020b06; color: #fff; font-family: Arial, sans-serif; }
       body { min-height: 100dvh; display: grid; place-items: center; overflow: hidden; }
       #unity-container { width: 100%; height: 100dvh; max-width: 620px; background: #020b06; position: relative; }
       #unity-canvas { width: 100%; height: 100%; display: block; background: #020b06; }
-      #loading-screen { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: radial-gradient(circle at center, #0b4228 0, #020b06 68%); text-align: center; }
-      #loading-content { width: min(100%, 360px); }
-      #loading-title { margin: 0 0 18px; color: #f2c15c; font-size: clamp(25px, 7vw, 34px); line-height: 1.12; overflow-wrap: anywhere; }
-      #loading-status { margin: 0 0 16px; font-size: clamp(16px, 4.5vw, 19px); font-weight: bold; }
+      #loading-screen { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: radial-gradient(circle at center, #0a2f1e 0, #020b06 70%); text-align: center; opacity: 1; transition: opacity .35s ease; }
+      #loading-screen.hidden { opacity: 0; pointer-events: none; }
+      #loading-content { width: min(92vw, 470px); display: grid; justify-items: center; }
+      #loading-logo { display: block; width: 100%; height: auto; margin-bottom: clamp(34px, 8vh, 74px); animation: loading-pulse 4.5s ease-in-out infinite; }
+      #loading-chip { display: block; width: clamp(86px, 25vw, 130px); height: auto; margin-bottom: 28px; animation: loading-spin 5.1s linear infinite; }
+      #loading-status { margin: 0 0 16px; color: #fff8de; font-size: clamp(13px, 3.8vw, 17px); font-weight: bold; letter-spacing: .08em; }
       #loading-track { width: 100%; height: 14px; overflow: hidden; border: 1px solid #e6bd62; border-radius: 999px; background: #06190f; }
       #loading-progress { width: 0; height: 100%; background: linear-gradient(90deg, #9a6410, #f2c15c); transition: width .15s ease-out; }
+      @keyframes loading-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+      @keyframes loading-spin { to { transform: rotate(-360deg); } }
+      @media (prefers-reduced-motion: reduce) { #loading-logo, #loading-chip { animation: none; } }
       #update-notice { position: fixed; inset: 0; z-index: 5; display: none; place-items: center; overflow-y: auto; padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #020b06; }
       #update-notice.visible { display: grid; }
       #update-card { width: min(100%, 400px); max-height: calc(100dvh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; border: 1px solid #e6bd62; border-radius: 18px; padding: clamp(20px, 6vw, 30px); color: #fff8de; background: linear-gradient(145deg, #0d4b2d, #062817); box-shadow: 0 18px 42px #000; text-align: center; }
@@ -36,8 +44,9 @@
         <canvas id="unity-canvas" tabindex="-1"></canvas>
         <section id="loading-screen" aria-live="polite">
           <div id="loading-content">
-            <h1 id="loading-title">Poker Zgadywany</h1>
-            <p id="loading-status">Ładowanie gry… 0%</p>
+            <img id="loading-logo" src="boot-logo.png" alt="Poker zgadywany" />
+            <img id="loading-chip" src="boot-chip.png" alt="" />
+            <p id="loading-status">PRZYGOTOWYWANIE GRY · 0%</p>
             <div id="loading-track" role="progressbar" aria-label="Postęp ładowania" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
               <div id="loading-progress"></div>
             </div>
@@ -108,7 +117,7 @@
         codeUrl: buildUrl + '/PWA.wasm.unityweb?v=' + releaseVersion,
         streamingAssetsUrl: 'StreamingAssets',
         companyName: 'DefaultCompany',
-        productName: 'Poker Zgadywany',
+        productName: 'Poker zgadywany',
         productVersion: '1.0',
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
       };
@@ -118,9 +127,12 @@
         const percent = Math.round(progress * 100);
         loadingProgress.style.width = percent + '%';
         loadingTrack.setAttribute('aria-valuenow', String(percent));
-        loadingStatus.textContent = 'Ładowanie gry… ' + percent + '%';
+        loadingStatus.textContent = percent < 100
+          ? 'PRZYGOTOWYWANIE GRY · ' + percent + '%'
+          : 'URUCHAMIANIE GRY…';
       }).then(() => {
-        loadingScreen.style.display = 'none';
+        loadingScreen.classList.add('hidden');
+        window.setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
       }).catch(() => {
           showRestartNotice(
             'Wymagane ponowne uruchomienie',

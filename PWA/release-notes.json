@@ -1,0 +1,9 @@
+{
+  "version": "1.2.0",
+  "title": "Dostępna aktualizacja",
+  "changes": [
+    "Poprawiono bezpieczne aktualizowanie plików gry.",
+    "Ukryto techniczne komunikaty błędów.",
+    "Dostosowano komunikaty do szerokości ekranu telefonu."
+  ]
+}

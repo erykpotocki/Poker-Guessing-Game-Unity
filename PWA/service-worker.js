@@ -1,5 +1,14 @@
 const CACHE_NAME = 'poker-zgadywany-__CACHE_VERSION__';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const SHELL = [
+  './',
+  './index.html',
+  './manifest.webmanifest?v=3',
+  './icon-180.png?v=3',
+  './icon-192.png?v=3',
+  './icon-512.png?v=3',
+  './boot-logo.png',
+  './boot-chip.png'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)));
@@ -7,20 +16,31 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(
-    keys.filter(key => key.startsWith('poker-zgadywany-') && key !== CACHE_NAME)
-      .map(key => caches.delete(key))
-  )));
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    const hadPreviousCache = keys.some(key => key.startsWith('poker-zgadywany-') && key !== CACHE_NAME);
+    await Promise.all(
+      keys.filter(key => key.startsWith('poker-zgadywany-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    );
+    await self.clients.claim();
+    if (!hadPreviousCache) return;
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    await Promise.all(windows.map(client => {
+      const freshUrl = new URL('./?pwa-updated=' + Date.now(), self.registration.scope);
+      return client.navigate(freshUrl.href);
+    }));
+  })());
 });
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
-  event.respondWith(caches.match(event.request).then(cached => {
-    if (cached) return cached;
-    return fetch(event.request).then(response => {
-      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
-      return response;
-    });
-  }));
+  if (new URL(event.request.url).pathname.endsWith('/release-notes.json')) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+  event.respondWith(fetch(event.request).then(response => {
+    if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+    return response;
+  }).catch(() => caches.match(event.request)));
 });

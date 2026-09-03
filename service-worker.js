@@ -1,5 +1,14 @@
-const CACHE_NAME = 'poker-zgadywany-1-2-0-auto-recovery';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'poker-zgadywany-639240407008186607';
+const SHELL = [
+  './',
+  './index.html',
+  './manifest.webmanifest?v=3',
+  './icon-180.png?v=3',
+  './icon-192.png?v=3',
+  './icon-512.png?v=3',
+  './boot-logo.png',
+  './boot-chip.png'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)));
