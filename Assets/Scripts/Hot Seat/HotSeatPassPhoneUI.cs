@@ -1,4 +1,5 @@
 using TMPro;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -11,6 +12,8 @@ public class HotSeatPassPhoneUI : MonoBehaviour
     [SerializeField] private Button startTurnButton;
 
     private UnityAction startTurnAction;
+    private CanvasGroup canvasGroup;
+    private Coroutine transitionRoutine;
 
     private void Awake()
     {
@@ -25,10 +28,29 @@ public class HotSeatPassPhoneUI : MonoBehaviour
 
     public void ShowInitialRound(string playerName, UnityAction onStartTurn)
     {
+        ShowRoundStart(1, playerName, onStartTurn);
+    }
+
+    public void ShowDealIntro(int roundNumber, string firstPlayerName, UnityAction onContinue)
+    {
         Show(
-            "ROZPOCZNIJ RUNDĘ",
-            "PODAJ TELEFON GRACZOWI,\nKTÓRY ROZPOCZYNA RUNDĘ:",
+            "ROZDANIE KART — RUNDA " + roundNumber,
+            "ZA CHWILĘ KAŻDY PO KOLEI ZOBACZY SWOJE KARTY.\n" +
+            "ODKRYJ JE, ZAPAMIĘTAJ, ZAKRYJ I DOPIERO WTEDY PODAJ TELEFON DALEJ.",
+            "PIERWSZY: " + firstPlayerName,
+            "ROZDAJ KARTY",
+            onContinue
+        );
+    }
+
+    public void ShowRoundStart(int roundNumber, string playerName, UnityAction onStartTurn)
+    {
+        Show(
+            "ROZPOCZNIJ RUNDĘ " + roundNumber,
+            "W TEJ RUNDZIE MUSISZ PODBIĆ LUB SPRAWDZIĆ.\nPOWODZENIA!\n\n" +
+            "PODAJ TELEFON GRACZOWI, KTÓRY ZACZYNA:",
             playerName,
+            roundNumber == 1 ? "ROZPOCZNIJ GRĘ" : "ROZPOCZNIJ RUNDĘ " + roundNumber,
             onStartTurn
         );
     }
@@ -39,6 +61,7 @@ public class HotSeatPassPhoneUI : MonoBehaviour
             "PRZEKAŻ TELEFON",
             "PODAJ TELEFON NASTĘPNEMU GRACZOWI:",
             playerName,
+            "GOTOWE",
             onStartTurn
         );
     }
@@ -47,6 +70,7 @@ public class HotSeatPassPhoneUI : MonoBehaviour
         string title,
         string message,
         string playerName,
+        string buttonLabel,
         UnityAction onStartTurn)
     {
         startTurnAction = onStartTurn;
@@ -59,8 +83,17 @@ public class HotSeatPassPhoneUI : MonoBehaviour
                 "<color=#FFF0C2><size=112%>" + playerName.ToUpper() + "</size></color>";
         }
 
+        TMP_Text label = startTurnButton != null
+            ? startTurnButton.GetComponentInChildren<TMP_Text>(true)
+            : null;
+        if (label != null)
+            label.text = buttonLabel;
+
         if (passPhonePanel != null)
+        {
             passPhonePanel.SetActive(true);
+            PlayEntrance();
+        }
     }
 
     public void Hide()
@@ -73,6 +106,10 @@ public class HotSeatPassPhoneUI : MonoBehaviour
     {
         if (passPhonePanel != null)
         {
+            canvasGroup = passPhonePanel.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+                canvasGroup = passPhonePanel.AddComponent<CanvasGroup>();
+
             Image background = passPhonePanel.GetComponent<Image>();
             if (background != null)
                 background.color = new Color(0.005f, 0.055f, 0.032f, 0.94f);
@@ -106,6 +143,47 @@ public class HotSeatPassPhoneUI : MonoBehaviour
 
             PokerButtonTheme.ApplyTo(startTurnButton);
         }
+    }
+
+    private void PlayEntrance()
+    {
+        if (transitionRoutine != null)
+            StopCoroutine(transitionRoutine);
+
+        transitionRoutine = StartCoroutine(AnimateEntrance());
+    }
+
+    private IEnumerator AnimateEntrance()
+    {
+        RectTransform panelRect = passPhonePanel.transform as RectTransform;
+        Vector3 targetScale = Vector3.one;
+        float elapsed = 0f;
+        const float duration = 0.38f;
+
+        if (canvasGroup != null)
+            canvasGroup.alpha = 0f;
+        if (panelRect != null)
+            panelRect.localScale = targetScale * 0.965f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+
+            if (canvasGroup != null)
+                canvasGroup.alpha = eased;
+            if (panelRect != null)
+                panelRect.localScale = Vector3.LerpUnclamped(targetScale * 0.965f, targetScale, eased);
+
+            yield return null;
+        }
+
+        if (canvasGroup != null)
+            canvasGroup.alpha = 1f;
+        if (panelRect != null)
+            panelRect.localScale = targetScale;
+        transitionRoutine = null;
     }
 
     private void HandleStartTurnClicked()

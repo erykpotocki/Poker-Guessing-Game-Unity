@@ -1221,7 +1221,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         if (handRankTitle != null)
         {
             string declaration = string.IsNullOrWhiteSpace(currentBidText)
-                ? "BRAK POPRZEDNIEJ DEKLARACJI"
+                ? "ROZPOCZYNASZ RUNDĘ"
                 : "POPRZEDNIA DEKLARACJA: " + currentBidText.ToUpper();
 
             handRankTitle.text = declaration + "\n" + value.ToUpper();

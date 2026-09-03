@@ -75,6 +75,11 @@ public class HotSeatSetupUI : MonoBehaviour
         new List<Image>();
 
     private Button multiCardTouchButton;
+    private Button previewContinueButton;
+    private Vector2 playerListBasePosition;
+    private Coroutine inputFocusRoutine;
+    private CanvasGroup cardPanelCanvasGroup;
+    private Coroutine cardPanelEntranceRoutine;
 
     private sealed class RoundRevealCard
     {
@@ -106,6 +111,8 @@ public class HotSeatSetupUI : MonoBehaviour
     private bool pendingCanCheck;
     private bool pendingBeginNewRound;
     private int pendingNextRoundStarterIndex = -1;
+    private int roundNumber;
+    private bool previewCardSeen;
 
     private void Start()
     {
@@ -135,6 +142,10 @@ public class HotSeatSetupUI : MonoBehaviour
 
         ApplySetupStyle();
         ApplyCardScreenStyle();
+        CreatePreviewContinueButton();
+        if (playerListRoot is RectTransform listRect)
+            playerListBasePosition = listRect.anchoredPosition;
+        StartCoroutine(AnimateSetupEntrance());
         RefreshButtons();
     }
 
@@ -164,10 +175,14 @@ public class HotSeatSetupUI : MonoBehaviour
                 input.SetTextWithoutNotify(cleaned);
         });
 
+        input.onSelect.AddListener(_ => FocusPlayerInput(input));
+        input.onDeselect.AddListener(_ => RestorePlayerListPosition());
+
         CreateRemovePlayerButton(row, input);
         StylePlayerInput(input);
         playerInputs.Add(input);
         RefreshButtons();
+        StartCoroutine(SelectNewPlayerInput(input, row.transform));
     }
 
     private void CreateRemovePlayerButton(
@@ -255,6 +270,7 @@ public class HotSeatSetupUI : MonoBehaviour
         }
 
         players.Clear();
+        roundNumber = 0;
 
         ChooseCardBackForThisGame();
 
@@ -280,6 +296,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void StartNewRound(int requestedStarterIndex = -1)
     {
+        roundNumber++;
         DealCards();
 
         starterIndex = requestedStarterIndex >= 0 &&
@@ -300,7 +317,7 @@ public class HotSeatSetupUI : MonoBehaviour
         currentPhase = HotSeatPhase.FirstCardPreview;
 
         setupPanel.SetActive(false);
-        cardPanel.SetActive(true);
+        cardPanel.SetActive(false);
 
         if (passPhoneUI != null)
             passPhoneUI.Hide();
@@ -308,7 +325,17 @@ public class HotSeatSetupUI : MonoBehaviour
         if (turnManager != null)
             turnManager.StopTurn();
 
-        ShowCardBack();
+        if (passPhoneUI != null)
+        {
+            passPhoneUI.ShowDealIntro(
+                roundNumber,
+                players[currentPlayerIndex].Name,
+                BeginRoundPreview
+            );
+            return;
+        }
+
+        BeginRoundPreview();
     }
 
     private void OnCardClicked()
@@ -318,7 +345,7 @@ public class HotSeatSetupUI : MonoBehaviour
             if (roundRevealInProgress)
                 return;
 
-            ShowRoundPause();
+            StartNewRound(pendingNextRoundStarterIndex);
             return;
         }
 
@@ -342,7 +369,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
         if (currentPhase == HotSeatPhase.FirstCardPreview)
         {
-            HideCardAndContinuePreview();
+            ShowCardBack();
             return;
         }
 
@@ -355,7 +382,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
         HotSeatPlayer player = players[currentPlayerIndex];
 
-        currentPlayerNameText.text = player.Name;
+        ShowCurrentPlayerHeading(player);
 
         Sprite backSprite =
             cardBackDatabase.GetBackSprite(cardBackIndex);
@@ -373,6 +400,11 @@ public class HotSeatSetupUI : MonoBehaviour
         instructionText.text =
             "UPEWNIJ SIĘ, ŻE NIKT NIE PATRZY\n" +
             "NACIŚNIJ KARTĘ, ŻEBY ODKRYĆ";
+
+        if (previewContinueButton != null)
+            previewContinueButton.gameObject.SetActive(
+                currentPhase == HotSeatPhase.FirstCardPreview && previewCardSeen
+            );
     }
 
     private void ShowCardFront()
@@ -381,7 +413,14 @@ public class HotSeatSetupUI : MonoBehaviour
 
         HotSeatPlayer player = players[currentPlayerIndex];
 
-        currentPlayerNameText.text = player.Name;
+        if (currentPhase == HotSeatPhase.FirstCardPreview)
+        {
+            previewCardSeen = true;
+            if (previewContinueButton != null)
+                previewContinueButton.gameObject.SetActive(true);
+        }
+
+        ShowCurrentPlayerHeading(player);
 
         if (player.Cards.Count == 0)
         {
@@ -431,6 +470,15 @@ public class HotSeatSetupUI : MonoBehaviour
             "NACIŚNIJ PONOWNIE, ŻEBY ZAKRYĆ";
 
         EnableTurnActionsAfterCardReveal();
+    }
+
+    private void ShowCurrentPlayerHeading(HotSeatPlayer player)
+    {
+        if (currentPlayerNameText == null || player == null)
+            return;
+
+        currentPlayerNameText.text = "TERAZ: " + player.Name.ToUpperInvariant();
+        currentPlayerNameText.transform.SetAsLastSibling();
     }
 
     private void ShowCardSprite(
@@ -599,9 +647,9 @@ public class HotSeatSetupUI : MonoBehaviour
             return;
 
         RectTransform rect = cardImage.rectTransform;
-        rect.sizeDelta = new Vector2(690f, 960f);
+        rect.sizeDelta = new Vector2(760f, 1058f);
         rect.localRotation = Quaternion.identity;
-        rect.anchoredPosition = new Vector2(0f, 185f);
+        rect.anchoredPosition = new Vector2(0f, 210f);
     }
 
     private void ShowRoundCards()
@@ -873,6 +921,9 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void HideCardAndContinuePreview()
     {
+        if (currentPhase != HotSeatPhase.FirstCardPreview || !previewCardSeen)
+            return;
+
         cardVisible = false;
         firstPreviewCount++;
 
@@ -885,6 +936,7 @@ public class HotSeatSetupUI : MonoBehaviour
         currentPlayerIndex =
             GetNextActivePlayerIndex(currentPlayerIndex);
 
+        previewCardSeen = false;
         ShowCardBack();
     }
 
@@ -894,7 +946,8 @@ public class HotSeatSetupUI : MonoBehaviour
 
         if (passPhoneUI != null)
         {
-            passPhoneUI.ShowInitialRound(
+            passPhoneUI.ShowRoundStart(
+                roundNumber,
                 players[starterIndex].Name,
                 BeginTurnLoop
             );
@@ -999,8 +1052,191 @@ public class HotSeatSetupUI : MonoBehaviour
         waitingForCardReveal = true;
         pendingCanCheck = canCheck;
         pendingBeginNewRound = beginNewRound;
-        cardPanel.SetActive(true);
+        ShowCardPanelAnimated();
+        if (previewContinueButton != null)
+            previewContinueButton.gameObject.SetActive(false);
         ShowCardBack();
+    }
+
+    private void BeginRoundPreview()
+    {
+        currentPhase = HotSeatPhase.FirstCardPreview;
+        cardVisible = false;
+        previewCardSeen = false;
+        ShowCardPanelAnimated();
+        ShowCardBack();
+    }
+
+    private void CreatePreviewContinueButton()
+    {
+        if (cardPanel == null || previewContinueButton != null)
+            return;
+
+        GameObject buttonObject = new GameObject(
+            "HS_PreviewContinueButton",
+            typeof(RectTransform), typeof(Image), typeof(Button));
+        buttonObject.transform.SetParent(cardPanel.transform, false);
+
+        RectTransform rect = buttonObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0f);
+        rect.anchorMax = new Vector2(0.5f, 0f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.anchoredPosition = new Vector2(0f, 74f);
+        rect.sizeDelta = new Vector2(720f, 112f);
+
+        Image image = buttonObject.GetComponent<Image>();
+        image.sprite = pokerButtonSprite;
+        image.type = Image.Type.Simple;
+        image.color = new Color(0.34f, 0.055f, 0.035f, 1f);
+
+        previewContinueButton = buttonObject.GetComponent<Button>();
+        previewContinueButton.targetGraphic = image;
+        previewContinueButton.onClick.AddListener(HideCardAndContinuePreview);
+        PokerButtonTheme.ApplyTo(previewContinueButton);
+
+        GameObject labelObject = new GameObject(
+            "Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelObject.transform.SetParent(buttonObject.transform, false);
+        RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+        labelRect.anchorMin = Vector2.zero;
+        labelRect.anchorMax = Vector2.one;
+        labelRect.offsetMin = new Vector2(24f, 8f);
+        labelRect.offsetMax = new Vector2(-24f, -8f);
+
+        TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+        label.text = "ZAKRYJ I PODAJ DALEJ";
+        label.alignment = TextAlignmentOptions.Center;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 24f;
+        label.fontSizeMax = 34f;
+        label.fontStyle = FontStyles.Bold;
+        label.color = Color.white;
+        label.raycastTarget = false;
+
+        buttonObject.SetActive(false);
+    }
+
+    private IEnumerator SelectNewPlayerInput(TMP_InputField input, Transform row)
+    {
+        yield return null;
+        if (input == null || row == null)
+            yield break;
+
+        CanvasGroup group = row.GetComponent<CanvasGroup>();
+        if (group == null)
+            group = row.gameObject.AddComponent<CanvasGroup>();
+        group.alpha = 0f;
+        row.localScale = Vector3.one * 0.94f;
+
+        float elapsed = 0f;
+        const float duration = 0.22f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(elapsed / duration), 3f);
+            row.localScale = Vector3.LerpUnclamped(Vector3.one * 0.94f, Vector3.one, t);
+            group.alpha = t;
+            yield return null;
+        }
+
+        row.localScale = Vector3.one;
+        group.alpha = 1f;
+        input.ActivateInputField();
+        input.Select();
+        input.selectionStringAnchorPosition = 0;
+        input.selectionStringFocusPosition = input.text.Length;
+    }
+
+    private void FocusPlayerInput(TMP_InputField input)
+    {
+        if (inputFocusRoutine != null)
+            StopCoroutine(inputFocusRoutine);
+        inputFocusRoutine = StartCoroutine(MoveFocusedInputToTop(input));
+    }
+
+    private IEnumerator MoveFocusedInputToTop(TMP_InputField input)
+    {
+        yield return null;
+        Canvas.ForceUpdateCanvases();
+
+        if (input == null || setupPanel == null ||
+            !(playerListRoot is RectTransform listRect) ||
+            !(setupPanel.transform is RectTransform setupRect))
+        {
+            inputFocusRoutine = null;
+            yield break;
+        }
+
+        Bounds inputBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
+            setupRect, input.transform as RectTransform);
+        Bounds addBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
+            setupRect, addPlayerButton.transform as RectTransform);
+        float desiredCenterY = addBounds.min.y - inputBounds.extents.y - 24f;
+        listRect.anchoredPosition += Vector2.up * (desiredCenterY - inputBounds.center.y);
+        inputFocusRoutine = null;
+    }
+
+    private void RestorePlayerListPosition()
+    {
+        if (playerListRoot is RectTransform listRect)
+            listRect.anchoredPosition = playerListBasePosition;
+    }
+
+    private IEnumerator AnimateSetupEntrance()
+    {
+        if (setupPanel == null)
+            yield break;
+
+        CanvasGroup group = setupPanel.GetComponent<CanvasGroup>();
+        if (group == null)
+            group = setupPanel.AddComponent<CanvasGroup>();
+
+        group.alpha = 0f;
+        float elapsed = 0f;
+        const float duration = 0.42f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            group.alpha = 1f - Mathf.Pow(1f - Mathf.Clamp01(elapsed / duration), 3f);
+            yield return null;
+        }
+
+        group.alpha = 1f;
+    }
+
+    private void ShowCardPanelAnimated()
+    {
+        if (cardPanel == null)
+            return;
+
+        cardPanel.SetActive(true);
+        if (cardPanelCanvasGroup == null)
+        {
+            cardPanelCanvasGroup = cardPanel.GetComponent<CanvasGroup>();
+            if (cardPanelCanvasGroup == null)
+                cardPanelCanvasGroup = cardPanel.AddComponent<CanvasGroup>();
+        }
+
+        if (cardPanelEntranceRoutine != null)
+            StopCoroutine(cardPanelEntranceRoutine);
+        cardPanelEntranceRoutine = StartCoroutine(AnimateCardPanelEntrance());
+    }
+
+    private IEnumerator AnimateCardPanelEntrance()
+    {
+        cardPanelCanvasGroup.alpha = 0f;
+        float elapsed = 0f;
+        const float duration = 0.32f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            cardPanelCanvasGroup.alpha = 1f - Mathf.Pow(1f - t, 3f);
+            yield return null;
+        }
+
+        cardPanelCanvasGroup.alpha = 1f;
+        cardPanelEntranceRoutine = null;
     }
 
     private void EnableTurnActionsAfterCardReveal()
@@ -1145,6 +1381,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void RestartGame()
     {
+        roundNumber = 0;
         foreach (HotSeatPlayer player in players)
         {
             player.CardCount = 1;
@@ -1249,7 +1486,7 @@ public class HotSeatSetupUI : MonoBehaviour
         return EvaluateCardsForHand(handId, allCards);
     }
 
-    private bool EvaluateCardsForHand(
+    private static bool EvaluateCardsForHand(
         string handId,
         IEnumerable<CardSpriteEntry> cards)
     {
@@ -1403,10 +1640,12 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private string FindHandId(string displayName)
     {
+        string normalizedDisplay = NormalizeHandText(displayName);
+
         foreach (string handId in HandRankCatalog.GetAllIds())
         {
-            if (string.Equals(HandRankCatalog.GetDisplayName(handId),
-                displayName, System.StringComparison.OrdinalIgnoreCase))
+            if (NormalizeHandText(HandRankCatalog.GetDisplayName(handId)) ==
+                normalizedDisplay)
             {
                 return handId;
             }
@@ -1415,7 +1654,25 @@ public class HotSeatSetupUI : MonoBehaviour
         return string.Empty;
     }
 
-    private int GetRankCount(
+    private static string NormalizeHandText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        System.Text.StringBuilder result = new System.Text.StringBuilder();
+        foreach (char character in value.Trim().ToUpperInvariant())
+        {
+            if (!char.IsWhiteSpace(character) &&
+                character != '\u200B' && character != '\uFEFF')
+            {
+                result.Append(character);
+            }
+        }
+
+        return result.ToString();
+    }
+
+    private static int GetRankCount(
         Dictionary<CardRank, int> counts,
         CardRank? rank)
     {
@@ -1427,7 +1684,7 @@ public class HotSeatSetupUI : MonoBehaviour
             : 0;
     }
 
-    private bool HasRanks(
+    private static bool HasRanks(
         Dictionary<CardRank, int> counts,
         params CardRank[] requiredRanks)
     {
@@ -1440,7 +1697,7 @@ public class HotSeatSetupUI : MonoBehaviour
         return true;
     }
 
-    private bool HasFlush(
+    private static bool HasFlush(
         Dictionary<CardSuit, HashSet<CardRank>> suitRanks,
         CardSuit? suit)
     {
@@ -1449,7 +1706,7 @@ public class HotSeatSetupUI : MonoBehaviour
             ranks.Count >= 5;
     }
 
-    private bool HasStraightFlush(
+    private static bool HasStraightFlush(
         Dictionary<CardSuit, HashSet<CardRank>> suitRanks,
         CardSuit? suit,
         params CardRank[] requiredRanks)
@@ -1469,7 +1726,7 @@ public class HotSeatSetupUI : MonoBehaviour
         return true;
     }
 
-    private CardRank? GetRank(string value)
+    private static CardRank? GetRank(string value)
     {
         switch (value)
         {
@@ -1483,7 +1740,7 @@ public class HotSeatSetupUI : MonoBehaviour
         }
     }
 
-    private CardSuit? GetSuit(string value)
+    private static CardSuit? GetSuit(string value)
     {
         switch (value)
         {
@@ -1735,8 +1992,11 @@ public class HotSeatSetupUI : MonoBehaviour
         if (currentPlayerNameText != null)
         {
             RectTransform nameRect = currentPlayerNameText.rectTransform;
-            nameRect.anchoredPosition = new Vector2(0f, -390f);
-            nameRect.sizeDelta = new Vector2(820f, 100f);
+            // Keep the current player's name above the card. It used to overlap
+            // the card rectangle and was rendered underneath the card artwork.
+            nameRect.anchoredPosition = new Vector2(0f, -205f);
+            nameRect.sizeDelta = new Vector2(900f, 120f);
+            currentPlayerNameText.transform.SetAsLastSibling();
 
             currentPlayerNameText.color = new Color(1f, 0.84f, 0.38f, 1f);
             currentPlayerNameText.enableAutoSizing = true;
@@ -1747,6 +2007,13 @@ public class HotSeatSetupUI : MonoBehaviour
 
         if (instructionText != null)
         {
+            RectTransform instructionRect = instructionText.rectTransform;
+            instructionRect.anchorMin = new Vector2(0.5f, 0f);
+            instructionRect.anchorMax = new Vector2(0.5f, 0f);
+            instructionRect.pivot = new Vector2(0.5f, 0f);
+            instructionRect.anchoredPosition = new Vector2(0f, 475f);
+            instructionRect.sizeDelta = new Vector2(900f, 158f);
+
             instructionText.color = new Color(1f, 0.95f, 0.82f, 1f);
             instructionText.enableAutoSizing = true;
             instructionText.fontSizeMin = 25f;

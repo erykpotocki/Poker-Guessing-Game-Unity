@@ -78,7 +78,7 @@ public class HotSeatTurnUI : MonoBehaviour
             return;
 
         currentBidText.text = string.IsNullOrWhiteSpace(bidName)
-            ? "BRAK POPRZEDNIEJ DEKLARACJI"
+            ? "ROZPOCZYNASZ RUNDĘ"
             : "POPRZEDNI GRACZ WSKAZAŁ:\n" + bidName.ToUpper();
     }
 
