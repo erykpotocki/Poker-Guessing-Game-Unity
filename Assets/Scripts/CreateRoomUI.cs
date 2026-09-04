@@ -15,8 +15,8 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        ConfigureMobileInput();
         ConfigureResponsiveLayout();
+        ConfigureMobileInput();
         if (roomCodeText != null)
             roomCodeText.text = "";
 
@@ -32,15 +32,12 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
 
     private void ConfigureResponsiveLayout()
     {
-        if (createButton == null || !(createButton.transform is RectTransform rect))
-            return;
-
-        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.19f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = Vector2.zero;
-        rect.sizeDelta = new Vector2(560f, 104f);
-        rect.localScale = Vector3.one;
-        PokerButtonTheme.ApplyTo(createButton);
+        SetCentered(FindRect("AvatarPreview"), 0.66f, 390f, 390f);
+        SetCentered(nickInput != null ? nickInput.transform as RectTransform : null, 0.47f, 500f, 78f);
+        Button rollButton = FindButtonWithLabel("Losuj");
+        SetCentered(rollButton != null ? rollButton.transform as RectTransform : null, 0.405f, 500f, 82f);
+        SetCentered(createButton != null ? createButton.transform as RectTransform : null, 0.255f, 560f, 104f);
+        if (createButton != null) PokerButtonTheme.ApplyTo(createButton);
     }
 
     private void ConfigureMobileInput()
@@ -52,7 +49,34 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
         MobileInputFieldUX mobileUx = GetComponent<MobileInputFieldUX>();
         if (mobileUx == null)
             mobileUx = gameObject.AddComponent<MobileInputFieldUX>();
-        mobileUx.Configure(250f, nickInput);
+        mobileUx.Configure(0f, nickInput);
+    }
+
+    private RectTransform FindRect(string objectName)
+    {
+        foreach (RectTransform rect in GetComponentsInChildren<RectTransform>(true))
+            if (rect.name == objectName) return rect;
+        return null;
+    }
+
+    private Button FindButtonWithLabel(string value)
+    {
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null && label.text.Trim().Equals(value, System.StringComparison.OrdinalIgnoreCase)) return button;
+        }
+        return null;
+    }
+
+    private static void SetCentered(RectTransform rect, float anchorY, float width, float height)
+    {
+        if (rect == null) return;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, anchorY);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(width, height);
+        rect.localScale = Vector3.one;
     }
 
     private void Update()
