@@ -8,8 +8,8 @@
 
 Assets/_Recovery/
 Assets/_Recovery.meta
-Assets/Photon/
-Assets/Photon.meta
+
+Assets/Photon/PhotonUnityNetworking/Resources/PhotonServerSettings.asset
 
 .vs/
 .idea/
