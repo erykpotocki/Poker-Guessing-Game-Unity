@@ -154,8 +154,15 @@ public sealed class PokerButtonTheme : MonoBehaviour
         bool isMainMenuUtilityButton =
             button.name == "RulesButton" || button.name == "SettingsButton";
 
-        label.enableAutoSizing = !isMainMenuUtilityButton;
-        if (isMainMenuUtilityButton)
+        label.enableAutoSizing = !isMainMenuUtilityButton && !usesCompactModeFont;
+        if (usesCompactModeFont)
+        {
+            label.fontSize = 44f;
+            label.fontSizeMin = 44f;
+            label.fontSizeMax = 44f;
+            label.fontStyle = FontStyles.Bold;
+        }
+        else if (isMainMenuUtilityButton)
         {
             label.fontSize = 11f;
             label.fontSizeMin = 11f;
@@ -164,10 +171,8 @@ public sealed class PokerButtonTheme : MonoBehaviour
         else
         {
             label.fontSizeMin = usesCompactMainMenuFont ? 10f :
-                usesCompactModeFont ? 38f :
                 keepsGameplayFont ? 24f : 30f;
             label.fontSizeMax = usesCompactMainMenuFont ? 14f :
-                usesCompactModeFont ? 52f :
                 keepsGameplayFont ? 36f : 44f;
         }
         label.characterSpacing = usesCompactMainMenuFont ? 0.5f : 1f;

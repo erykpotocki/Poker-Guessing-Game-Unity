@@ -16,6 +16,7 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
     private void Start()
     {
         ConfigureMobileInput();
+        ConfigureResponsiveLayout();
         if (roomCodeText != null)
             roomCodeText.text = "";
 
@@ -27,6 +28,19 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
         }
 
         ValidateCreateButton();
+    }
+
+    private void ConfigureResponsiveLayout()
+    {
+        if (createButton == null || !(createButton.transform is RectTransform rect))
+            return;
+
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.19f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(560f, 104f);
+        rect.localScale = Vector3.one;
+        PokerButtonTheme.ApplyTo(createButton);
     }
 
     private void ConfigureMobileInput()

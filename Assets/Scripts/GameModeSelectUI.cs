@@ -118,9 +118,10 @@ public class GameModeSelectUI : MonoBehaviour
             if (label != null)
             {
                 label.fontStyle = FontStyles.Bold;
-                label.enableAutoSizing = true;
-                label.fontSizeMin = 38f;
-                label.fontSizeMax = 52f;
+                label.enableAutoSizing = false;
+                label.fontSize = 44f;
+                label.fontSizeMin = 44f;
+                label.fontSizeMax = 44f;
             }
         }
 

@@ -20,6 +20,7 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
     private void Start()
     {
         ConfigureMobileInputs();
+        ConfigureResponsiveLayout();
         if (joinButton != null)
         {
             joinButton.onClick.RemoveAllListeners();
@@ -33,6 +34,19 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
             roomIdInput.onValueChanged.AddListener(_ => Validate());
 
         Validate();
+    }
+
+    private void ConfigureResponsiveLayout()
+    {
+        if (joinButton == null || !(joinButton.transform is RectTransform rect))
+            return;
+
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.19f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(560f, 104f);
+        rect.localScale = Vector3.one;
+        PokerButtonTheme.ApplyTo(joinButton);
     }
 
     private void ConfigureMobileInputs()
