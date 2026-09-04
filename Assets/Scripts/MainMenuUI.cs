@@ -74,15 +74,15 @@ public class MainMenuUI : MonoBehaviour
 
         menuGroup.localScale = new Vector3(3.25f, 2.5f, 1f);
         primaryButton = CreateMenuButton(
-            "PrimaryModeButton", styleSource, new Vector2(73.23f, -94f), new Vector2(218f, 52f), true);
+            "PrimaryModeButton", styleSource, new Vector2(73.23f, -88f), new Vector2(240f, 64f), true);
         secondaryButton = CreateMenuButton(
-            "SecondaryModeButton", styleSource, new Vector2(73.23f, -166f), new Vector2(218f, 52f), true);
+            "SecondaryModeButton", styleSource, new Vector2(73.23f, -170f), new Vector2(240f, 64f), true);
         rulesButton = CreateMenuButton(
-            "RulesButton", styleSource, new Vector2(16.73f, -232f), new Vector2(105f, 34f), false);
+            "RulesButton", styleSource, new Vector2(11.23f, -250f), new Vector2(116f, 44f), false);
         settingsButton = CreateMenuButton(
-            "SettingsButton", styleSource, new Vector2(129.73f, -232f), new Vector2(105f, 34f), false);
+            "SettingsButton", styleSource, new Vector2(135.23f, -250f), new Vector2(116f, 44f), false);
         backButton = CreateMenuButton(
-            "ModeBackButton", styleSource, new Vector2(73.23f, -238f), new Vector2(218f, 38f), false);
+            "ModeBackButton", styleSource, new Vector2(73.23f, -250f), new Vector2(240f, 48f), false);
 
         Canvas canvas = menuGroup.GetComponentInParent<Canvas>();
         if (canvas != null)
@@ -131,12 +131,12 @@ public class MainMenuUI : MonoBehaviour
         titleRect.anchorMax = withSubtitle ? new Vector2(1f, 0.96f) : Vector2.one;
         titleRect.offsetMin = new Vector2(9f, withSubtitle ? 0f : 3f);
         titleRect.offsetMax = new Vector2(-9f, withSubtitle ? -1f : -3f);
-        title.fontSizeMin = withSubtitle ? 7f : 4.5f;
-        title.fontSizeMax = withSubtitle ? 11f : 8f;
+        title.fontSizeMin = withSubtitle ? 9.5f : 7f;
+        title.fontSizeMax = withSubtitle ? 14f : 11f;
         if (!withSubtitle)
         {
             title.enableAutoSizing = false;
-            title.fontSize = 11f;
+            title.fontSize = 12.5f;
         }
 
         if (withSubtitle)
@@ -148,8 +148,8 @@ public class MainMenuUI : MonoBehaviour
             subtitleRect.offsetMin = new Vector2(12f, 0f);
             subtitleRect.offsetMax = new Vector2(-12f, 0f);
             subtitle.fontStyle = FontStyles.Normal;
-            subtitle.fontSizeMin = 5f;
-            subtitle.fontSizeMax = 7.5f;
+            subtitle.fontSizeMin = 6.5f;
+            subtitle.fontSizeMax = 9f;
             subtitle.color = new Color(0.91f, 0.81f, 0.63f, 1f);
         }
 
