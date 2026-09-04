@@ -81,18 +81,18 @@ public class GameModeSelectUI : MonoBehaviour
 
             layout.enabled = true;
 
-            layout.minWidth = 720f;
-            layout.preferredWidth = 780f;
-            layout.minHeight = 118f;
-            layout.preferredHeight = 118f;
+            layout.minWidth = 560f;
+            layout.preferredWidth = 620f;
+            layout.minHeight = 88f;
+            layout.preferredHeight = 96f;
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
             {
                 label.fontStyle = FontStyles.Bold;
                 label.enableAutoSizing = true;
-                label.fontSizeMin = 30f;
-                label.fontSizeMax = 44f;
+                label.fontSizeMin = 20f;
+                label.fontSizeMax = 30f;
             }
         }
     }

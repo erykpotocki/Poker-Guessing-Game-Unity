@@ -26,6 +26,12 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
     public override void OnPlayerEnteredRoom(Player newPlayer) => Refresh();
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
+        if (otherPlayer != null && otherPlayer.IsInactive)
+        {
+            StartCoroutine(RefreshAfterPlayerListUpdate());
+            return;
+        }
+
         if (otherPlayer != null &&
             rowsByActorNumber.TryGetValue(otherPlayer.ActorNumber, out GameObject row))
         {
@@ -70,7 +76,11 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
         ClearRows();
 
         int iRow = 1;
-        foreach (var p in PhotonNetwork.PlayerList)
+        List<Player> roomPlayers = new List<Player>(
+            PhotonNetwork.CurrentRoom.Players.Values);
+        roomPlayers.Sort((a, b) => a.ActorNumber.CompareTo(b.ActorNumber));
+
+        foreach (Player p in roomPlayers)
         {
             var go = Instantiate(rowPrefab, container);
             spawned.Add(go);
@@ -80,7 +90,9 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
             var avatarImg = go.transform.Find("AvatarImage")?.GetComponent<Image>();
 
             if (nameText != null)
-                nameText.text = $"{iRow}. {p.NickName}";
+                nameText.text = p.IsInactive
+                    ? $"{iRow}. {p.NickName} (wróci za chwilę…)"
+                    : $"{iRow}. {p.NickName}";
 
             int idx = 0;
             if (p.CustomProperties != null && p.CustomProperties.ContainsKey(AvatarKey))

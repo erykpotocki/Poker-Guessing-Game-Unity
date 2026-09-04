@@ -73,9 +73,7 @@ public class AutoResumeRoom : MonoBehaviourPunCallbacks
             }
         }
 
-        int playerCount = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 0;
-
-        if (gameEnded || playerCount <= 1)
+        if (gameEnded)
         {
             ClearResumePrefs();
 

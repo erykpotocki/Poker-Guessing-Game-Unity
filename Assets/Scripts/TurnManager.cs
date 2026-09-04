@@ -136,6 +136,7 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
 
     private void Start()
     {
+        disconnectedRemovalSeconds = Mathf.Max(disconnectedRemovalSeconds, 300f);
         TryBindHandRankPanel();
         TryResolveRoundLogUI();
         TryResolveCardDealTest();
