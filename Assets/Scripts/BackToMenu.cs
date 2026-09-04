@@ -98,6 +98,15 @@ public class BackToMenu : MonoBehaviourPunCallbacks
         }
     }
 
+    public void HideCornerButton()
+    {
+        if (cornerBackButton == null)
+            ResolveCornerBackButton();
+
+        if (cornerBackButton != null)
+            cornerBackButton.gameObject.SetActive(false);
+    }
+
     public void GoMainMenu()
     {
         ClearResumeData();

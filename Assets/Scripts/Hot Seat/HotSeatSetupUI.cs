@@ -147,6 +147,8 @@ public class HotSeatSetupUI : MonoBehaviour
             cardImage.preserveAspect = false;
 
         ApplySetupStyle();
+        CreateSetupHeader();
+        CreateSetupBackButton();
         EnsureScrollablePlayerList();
         ApplyCardScreenStyle();
         CreatePreviewContinueButton();
@@ -2282,6 +2284,77 @@ public class HotSeatSetupUI : MonoBehaviour
 
         if (playerListRoot is RectTransform listRect)
             listRect.anchoredPosition = new Vector2(0f, listRect.anchoredPosition.y);
+    }
+
+    private void CreateSetupHeader()
+    {
+        if (setupPanel == null || setupPanel.transform.Find("SetupHeading") != null)
+            return;
+
+        GameObject headingObject = new GameObject(
+            "SetupHeading", typeof(RectTransform), typeof(TextMeshProUGUI));
+        headingObject.transform.SetParent(setupPanel.transform, false);
+
+        RectTransform rect = headingObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = new Vector2(0f, -410f);
+        rect.sizeDelta = new Vector2(900f, 86f);
+
+        TextMeshProUGUI heading = headingObject.GetComponent<TextMeshProUGUI>();
+        heading.text = "USTAW GRACZY";
+        heading.alignment = TextAlignmentOptions.Center;
+        heading.enableAutoSizing = true;
+        heading.fontSizeMin = 34f;
+        heading.fontSizeMax = 52f;
+        heading.fontStyle = FontStyles.Bold;
+        heading.characterSpacing = 3f;
+        heading.color = new Color(1f, 0.82f, 0.30f, 1f);
+        heading.raycastTarget = false;
+    }
+
+    private void CreateSetupBackButton()
+    {
+        if (setupPanel == null || startButton == null ||
+            setupPanel.transform.Find("SetupBackButton") != null)
+            return;
+
+        BackToMenu navigation = FindFirstObjectByType<BackToMenu>();
+        if (navigation != null)
+            navigation.HideCornerButton();
+
+        GameObject buttonObject = Instantiate(
+            startButton.gameObject, startButton.transform.parent);
+        buttonObject.name = "SetupBackButton";
+
+        Button button = buttonObject.GetComponent<Button>();
+        button.onClick.RemoveAllListeners();
+        if (navigation != null)
+            button.onClick.AddListener(navigation.GoMainMenu);
+        else
+            button.onClick.AddListener(() =>
+                UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu"));
+
+        if (button.transform is RectTransform rect)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0f);
+            rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 104f);
+            rect.sizeDelta = new Vector2(720f, 108f);
+        }
+
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            label.text = "WSTECZ";
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 27f;
+            label.fontSizeMax = 38f;
+        }
+
+        PokerButtonTheme.ApplyTo(button);
     }
 
     private void ApplyCardScreenStyle()
