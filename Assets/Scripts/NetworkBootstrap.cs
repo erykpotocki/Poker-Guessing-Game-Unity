@@ -9,6 +9,16 @@ public class NetworkBootstrap : MonoBehaviourPunCallbacks
 
     private const string UserIdPrefsKey = "PhotonUserId";
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void EnsureBootstrapExists()
+    {
+        if (instance != null)
+            return;
+
+        GameObject bootstrap = new GameObject(nameof(NetworkBootstrap));
+        bootstrap.AddComponent<NetworkBootstrap>();
+    }
+
     private void Awake()
     {
         if (instance != null && instance != this)

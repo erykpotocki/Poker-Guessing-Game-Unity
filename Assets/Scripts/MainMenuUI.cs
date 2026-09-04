@@ -29,7 +29,7 @@ public class MainMenuUI : MonoBehaviour
         "czy poprzedni gracz mówi prawdę. Układ tworzą wszystkie karty znajdujące się na stole.\n\n" +
         "<b>SPRAWDZENIE</b>\nJeżeli zadeklarowany układ jest na stole, przegrywa sprawdzający. " +
         "Jeżeli go nie ma — przegrywa gracz, który go zadeklarował.\n\n" +
-        "<b>KARA</b>\nPrzegrany dostaje kolejną kartę. Liczba kart zmienia się: " +
+        "<b>KARA</b>\nPrzegrany dostaje kolejną kartę. Liczba kart zmienia się:\n" +
         "1 → 2 → 3 → 2 → 1, a następna porażka oznacza odpadnięcie.\n\n" +
         "<b>PAMIĘTAJ</b>\nW każdej rundzie musisz przebić poprzednią deklarację albo ją sprawdzić.";
 
@@ -133,6 +133,11 @@ public class MainMenuUI : MonoBehaviour
         titleRect.offsetMax = new Vector2(-9f, withSubtitle ? -1f : -3f);
         title.fontSizeMin = withSubtitle ? 7f : 4.5f;
         title.fontSizeMax = withSubtitle ? 11f : 8f;
+        if (!withSubtitle)
+        {
+            title.enableAutoSizing = false;
+            title.fontSize = 11f;
+        }
 
         if (withSubtitle)
         {
@@ -413,23 +418,21 @@ public class MainMenuUI : MonoBehaviour
             if (group == null)
                 group = button.gameObject.AddComponent<CanvasGroup>();
             group.alpha = 0f;
-            button.transform.localScale = Vector3.one * 0.92f;
+            button.transform.localScale = Vector3.one;
 
             float elapsed = 0f;
-            const float duration = 0.2f;
+            const float duration = 0.42f;
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = EaseOut(Mathf.Clamp01(elapsed / duration));
                 group.alpha = t;
-                button.transform.localScale = Vector3.LerpUnclamped(
-                    Vector3.one * 0.92f, Vector3.one, t);
                 yield return null;
             }
 
             group.alpha = 1f;
             button.transform.localScale = Vector3.one;
-            yield return new WaitForSecondsRealtime(0.055f);
+            yield return new WaitForSecondsRealtime(0.08f);
         }
     }
 

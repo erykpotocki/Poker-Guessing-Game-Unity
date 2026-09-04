@@ -52,6 +52,23 @@ public class HotSeatTurnUI : MonoBehaviour
             turnControlsRoot.SetActive(false);
     }
 
+    public void ShowBidWhileChoosingRaise()
+    {
+        Show();
+
+        if (timerText != null)
+            timerText.gameObject.SetActive(false);
+        if (raiseButton != null)
+            raiseButton.gameObject.SetActive(false);
+        if (checkButton != null)
+            checkButton.gameObject.SetActive(false);
+        if (checkSeparatorText != null)
+            checkSeparatorText.SetActive(false);
+
+        if (currentBidText != null)
+            currentBidText.gameObject.SetActive(true);
+    }
+
     public void SetActions(
         UnityAction onRaise,
         UnityAction onCheck)
@@ -65,6 +82,8 @@ public class HotSeatTurnUI : MonoBehaviour
         if (timerText == null)
             return;
 
+        timerText.gameObject.SetActive(true);
+
         int displayedSeconds = seconds >= 0f
             ? Mathf.CeilToInt(seconds)
             : Mathf.FloorToInt(seconds);
@@ -76,6 +95,8 @@ public class HotSeatTurnUI : MonoBehaviour
     {
         if (currentBidText == null)
             return;
+
+        currentBidText.gameObject.SetActive(true);
 
         currentBidText.text = string.IsNullOrWhiteSpace(bidName)
             ? "ROZPOCZYNASZ RUNDĘ"

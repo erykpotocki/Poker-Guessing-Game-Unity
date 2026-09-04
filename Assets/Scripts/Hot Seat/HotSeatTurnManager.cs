@@ -84,7 +84,12 @@ public class HotSeatTurnManager : MonoBehaviour
         if (!turnActive)
             return;
 
-        StopTurn();
+        turnActive = false;
+        if (turnUI != null)
+        {
+            turnUI.SetButtonsInteractable(false);
+            turnUI.ShowBidWhileChoosingRaise();
+        }
         RaiseRequested?.Invoke();
     }
 

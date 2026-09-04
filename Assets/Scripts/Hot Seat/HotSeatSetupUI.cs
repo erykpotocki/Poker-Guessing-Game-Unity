@@ -77,6 +77,8 @@ public class HotSeatSetupUI : MonoBehaviour
     private Button multiCardTouchButton;
     private Button previewContinueButton;
     private Vector2 playerListBasePosition;
+    private ScrollRect playerListScrollRect;
+    private RectTransform playerListViewport;
     private Coroutine inputFocusRoutine;
     private CanvasGroup cardPanelCanvasGroup;
     private Coroutine cardPanelEntranceRoutine;
@@ -142,6 +144,7 @@ public class HotSeatSetupUI : MonoBehaviour
             cardImage.preserveAspect = false;
 
         ApplySetupStyle();
+        EnsureScrollablePlayerList();
         ApplyCardScreenStyle();
         CreatePreviewContinueButton();
         if (playerListRoot is RectTransform listRect)
@@ -176,8 +179,8 @@ public class HotSeatSetupUI : MonoBehaviour
                 input.SetTextWithoutNotify(cleaned);
         });
 
-        input.onSelect.AddListener(_ => FocusPlayerInput(input));
-        input.onDeselect.AddListener(_ => RestorePlayerListPosition());
+        input.onSelect.AddListener(_ => BeginEditingPlayerName(input));
+        input.onDeselect.AddListener(_ => FinishEditingPlayerName(input));
 
         CreateRemovePlayerButton(row, input);
         StylePlayerInput(input);
@@ -1144,8 +1147,33 @@ public class HotSeatSetupUI : MonoBehaviour
         group.alpha = 1f;
         input.Select();
         input.ActivateInputField();
-        input.selectionStringAnchorPosition = 0;
+        input.caretPosition = input.text.Length;
+        input.selectionStringAnchorPosition = input.text.Length;
         input.selectionStringFocusPosition = input.text.Length;
+    }
+
+    private void BeginEditingPlayerName(TMP_InputField input)
+    {
+        if (input == null)
+            return;
+
+        if (IsDefaultPlayerName(input.text))
+            input.SetTextWithoutNotify(string.Empty);
+
+        input.caretPosition = input.text.Length;
+        input.selectionStringAnchorPosition = input.text.Length;
+        input.selectionStringFocusPosition = input.text.Length;
+        FocusPlayerInput(input);
+    }
+
+    private void FinishEditingPlayerName(TMP_InputField input)
+    {
+        if (input == null || !string.IsNullOrWhiteSpace(input.text))
+            return;
+
+        int index = playerInputs.IndexOf(input);
+        if (index >= 0)
+            input.SetTextWithoutNotify(GetDefaultPlayerName(index + 1));
     }
 
     private void FocusPlayerInput(TMP_InputField input)
@@ -1168,12 +1196,11 @@ public class HotSeatSetupUI : MonoBehaviour
                 !(input.transform is RectTransform inputRect))
                 continue;
 
+            LayoutRebuilder.ForceRebuildLayoutImmediate(listRect);
+
             float keyboardHeight = GetKeyboardHeight();
             if (keyboardHeight <= 0f)
-            {
-                listRect.anchoredPosition = playerListBasePosition;
                 continue;
-            }
 
             inputRect.GetWorldCorners(inputWorldCorners);
             Canvas canvas = input.GetComponentInParent<Canvas>();
@@ -1181,15 +1208,26 @@ public class HotSeatSetupUI : MonoBehaviour
                 ? canvas.worldCamera
                 : null;
             float canvasScale = canvas != null ? Mathf.Max(0.01f, canvas.scaleFactor) : 1f;
-            float currentOffsetPixels =
-                (listRect.anchoredPosition.y - playerListBasePosition.y) * canvasScale;
-            float inputBottomAtBase = RectTransformUtility.WorldToScreenPoint(
-                eventCamera, inputWorldCorners[0]).y - currentOffsetPixels;
-            const float keyboardClearancePixels = 28f;
-            float overlapPixels = keyboardHeight + keyboardClearancePixels - inputBottomAtBase;
+            float inputBottom = RectTransformUtility.WorldToScreenPoint(
+                eventCamera, inputWorldCorners[0]).y;
+            const float keyboardClearancePixels = 42f;
+            float overlapPixels = keyboardHeight + keyboardClearancePixels - inputBottom;
 
-            listRect.anchoredPosition = playerListBasePosition +
-                Vector2.up * (Mathf.Max(0f, overlapPixels) / canvasScale);
+            if (overlapPixels <= 0f)
+                continue;
+
+            float targetY = listRect.anchoredPosition.y + overlapPixels / canvasScale;
+            float maximumY = playerListViewport != null
+                ? Mathf.Max(playerListBasePosition.y,
+                    playerListBasePosition.y + listRect.rect.height - playerListViewport.rect.height)
+                : targetY;
+
+            listRect.anchoredPosition = new Vector2(
+                playerListBasePosition.x,
+                Mathf.Clamp(targetY, playerListBasePosition.y, maximumY));
+
+            if (playerListScrollRect != null)
+                playerListScrollRect.StopMovement();
         }
 
         inputFocusRoutine = null;
@@ -1203,10 +1241,55 @@ public class HotSeatSetupUI : MonoBehaviour
         return Mathf.Max(0f, TouchScreenKeyboard.area.height);
     }
 
-    private void RestorePlayerListPosition()
+    private void EnsureScrollablePlayerList()
     {
-        if (playerListRoot is RectTransform listRect)
-            listRect.anchoredPosition = playerListBasePosition;
+        if (!(playerListRoot is RectTransform contentRect) ||
+            contentRect.parent == null || playerListScrollRect != null)
+            return;
+
+        Transform originalParent = contentRect.parent;
+        int siblingIndex = contentRect.GetSiblingIndex();
+
+        GameObject viewportObject = new GameObject(
+            "PlayerListViewport", typeof(RectTransform), typeof(Image),
+            typeof(RectMask2D), typeof(ScrollRect));
+        viewportObject.layer = contentRect.gameObject.layer;
+        viewportObject.transform.SetParent(originalParent, false);
+        viewportObject.transform.SetSiblingIndex(siblingIndex);
+
+        playerListViewport = viewportObject.GetComponent<RectTransform>();
+        playerListViewport.anchorMin = contentRect.anchorMin;
+        playerListViewport.anchorMax = contentRect.anchorMax;
+        playerListViewport.pivot = contentRect.pivot;
+        playerListViewport.anchoredPosition = contentRect.anchoredPosition;
+        playerListViewport.sizeDelta = contentRect.sizeDelta;
+
+        Image viewportImage = viewportObject.GetComponent<Image>();
+        viewportImage.color = Color.clear;
+        viewportImage.raycastTarget = true;
+
+        contentRect.SetParent(playerListViewport, false);
+        contentRect.anchorMin = new Vector2(0f, 1f);
+        contentRect.anchorMax = new Vector2(1f, 1f);
+        contentRect.pivot = new Vector2(0.5f, 1f);
+        contentRect.anchoredPosition = Vector2.zero;
+        contentRect.sizeDelta = Vector2.zero;
+
+        ContentSizeFitter fitter = contentRect.GetComponent<ContentSizeFitter>();
+        if (fitter == null)
+            fitter = contentRect.gameObject.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        playerListScrollRect = viewportObject.GetComponent<ScrollRect>();
+        playerListScrollRect.viewport = playerListViewport;
+        playerListScrollRect.content = contentRect;
+        playerListScrollRect.horizontal = false;
+        playerListScrollRect.vertical = true;
+        playerListScrollRect.movementType = ScrollRect.MovementType.Clamped;
+        playerListScrollRect.inertia = true;
+        playerListScrollRect.decelerationRate = 0.12f;
+        playerListScrollRect.scrollSensitivity = 70f;
     }
 
     private IEnumerator AnimateSetupEntrance()
@@ -2112,6 +2195,10 @@ public class HotSeatSetupUI : MonoBehaviour
 
         input.customCaretColor = true;
         input.caretColor = new Color(1f, 0.82f, 0.30f, 1f);
+        input.caretBlinkRate = 0.55f;
+        input.caretWidth = 4;
+        input.onFocusSelectAll = false;
+        input.keepTextSelectionVisible = true;
         input.selectionColor = new Color(0.72f, 0.49f, 0.08f, 0.55f);
     }
 

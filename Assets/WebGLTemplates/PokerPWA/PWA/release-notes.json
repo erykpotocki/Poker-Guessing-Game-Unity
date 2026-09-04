@@ -1,9 +1,10 @@
 {
-  "version": "1.2.1",
+  "version": "1.2.2",
   "title": "Dostępna aktualizacja",
   "changes": [
-    "Połączono ekrany startowe i dodano tło pokerowego pokoju.",
-    "Poprawiono układ kart, komunikatów i przycisku ustawień.",
-    "Ulepszono obsługę klawiatury podczas dodawania graczy."
+    "Połączono dwa etapy ładowania w jeden ekran.",
+    "Ujednolicono napisy, przyciski cofania oraz tempo animacji.",
+    "Ulepszono edycję i przewijanie nazw graczy przy otwartej klawiaturze.",
+    "Poprzednia deklaracja pozostaje widoczna podczas wybierania wyższego układu."
   ]
 }

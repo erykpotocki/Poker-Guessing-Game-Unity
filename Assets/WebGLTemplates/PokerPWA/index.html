@@ -9,10 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="application-name" content="Poker&nbsp;zgadywany" />
     <meta name="apple-mobile-web-app-title" content="Poker&nbsp;zgadywany" />
-    <link rel="manifest" href="manifest.webmanifest?v=4" />
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=4" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=4" />
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icon-180.png?v=4" />
+    <link rel="manifest" href="manifest.webmanifest?v=5" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=5" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=5" />
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icon-180.png?v=5" />
     <title>{{{ PRODUCT_NAME }}}</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
@@ -20,8 +20,13 @@
       body { min-height: 100dvh; display: grid; place-items: center; overflow: hidden; }
       #unity-container { width: 100%; height: 100dvh; max-width: 620px; background: #020b06; position: relative; }
       #unity-canvas { width: 100%; height: 100%; display: block; background: #020b06; }
-      #loading-screen { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(#0004, #0005), url('boot-background.png?v=4') center / cover no-repeat, #020b06; text-align: center; opacity: 1; transition: opacity .35s ease; }
+      #loading-screen { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(#0004, #0005), url('boot-background.png?v=5') center / cover no-repeat, #020b06; text-align: center; opacity: 1; transition: opacity .35s ease; }
       #loading-screen.hidden { opacity: 0; pointer-events: none; }
+      #loading-screen.ready { cursor: pointer; }
+      #loading-screen.ready #loading-logo,
+      #loading-screen.ready #loading-chip { animation-play-state: paused; }
+      #loading-screen.ready #loading-track { display: none; }
+      #loading-screen.ready #loading-status { margin: 0; animation: continue-pulse 1.8s ease-in-out infinite; }
       #loading-content { width: min(92vw, 470px); display: grid; justify-items: center; }
       #loading-logo { display: block; width: 100%; height: auto; margin-bottom: clamp(34px, 8vh, 74px); animation: loading-pulse 4.5s ease-in-out infinite; }
       #loading-chip { display: block; width: clamp(86px, 25vw, 130px); height: auto; margin-bottom: 28px; animation: loading-spin 5.1s linear infinite; }
@@ -30,6 +35,7 @@
       #loading-progress { width: 0; height: 100%; background: linear-gradient(90deg, #9a6410, #f2c15c); transition: width .15s ease-out; }
       @keyframes loading-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
       @keyframes loading-spin { to { transform: rotate(-360deg); } }
+      @keyframes continue-pulse { 0%, 100% { opacity: .7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.04); } }
       @media (prefers-reduced-motion: reduce) { #loading-logo, #loading-chip { animation: none; } }
       #update-notice { position: fixed; inset: 0; z-index: 5; display: none; place-items: center; overflow-y: auto; padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #020b06; }
       #update-notice.visible { display: grid; }
@@ -70,7 +76,29 @@
       const updateTitle = document.querySelector('#update-title');
       const updateMessage = document.querySelector('#update-message');
       const updateClose = document.querySelector('#update-close');
-      const releaseVersion = '1.2.1';
+      const releaseVersion = '1.2.2';
+
+      function waitForContinue() {
+        loadingProgress.style.width = '100%';
+        loadingTrack.setAttribute('aria-valuenow', '100');
+        loadingStatus.textContent = 'DOTKNIJ, BY KONTYNUOWAĆ';
+        loadingScreen.classList.add('ready');
+        loadingScreen.setAttribute('role', 'button');
+        loadingScreen.setAttribute('tabindex', '0');
+
+        const continueToGame = event => {
+          if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ')
+            return;
+
+          event.preventDefault();
+          event.stopPropagation();
+          loadingScreen.classList.add('hidden');
+          window.setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
+        };
+
+        loadingScreen.addEventListener('pointerup', continueToGame, { once: true });
+        loadingScreen.addEventListener('keydown', continueToGame);
+      }
 
       function showRestartNotice(title, message, version) {
         updateTitle.textContent = title;
@@ -131,8 +159,7 @@
           ? 'PRZYGOTOWYWANIE GRY · ' + percent + '%'
           : 'URUCHAMIANIE GRY…';
       }).then(() => {
-        loadingScreen.classList.add('hidden');
-        window.setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
+        waitForContinue();
       }).catch(() => {
           showRestartNotice(
             'Wymagane ponowne uruchomienie',

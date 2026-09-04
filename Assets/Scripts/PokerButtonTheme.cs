@@ -120,15 +120,28 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
         label.color = button.interactable ? LabelColor : DisabledLabelColor;
         label.fontStyle = FontStyles.Bold;
-        label.enableAutoSizing = true;
         bool usesCompactMainMenuFont =
             button.gameObject.scene.name == "MainMenu" &&
             !button.name.StartsWith("Info");
-        label.fontSizeMin = usesCompactMainMenuFont ? 10f : 18f;
-        label.fontSizeMax = usesCompactMainMenuFont ? 14f : 28f;
+        bool isMainMenuUtilityButton =
+            button.name == "RulesButton" || button.name == "SettingsButton";
+
+        label.enableAutoSizing = !isMainMenuUtilityButton;
+        if (isMainMenuUtilityButton)
+        {
+            label.fontSize = 11f;
+            label.fontSizeMin = 11f;
+            label.fontSizeMax = 11f;
+        }
+        else
+        {
+            label.fontSizeMin = usesCompactMainMenuFont ? 10f : 18f;
+            label.fontSizeMax = usesCompactMainMenuFont ? 14f : 28f;
+        }
         label.characterSpacing = usesCompactMainMenuFont ? 0.5f : 1f;
         label.margin = usesCompactMainMenuFont
-            ? new Vector4(14f, 6f, 14f, 6f)
+            ? new Vector4(isMainMenuUtilityButton ? 8f : 14f, 6f,
+                isMainMenuUtilityButton ? 8f : 14f, 6f)
             : new Vector4(18f, 6f, 18f, 6f);
 
         Shadow textShadow = GetExactShadow(label.gameObject);
