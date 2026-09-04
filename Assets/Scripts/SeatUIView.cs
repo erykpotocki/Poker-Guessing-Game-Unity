@@ -27,11 +27,17 @@ public class SeatUIView : MonoBehaviour
 
     private Color defaultAvatarColor = Color.white;
     private Color defaultNickColor = Color.white;
+    private Image circularAvatarContent;
+    private static Sprite circleMaskSprite;
+    private static Sprite circleRingSprite;
 
     private void Awake()
     {
-        if (avatarImage != null)
-            defaultAvatarColor = avatarImage.color;
+        ConfigureCircularAvatar();
+        ConfigureCircularHighlight();
+
+        if (circularAvatarContent != null)
+            defaultAvatarColor = circularAvatarContent.color;
 
         if (nickText != null)
             defaultNickColor = nickText.color;
@@ -57,7 +63,9 @@ public class SeatUIView : MonoBehaviour
         if (nickText != null)
             nickText.text = nick;
 
-        if (avatarImage != null)
+        if (circularAvatarContent != null)
+            circularAvatarContent.sprite = avatar;
+        else if (avatarImage != null)
             avatarImage.sprite = avatar;
     }
 
@@ -118,14 +126,17 @@ public class SeatUIView : MonoBehaviour
 
     private void ApplyCurrentVisualState()
     {
-        if (avatarImage != null)
+        Image visibleAvatar = circularAvatarContent != null
+            ? circularAvatarContent
+            : avatarImage;
+        if (visibleAvatar != null)
         {
             if (isEliminated)
-                avatarImage.color = eliminatedAvatarTint;
+                visibleAvatar.color = eliminatedAvatarTint;
             else if (isDisconnected)
-                avatarImage.color = disconnectedAvatarTint;
+                visibleAvatar.color = disconnectedAvatarTint;
             else
-                avatarImage.color = defaultAvatarColor;
+                visibleAvatar.color = defaultAvatarColor;
         }
 
         if (nickText != null)
@@ -137,5 +148,110 @@ public class SeatUIView : MonoBehaviour
             else
                 nickText.color = defaultNickColor;
         }
+    }
+
+    private void ConfigureCircularAvatar()
+    {
+        if (avatarImage == null)
+            return;
+
+        EnsureCircleSprites();
+        RectTransform avatarRect = avatarImage.rectTransform;
+        avatarRect.sizeDelta = new Vector2(120f, 120f);
+        avatarRect.anchoredPosition = new Vector2(0f, -4f);
+
+        Sprite currentAvatar = avatarImage.sprite;
+        avatarImage.sprite = circleMaskSprite;
+        avatarImage.color = Color.white;
+        avatarImage.preserveAspect = false;
+
+        Mask mask = avatarImage.GetComponent<Mask>();
+        if (mask == null)
+            mask = avatarImage.gameObject.AddComponent<Mask>();
+        mask.showMaskGraphic = false;
+
+        Transform existing = avatarImage.transform.Find("CircularAvatarContent");
+        if (existing != null)
+            circularAvatarContent = existing.GetComponent<Image>();
+        if (circularAvatarContent == null)
+        {
+            GameObject content = new GameObject(
+                "CircularAvatarContent", typeof(RectTransform),
+                typeof(CanvasRenderer), typeof(Image));
+            content.transform.SetParent(avatarImage.transform, false);
+            circularAvatarContent = content.GetComponent<Image>();
+        }
+
+        RectTransform contentRect = circularAvatarContent.rectTransform;
+        contentRect.anchorMin = Vector2.zero;
+        contentRect.anchorMax = Vector2.one;
+        contentRect.offsetMin = Vector2.zero;
+        contentRect.offsetMax = Vector2.zero;
+        circularAvatarContent.sprite = currentAvatar;
+        circularAvatarContent.color = Color.white;
+        circularAvatarContent.preserveAspect = false;
+        circularAvatarContent.raycastTarget = false;
+    }
+
+    private void ConfigureCircularHighlight()
+    {
+        if (activeTurnHighlight == null)
+            return;
+
+        EnsureCircleSprites();
+        activeTurnHighlight.sizeDelta = new Vector2(146f, 146f);
+        activeTurnHighlight.anchoredPosition = new Vector2(0f, 9f);
+
+        Image highlightImage = activeTurnHighlight.GetComponent<Image>();
+        if (highlightImage != null)
+        {
+            highlightImage.sprite = circleRingSprite;
+            highlightImage.color = new Color(1f, 0.72f, 0.18f, 0.9f);
+            highlightImage.preserveAspect = true;
+            highlightImage.raycastTarget = false;
+        }
+    }
+
+    private static void EnsureCircleSprites()
+    {
+        if (circleMaskSprite != null && circleRingSprite != null)
+            return;
+
+        const int size = 128;
+        Texture2D maskTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        Texture2D ringTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        maskTexture.name = "AvatarCircleMask";
+        ringTexture.name = "ActiveTurnCircleRing";
+        maskTexture.hideFlags = HideFlags.HideAndDontSave;
+        ringTexture.hideFlags = HideFlags.HideAndDontSave;
+
+        Color[] maskPixels = new Color[size * size];
+        Color[] ringPixels = new Color[size * size];
+        Vector2 center = new Vector2((size - 1) * 0.5f, (size - 1) * 0.5f);
+        float outerRadius = size * 0.49f;
+        float innerRadius = size * 0.41f;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float distance = Vector2.Distance(new Vector2(x, y), center);
+                float maskAlpha = Mathf.Clamp01(outerRadius - distance + 1f);
+                float ringAlpha = Mathf.Clamp01(outerRadius - distance + 1f) *
+                    Mathf.Clamp01(distance - innerRadius + 1f);
+                int index = y * size + x;
+                maskPixels[index] = new Color(1f, 1f, 1f, maskAlpha);
+                ringPixels[index] = new Color(1f, 1f, 1f, ringAlpha);
+            }
+        }
+
+        maskTexture.SetPixels(maskPixels);
+        ringTexture.SetPixels(ringPixels);
+        maskTexture.Apply(false, true);
+        ringTexture.Apply(false, true);
+        circleMaskSprite = Sprite.Create(maskTexture,
+            new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f);
+        circleRingSprite = Sprite.Create(ringTexture,
+            new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f);
     }
 }

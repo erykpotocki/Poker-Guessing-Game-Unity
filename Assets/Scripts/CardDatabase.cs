@@ -30,6 +30,14 @@ public class CardSpriteEntry
 public class CardDatabase : MonoBehaviour
 {
     public CardSpriteEntry[] cards;
+    [SerializeField] private CardSpriteEntry[] multiplayerCards;
+
+    public CardSpriteEntry[] GetMultiplayerCards()
+    {
+        return multiplayerCards != null && multiplayerCards.Length > 0
+            ? multiplayerCards
+            : cards;
+    }
 
     public Sprite GetCardSprite(CardSuit suit, CardRank rank)
     {

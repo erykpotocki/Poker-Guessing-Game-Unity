@@ -472,7 +472,8 @@ public class CardDealTest : MonoBehaviour
             yield break;
         }
 
-        if (cardDatabase.cards == null || cardDatabase.cards.Length == 0)
+        CardSpriteEntry[] multiplayerCards = cardDatabase.GetMultiplayerCards();
+        if (multiplayerCards == null || multiplayerCards.Length == 0)
         {
             Debug.LogError("CardDealTest: CardDatabase nie ma żadnych kart.");
             yield break;
@@ -509,7 +510,7 @@ public class CardDealTest : MonoBehaviour
             yield break;
         }
 
-        if (orderedTargets.Count > cardDatabase.cards.Length)
+        if (orderedTargets.Count > multiplayerCards.Length)
         {
             Debug.LogError("CardDealTest: liczba wszystkich rozdawanych kart jest większa niż liczba kart w CardDatabase.");
             yield break;
@@ -718,12 +719,13 @@ public class CardDealTest : MonoBehaviour
     {
         foundEntry = null;
 
-        if (cardDatabase == null || cardDatabase.cards == null)
+        if (cardDatabase == null || cardDatabase.GetMultiplayerCards() == null)
             return false;
 
-        for (int i = 0; i < cardDatabase.cards.Length; i++)
+        CardSpriteEntry[] multiplayerCards = cardDatabase.GetMultiplayerCards();
+        for (int i = 0; i < multiplayerCards.Length; i++)
         {
-            CardSpriteEntry entry = cardDatabase.cards[i];
+            CardSpriteEntry entry = multiplayerCards[i];
             if (entry == null)
                 continue;
 
@@ -870,7 +872,8 @@ public class CardDealTest : MonoBehaviour
 
     private List<CardSpriteEntry> GetShuffledCards()
     {
-        List<CardSpriteEntry> shuffled = new List<CardSpriteEntry>(cardDatabase.cards);
+        List<CardSpriteEntry> shuffled = new List<CardSpriteEntry>(
+            cardDatabase.GetMultiplayerCards());
         System.Random rng = new System.Random(sharedRoundSeed ^ 918273);
 
         for (int i = shuffled.Count - 1; i > 0; i--)
