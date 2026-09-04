@@ -1,9 +1,9 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "title": "Dostępna aktualizacja",
   "changes": [
-    "Poprawiono bezpieczne aktualizowanie plików gry.",
-    "Ukryto techniczne komunikaty błędów.",
-    "Dostosowano komunikaty do szerokości ekranu telefonu."
+    "Połączono ekrany startowe i dodano tło pokerowego pokoju.",
+    "Poprawiono układ kart, komunikatów i przycisku ustawień.",
+    "Ulepszono obsługę klawiatury podczas dodawania graczy."
   ]
 }

@@ -1,11 +1,12 @@
-const CACHE_NAME = 'poker-zgadywany-639240407008186607';
+const CACHE_NAME = 'poker-zgadywany-639241124123698115';
 const SHELL = [
   './',
   './index.html',
-  './manifest.webmanifest?v=3',
-  './icon-180.png?v=3',
-  './icon-192.png?v=3',
-  './icon-512.png?v=3',
+  './manifest.webmanifest?v=4',
+  './icon-180.png?v=4',
+  './icon-192.png?v=4',
+  './icon-512.png?v=4',
+  './boot-background.png?v=4',
   './boot-logo.png',
   './boot-chip.png'
 ];
