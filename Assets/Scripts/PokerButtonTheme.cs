@@ -10,6 +10,8 @@ using UnityEngine.UI;
 /// </summary>
 public sealed class PokerButtonTheme : MonoBehaviour
 {
+    private const float MinimumTouchWidth = 116f;
+    private const float MinimumTouchHeight = 116f;
     private static readonly Color LabelColor = new Color(1f, 0.94f, 0.76f);
     private static readonly Color DisabledLabelColor = new Color(0.67f, 0.62f, 0.54f, 0.72f);
 
@@ -98,6 +100,8 @@ public sealed class PokerButtonTheme : MonoBehaviour
         if (background == null)
             return;
 
+        ConfigureMobileTouchTarget(button);
+
         bool firstApplication = background.sprite != buttonSprite;
         if (firstApplication)
         {
@@ -135,14 +139,18 @@ public sealed class PokerButtonTheme : MonoBehaviour
         }
         else
         {
-            label.fontSizeMin = usesCompactMainMenuFont ? 10f : 18f;
-            label.fontSizeMax = usesCompactMainMenuFont ? 14f : 28f;
+            label.fontSizeMin = usesCompactMainMenuFont ? 10f : 24f;
+            label.fontSizeMax = usesCompactMainMenuFont ? 14f : 36f;
         }
         label.characterSpacing = usesCompactMainMenuFont ? 0.5f : 1f;
         label.margin = usesCompactMainMenuFont
             ? new Vector4(isMainMenuUtilityButton ? 8f : 14f, 6f,
                 isMainMenuUtilityButton ? 8f : 14f, 6f)
             : new Vector4(18f, 6f, 18f, 6f);
+
+        Navigation navigation = button.navigation;
+        navigation.mode = Navigation.Mode.None;
+        button.navigation = navigation;
 
         Shadow textShadow = GetExactShadow(label.gameObject);
         if (textShadow == null)
@@ -151,6 +159,38 @@ public sealed class PokerButtonTheme : MonoBehaviour
         textShadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
         textShadow.effectDistance = new Vector2(1.5f, -1.5f);
         textShadow.useGraphicAlpha = true;
+    }
+
+    private static void ConfigureMobileTouchTarget(Button button)
+    {
+        if (!(button.transform is RectTransform buttonRect))
+            return;
+
+        Transform existing = button.transform.Find("__MobileTouchTarget");
+        GameObject targetObject;
+        if (existing == null)
+        {
+            targetObject = new GameObject(
+                "__MobileTouchTarget", typeof(RectTransform), typeof(Image));
+            targetObject.transform.SetParent(button.transform, false);
+            targetObject.transform.SetAsFirstSibling();
+
+            Image targetImage = targetObject.GetComponent<Image>();
+            targetImage.color = new Color(1f, 1f, 1f, 0.001f);
+            targetImage.raycastTarget = true;
+        }
+        else
+        {
+            targetObject = existing.gameObject;
+        }
+
+        RectTransform targetRect = targetObject.GetComponent<RectTransform>();
+        targetRect.anchorMin = targetRect.anchorMax = new Vector2(0.5f, 0.5f);
+        targetRect.pivot = new Vector2(0.5f, 0.5f);
+        targetRect.anchoredPosition = Vector2.zero;
+        targetRect.sizeDelta = new Vector2(
+            Mathf.Max(MinimumTouchWidth, Mathf.Abs(buttonRect.rect.width)),
+            Mathf.Max(MinimumTouchHeight, Mathf.Abs(buttonRect.rect.height)));
     }
 
     private static void ConfigureButtonTransitions(Button button)

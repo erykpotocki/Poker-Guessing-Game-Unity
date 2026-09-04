@@ -2307,8 +2307,8 @@ public class HotSeatSetupUI : MonoBehaviour
 
         if (startButton != null && startButton.transform is RectTransform startRect)
         {
-            startRect.anchoredPosition = new Vector2(0f, 404f);
-            startRect.sizeDelta = new Vector2(620f, 126f);
+            startRect.anchoredPosition = new Vector2(0f, 260f);
+            startRect.sizeDelta = new Vector2(660f, 136f);
         }
 
         if (playerListRoot is RectTransform listRect)
@@ -2370,8 +2370,8 @@ public class HotSeatSetupUI : MonoBehaviour
             rect.anchorMin = new Vector2(0.5f, 0f);
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 244f);
-            rect.sizeDelta = new Vector2(620f, 126f);
+            rect.anchoredPosition = new Vector2(0f, 96f);
+            rect.sizeDelta = new Vector2(420f, 92f);
         }
 
         TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
@@ -2379,20 +2379,31 @@ public class HotSeatSetupUI : MonoBehaviour
         {
             label.text = "WSTECZ";
             label.enableAutoSizing = true;
-            label.fontSizeMin = 30f;
-            label.fontSizeMax = 42f;
+            label.fontSizeMin = 22f;
+            label.fontSizeMax = 30f;
+            label.color = new Color(0.92f, 0.78f, 0.53f, 0.95f);
         }
 
         TMP_Text startLabel = startButton.GetComponentInChildren<TMP_Text>(true);
         if (startLabel != null)
         {
             startLabel.enableAutoSizing = true;
-            startLabel.fontSizeMin = 30f;
-            startLabel.fontSizeMax = 42f;
+            startLabel.fontSizeMin = 32f;
+            startLabel.fontSizeMax = 44f;
             startLabel.fontStyle = FontStyles.Bold;
         }
 
         PokerButtonTheme.ApplyTo(button);
+
+        Image secondaryBackground = button.targetGraphic as Image;
+        if (secondaryBackground != null)
+            secondaryBackground.color = new Color(0.56f, 0.48f, 0.44f, 0.72f);
+
+        foreach (Shadow shadow in button.GetComponents<Shadow>())
+        {
+            if (shadow != null && shadow.GetType() == typeof(Shadow))
+                shadow.effectDistance = new Vector2(0f, -2f);
+        }
     }
 
     private void ApplyCardScreenStyle()
