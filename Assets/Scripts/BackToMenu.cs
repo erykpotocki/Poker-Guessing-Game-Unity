@@ -88,10 +88,20 @@ public class BackToMenu : MonoBehaviourPunCallbacks
             if (bottomLabel != null)
             {
                 bottomLabel.text = "COFNIJ";
+                bottomLabel.rectTransform.anchorMin = Vector2.zero;
+                bottomLabel.rectTransform.anchorMax = Vector2.one;
+                bottomLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                bottomLabel.rectTransform.anchoredPosition = Vector2.zero;
+                bottomLabel.rectTransform.offsetMin = new Vector2(18f, 8f);
+                bottomLabel.rectTransform.offsetMax = new Vector2(-18f, -8f);
+                bottomLabel.rectTransform.localScale = Vector3.one;
+                bottomLabel.alignment = TextAlignmentOptions.Center;
+                bottomLabel.textWrappingMode = TextWrappingModes.NoWrap;
+                bottomLabel.overflowMode = TextOverflowModes.Ellipsis;
                 bottomLabel.fontStyle = FontStyles.Bold;
                 bottomLabel.enableAutoSizing = true;
-                bottomLabel.fontSizeMin = 22f;
-                bottomLabel.fontSizeMax = 32f;
+                bottomLabel.fontSizeMin = 28f;
+                bottomLabel.fontSizeMax = 38f;
             }
 
             PokerButtonTheme.ApplyTo(cornerBackButton);

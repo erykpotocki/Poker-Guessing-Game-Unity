@@ -100,8 +100,8 @@ public class GameModeSelectUI : MonoBehaviour
             layout.ignoreLayout = false;
             layout.minWidth = buttonWidth;
             layout.preferredWidth = buttonWidth;
-            layout.minHeight = 96f;
-            layout.preferredHeight = 96f;
+            layout.minHeight = 116f;
+            layout.preferredHeight = 116f;
 
             if (modePanel == null)
                 modePanel = button.transform.parent as RectTransform;
@@ -110,7 +110,7 @@ public class GameModeSelectUI : MonoBehaviour
             {
                 buttonRect.pivot = new Vector2(0.5f, 0.5f);
                 buttonRect.anchoredPosition = Vector2.zero;
-                buttonRect.sizeDelta = new Vector2(buttonWidth, 96f);
+                buttonRect.sizeDelta = new Vector2(buttonWidth, 116f);
                 buttonRect.localScale = Vector3.one;
             }
 
@@ -119,8 +119,8 @@ public class GameModeSelectUI : MonoBehaviour
             {
                 label.fontStyle = FontStyles.Bold;
                 label.enableAutoSizing = true;
-                label.fontSizeMin = 20f;
-                label.fontSizeMax = 30f;
+                label.fontSizeMin = 38f;
+                label.fontSizeMax = 52f;
             }
         }
 
@@ -162,8 +162,8 @@ public class GameModeSelectUI : MonoBehaviour
             headingRect.anchoredPosition = Vector2.zero;
             headingRect.sizeDelta = new Vector2(buttonWidth, 100f);
             heading.enableAutoSizing = true;
-            heading.fontSizeMin = 30f;
-            heading.fontSizeMax = 46f;
+            heading.fontSizeMin = 42f;
+            heading.fontSizeMax = 60f;
             heading.textWrappingMode = TextWrappingModes.NoWrap;
         }
     }
