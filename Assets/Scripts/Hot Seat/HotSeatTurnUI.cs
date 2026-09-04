@@ -150,8 +150,8 @@ public class HotSeatTurnUI : MonoBehaviour
             bidRect.anchorMax = new Vector2(0.5f, 1f);
             bidRect.pivot = new Vector2(0.5f, 1f);
             // Keep the declaration clearly below the safe-area exit button.
-            bidRect.anchoredPosition = new Vector2(0f, -285f);
-            bidRect.sizeDelta = new Vector2(880f, 110f);
+            bidRect.anchoredPosition = new Vector2(0f, -272f);
+            bidRect.sizeDelta = new Vector2(880f, 76f);
             currentBidText.alignment = TextAlignmentOptions.Center;
             currentBidText.enableAutoSizing = true;
             currentBidText.fontSizeMin = 28f;

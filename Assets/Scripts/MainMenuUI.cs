@@ -124,13 +124,15 @@ public class MainMenuUI : MonoBehaviour
         button.targetGraphic = image;
 
         TMP_Text title = CreateText("Title", buttonObject.transform);
+        title.textWrappingMode = TextWrappingModes.NoWrap;
+        title.overflowMode = TextOverflowModes.Overflow;
         RectTransform titleRect = title.rectTransform;
         titleRect.anchorMin = withSubtitle ? new Vector2(0f, 0.43f) : Vector2.zero;
         titleRect.anchorMax = withSubtitle ? new Vector2(1f, 0.96f) : Vector2.one;
         titleRect.offsetMin = new Vector2(9f, withSubtitle ? 0f : 3f);
         titleRect.offsetMax = new Vector2(-9f, withSubtitle ? -1f : -3f);
-        title.fontSizeMin = withSubtitle ? 7f : 6f;
-        title.fontSizeMax = withSubtitle ? 11f : 9f;
+        title.fontSizeMin = withSubtitle ? 7f : 4.5f;
+        title.fontSizeMax = withSubtitle ? 11f : 8f;
 
         if (withSubtitle)
         {

@@ -80,6 +80,7 @@ public class HotSeatSetupUI : MonoBehaviour
     private Coroutine inputFocusRoutine;
     private CanvasGroup cardPanelCanvasGroup;
     private Coroutine cardPanelEntranceRoutine;
+    private readonly Vector3[] inputWorldCorners = new Vector3[4];
 
     private sealed class RoundRevealCard
     {
@@ -568,7 +569,7 @@ public class HotSeatSetupUI : MonoBehaviour
             rect.sizeDelta = new Vector2(cardWidth, cardHeight);
             rect.anchoredPosition = new Vector2(
                 centeredIndex * horizontalStep,
-                165f - Mathf.Abs(centeredIndex) * verticalStep
+                45f - Mathf.Abs(centeredIndex) * verticalStep
             );
             rect.localRotation = Quaternion.Euler(
                 0f,
@@ -613,7 +614,7 @@ public class HotSeatSetupUI : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, 150f);
+        rect.anchoredPosition = new Vector2(0f, 30f);
         rect.sizeDelta = new Vector2(width, height);
         multiCardTouchButton.gameObject.SetActive(true);
         multiCardTouchButton.transform.SetAsLastSibling();
@@ -649,7 +650,7 @@ public class HotSeatSetupUI : MonoBehaviour
         RectTransform rect = cardImage.rectTransform;
         rect.sizeDelta = new Vector2(760f, 1058f);
         rect.localRotation = Quaternion.identity;
-        rect.anchoredPosition = new Vector2(0f, 210f);
+        rect.anchoredPosition = new Vector2(0f, 90f);
     }
 
     private void ShowRoundCards()
@@ -1141,8 +1142,8 @@ public class HotSeatSetupUI : MonoBehaviour
 
         row.localScale = Vector3.one;
         group.alpha = 1f;
-        input.ActivateInputField();
         input.Select();
+        input.ActivateInputField();
         input.selectionStringAnchorPosition = 0;
         input.selectionStringFocusPosition = input.text.Length;
     }
@@ -1156,24 +1157,50 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private IEnumerator MoveFocusedInputToTop(TMP_InputField input)
     {
-        yield return null;
-        Canvas.ForceUpdateCanvases();
-
-        if (input == null || setupPanel == null ||
-            !(playerListRoot is RectTransform listRect) ||
-            !(setupPanel.transform is RectTransform setupRect))
+        // Track the keyboard while this field stays focused. Mobile browsers
+        // can report its final area several frames after focus.
+        while (input != null && input.isFocused)
         {
-            inputFocusRoutine = null;
-            yield break;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            if (!(playerListRoot is RectTransform listRect) ||
+                !(input.transform is RectTransform inputRect))
+                continue;
+
+            float keyboardHeight = GetKeyboardHeight();
+            if (keyboardHeight <= 0f)
+            {
+                listRect.anchoredPosition = playerListBasePosition;
+                continue;
+            }
+
+            inputRect.GetWorldCorners(inputWorldCorners);
+            Canvas canvas = input.GetComponentInParent<Canvas>();
+            Camera eventCamera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera
+                : null;
+            float canvasScale = canvas != null ? Mathf.Max(0.01f, canvas.scaleFactor) : 1f;
+            float currentOffsetPixels =
+                (listRect.anchoredPosition.y - playerListBasePosition.y) * canvasScale;
+            float inputBottomAtBase = RectTransformUtility.WorldToScreenPoint(
+                eventCamera, inputWorldCorners[0]).y - currentOffsetPixels;
+            const float keyboardClearancePixels = 28f;
+            float overlapPixels = keyboardHeight + keyboardClearancePixels - inputBottomAtBase;
+
+            listRect.anchoredPosition = playerListBasePosition +
+                Vector2.up * (Mathf.Max(0f, overlapPixels) / canvasScale);
         }
 
-        Bounds inputBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
-            setupRect, input.transform as RectTransform);
-        Bounds addBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
-            setupRect, addPlayerButton.transform as RectTransform);
-        float desiredCenterY = addBounds.min.y - inputBounds.extents.y - 24f;
-        listRect.anchoredPosition += Vector2.up * (desiredCenterY - inputBounds.center.y);
         inputFocusRoutine = null;
+    }
+
+    private static float GetKeyboardHeight()
+    {
+        if (!TouchScreenKeyboard.visible)
+            return 0f;
+
+        return Mathf.Max(0f, TouchScreenKeyboard.area.height);
     }
 
     private void RestorePlayerListPosition()
@@ -1994,8 +2021,8 @@ public class HotSeatSetupUI : MonoBehaviour
             RectTransform nameRect = currentPlayerNameText.rectTransform;
             // Keep the current player's name above the card. It used to overlap
             // the card rectangle and was rendered underneath the card artwork.
-            nameRect.anchoredPosition = new Vector2(0f, -205f);
-            nameRect.sizeDelta = new Vector2(900f, 120f);
+            nameRect.anchoredPosition = new Vector2(0f, -190f);
+            nameRect.sizeDelta = new Vector2(900f, 72f);
             currentPlayerNameText.transform.SetAsLastSibling();
 
             currentPlayerNameText.color = new Color(1f, 0.84f, 0.38f, 1f);
@@ -2011,7 +2038,7 @@ public class HotSeatSetupUI : MonoBehaviour
             instructionRect.anchorMin = new Vector2(0.5f, 0f);
             instructionRect.anchorMax = new Vector2(0.5f, 0f);
             instructionRect.pivot = new Vector2(0.5f, 0f);
-            instructionRect.anchoredPosition = new Vector2(0f, 475f);
+            instructionRect.anchoredPosition = new Vector2(0f, 405f);
             instructionRect.sizeDelta = new Vector2(900f, 158f);
 
             instructionText.color = new Color(1f, 0.95f, 0.82f, 1f);

@@ -7,12 +7,12 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="application-name" content="Poker zgadywany" />
-    <meta name="apple-mobile-web-app-title" content="Poker zgadywany" />
-    <link rel="manifest" href="manifest.webmanifest?v=3" />
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=3" />
-    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=3" />
-    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icon-180.png?v=3" />
+    <meta name="application-name" content="Poker&nbsp;zgadywany" />
+    <meta name="apple-mobile-web-app-title" content="Poker&nbsp;zgadywany" />
+    <link rel="manifest" href="manifest.webmanifest?v=4" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=4" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=4" />
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icon-180.png?v=4" />
     <title>{{{ PRODUCT_NAME }}}</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
@@ -20,7 +20,7 @@
       body { min-height: 100dvh; display: grid; place-items: center; overflow: hidden; }
       #unity-container { width: 100%; height: 100dvh; max-width: 620px; background: #020b06; position: relative; }
       #unity-canvas { width: 100%; height: 100%; display: block; background: #020b06; }
-      #loading-screen { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: radial-gradient(circle at center, #0a2f1e 0, #020b06 70%); text-align: center; opacity: 1; transition: opacity .35s ease; }
+      #loading-screen { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); background: linear-gradient(#0004, #0005), url('boot-background.png?v=4') center / cover no-repeat, #020b06; text-align: center; opacity: 1; transition: opacity .35s ease; }
       #loading-screen.hidden { opacity: 0; pointer-events: none; }
       #loading-content { width: min(92vw, 470px); display: grid; justify-items: center; }
       #loading-logo { display: block; width: 100%; height: auto; margin-bottom: clamp(34px, 8vh, 74px); animation: loading-pulse 4.5s ease-in-out infinite; }
@@ -70,7 +70,7 @@
       const updateTitle = document.querySelector('#update-title');
       const updateMessage = document.querySelector('#update-message');
       const updateClose = document.querySelector('#update-close');
-      const releaseVersion = '1.2.0';
+      const releaseVersion = '1.2.1';
 
       function showRestartNotice(title, message, version) {
         updateTitle.textContent = title;
