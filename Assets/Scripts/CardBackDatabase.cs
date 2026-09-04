@@ -89,14 +89,4 @@ public class CardBackDatabase : MonoBehaviour
         return availableBackSprites[index];
     }
 
-    public Sprite GetMultiplayerBackSprite(int index = 0)
-    {
-        if (backSprites == null || backSprites.Length == 0)
-            return GetBackSprite(index);
-
-        if (index < 0 || index >= backSprites.Length)
-            index = 0;
-
-        return backSprites[index];
-    }
 }

@@ -29,24 +29,10 @@ public class CardView : MonoBehaviour
         }
 
         cardImage.sprite = backSprite;
-        cardImage.preserveAspect = true;
-    }
-
-    public void SetMultiplayerBack(CardBackDatabase backDatabase, int backIndex = 0)
-    {
-        if (cardImage == null)
-            cardImage = GetComponent<Image>();
-
-        if (cardImage == null || backDatabase == null)
-            return;
-
-        Sprite backSprite = backDatabase.GetMultiplayerBackSprite(backIndex);
-        if (backSprite == null)
-            return;
-
-        cardImage.sprite = backSprite;
         cardImage.color = Color.white;
-        cardImage.preserveAspect = true;
+        // The new back is portrait-oriented. Filling the same card frame as the
+        // former purple back prevents it from appearing unusually narrow.
+        cardImage.preserveAspect = false;
         cardImage.enabled = true;
     }
 }

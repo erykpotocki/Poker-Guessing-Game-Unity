@@ -20,14 +20,11 @@ public class GameModeSelectUI : MonoBehaviour
     {
         PokerButtonTheme.EnsureController();
         ConfigureModeButtons();
-        ResolveCloseButton();
-        ApplySafeArea();
     }
 
     private void Update()
     {
-        if (Screen.safeArea != lastSafeArea)
-            ApplySafeArea();
+        // BackToMenu applies one shared safe-area layout to the close button.
     }
 
     public void SelectBeginnerMode()

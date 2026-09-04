@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -17,12 +18,35 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
 
     private const string AvatarKey = "avatarIndex";
     private readonly List<GameObject> spawned = new();
+    private readonly Dictionary<int, GameObject> rowsByActorNumber = new();
 
     private void Start() => Refresh();
 
     public override void OnJoinedRoom() => Refresh();
     public override void OnPlayerEnteredRoom(Player newPlayer) => Refresh();
-    public override void OnPlayerLeftRoom(Player otherPlayer) => Refresh();
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        if (otherPlayer != null &&
+            rowsByActorNumber.TryGetValue(otherPlayer.ActorNumber, out GameObject row))
+        {
+            rowsByActorNumber.Remove(otherPlayer.ActorNumber);
+            spawned.Remove(row);
+            if (row != null)
+            {
+                row.SetActive(false);
+                Destroy(row);
+            }
+        }
+
+        StartCoroutine(RefreshAfterPlayerListUpdate());
+    }
+
+    public override void OnLeftRoom()
+    {
+        ClearRows();
+        if (playersCountText != null)
+            playersCountText.text = "Gracze: -/-";
+    }
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps) => Refresh();
 
     private void Refresh()
@@ -50,6 +74,7 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
         {
             var go = Instantiate(rowPrefab, container);
             spawned.Add(go);
+            rowsByActorNumber[p.ActorNumber] = go;
 
             var nameText = go.transform.Find("NameText")?.GetComponent<TMP_Text>();
             var avatarImg = go.transform.Find("AvatarImage")?.GetComponent<Image>();
@@ -76,5 +101,12 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
         for (int i = 0; i < spawned.Count; i++)
             if (spawned[i] != null) Destroy(spawned[i]);
         spawned.Clear();
+        rowsByActorNumber.Clear();
+    }
+
+    private IEnumerator RefreshAfterPlayerListUpdate()
+    {
+        yield return null;
+        Refresh();
     }
 }

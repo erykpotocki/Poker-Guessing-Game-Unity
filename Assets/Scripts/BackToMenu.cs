@@ -29,16 +29,30 @@ public class BackToMenu : MonoBehaviourPunCallbacks
 
     private void ResolveCornerBackButton()
     {
+        Button bestCandidate = null;
+        float bestScore = float.MinValue;
+
         foreach (Button button in FindObjectsByType<Button>(
             FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null && label.text.Trim().ToUpperInvariant() == "X")
-            {
-                cornerBackButton = button;
-                return;
-            }
+            RectTransform rect = button.transform as RectTransform;
+            if (label == null || rect == null ||
+                label.text.Trim().ToUpperInvariant() != "X")
+                continue;
+
+            // Only a navigation control belongs near the upper-left corner.
+            // This excludes the X buttons used for deleting player rows.
+            float score = rect.anchorMin.y * 10f - rect.anchorMin.x;
+            if (rect.anchorMin.y < 0.75f || rect.anchorMin.x > 0.25f ||
+                score <= bestScore)
+                continue;
+
+            bestCandidate = button;
+            bestScore = score;
         }
+
+        cornerBackButton = bestCandidate;
     }
 
     private void ApplySafeAreaPosition()
@@ -62,9 +76,9 @@ public class BackToMenu : MonoBehaviourPunCallbacks
         buttonRect.anchorMax = new Vector2(0f, 1f);
         buttonRect.pivot = new Vector2(0f, 1f);
         buttonRect.anchoredPosition = new Vector2(
-            Mathf.Max(28f, leftInset + 20f),
-            -Mathf.Max(116f, topInset + 28f));
-        buttonRect.sizeDelta = new Vector2(148f, 148f);
+            leftInset + 24f,
+            -(topInset + 24f));
+        buttonRect.sizeDelta = new Vector2(132f, 132f);
         buttonRect.localScale = Vector3.one;
 
         Image background = cornerBackButton.targetGraphic as Image;
@@ -87,7 +101,7 @@ public class BackToMenu : MonoBehaviourPunCallbacks
             label.color = new Color(0.95f, 0.82f, 0.42f, 0.96f);
             label.fontStyle = FontStyles.Normal;
             label.enableAutoSizing = false;
-            label.fontSize = 108f;
+            label.fontSize = 82f;
 
             Shadow shadow = label.GetComponent<Shadow>();
             if (shadow == null)

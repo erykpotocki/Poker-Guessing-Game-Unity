@@ -1,12 +1,12 @@
 {
   "name": "Poker\u00a0zgadywany",
-  "short_name": "Poker\u00a0zgadywany",
+  "short_name": "Zgadywany",
   "description": "Poker zgadywany — gra karciana online i na jednym telefonie.",
   "lang": "pl",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#020b06",
   "theme_color": "#072816",
   "icons": [

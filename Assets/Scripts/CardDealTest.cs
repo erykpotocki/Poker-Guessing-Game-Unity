@@ -38,6 +38,7 @@ public class CardDealTest : MonoBehaviour
 
     [Header("Card settings")]
     [SerializeField] private int backIndex = 0;
+    [SerializeField, Min(1f)] private float multiplayerCardSizeMultiplier = 2f;
 
     [Header("Resume / restore")]
     [SerializeField] private bool tryRestoreSnapshotOnStart = true;
@@ -1201,7 +1202,7 @@ public class CardDealTest : MonoBehaviour
     private CardView CreateBackCard(Vector2 anchoredPos)
     {
         CardView spawnedCard = Instantiate(cardPrefab, cardsParent);
-        spawnedCard.SetMultiplayerBack(cardBackDatabase, backIndex);
+        spawnedCard.SetBack(cardBackDatabase, backIndex);
 
         RectTransform rect = spawnedCard.GetComponent<RectTransform>();
         if (rect == null)
@@ -1211,6 +1212,7 @@ public class CardDealTest : MonoBehaviour
             return null;
         }
 
+        rect.sizeDelta *= multiplayerCardSizeMultiplier;
         rect.localScale = Vector3.one;
         rect.anchoredPosition = anchoredPos;
 

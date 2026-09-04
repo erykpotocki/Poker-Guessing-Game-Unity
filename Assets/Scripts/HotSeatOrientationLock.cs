@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class HotSeatOrientationLock : MonoBehaviour
 {
@@ -42,9 +43,31 @@ public class HotSeatOrientationLock : MonoBehaviour
 
     private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "Game")
+        bool landscape = scene.name == "Game" || scene.name == "BootLoading";
+        if (landscape)
             LockLandscape();
-        else if (scene.name == "MainMenu" || scene.name == "Hot Seat")
+        else
             LockPortrait();
+
+        ConfigureCanvases(landscape);
+    }
+
+    private static void ConfigureCanvases(bool landscape)
+    {
+        CanvasScaler[] scalers = Object.FindObjectsByType<CanvasScaler>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (CanvasScaler scaler in scalers)
+        {
+            if (scaler == null)
+                continue;
+
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = landscape
+                ? new Vector2(1920f, 1080f)
+                : new Vector2(1080f, 1920f);
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.matchWidthOrHeight = 0.5f;
+        }
     }
 }
