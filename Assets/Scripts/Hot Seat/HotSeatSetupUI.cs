@@ -85,6 +85,7 @@ public class HotSeatSetupUI : MonoBehaviour
     private Coroutine previewTransitionRoutine;
     private Coroutine unseenCardSparkleRoutine;
     private readonly List<GameObject> unseenCardSparkles = new List<GameObject>();
+    private readonly List<Sprite> unseenCardSparkleSprites = new List<Sprite>();
     private readonly Vector3[] inputWorldCorners = new Vector3[4];
 
     private sealed class RoundRevealCard
@@ -1031,32 +1032,55 @@ public class HotSeatSetupUI : MonoBehaviour
         if (cardImage == null)
             return;
 
+        EnsureUnseenCardSparkleSprites();
+        if (unseenCardSparkleSprites.Count == 0)
+            return;
+
         Vector2[] anchors =
         {
-            new Vector2(0.08f, 0.88f), new Vector2(0.92f, 0.82f),
-            new Vector2(0.12f, 0.14f), new Vector2(0.88f, 0.18f)
+            new Vector2(0.10f, 0.87f), new Vector2(0.90f, 0.79f),
+            new Vector2(0.14f, 0.16f), new Vector2(0.86f, 0.20f)
         };
 
-        foreach (Vector2 anchor in anchors)
+        for (int i = 0; i < anchors.Length; i++)
         {
             GameObject sparkle = new GameObject(
-                "UnseenCardSparkle", typeof(RectTransform), typeof(TextMeshProUGUI));
+                "UnseenCardSparkle", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             sparkle.transform.SetParent(cardImage.transform, false);
             RectTransform rect = sparkle.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = anchor;
-            rect.sizeDelta = new Vector2(90f, 90f);
+            rect.anchorMin = rect.anchorMax = anchors[i];
+            float size = i % 2 == 0 ? 150f : 118f;
+            rect.sizeDelta = new Vector2(size, size);
             rect.anchoredPosition = Vector2.zero;
 
-            TextMeshProUGUI text = sparkle.GetComponent<TextMeshProUGUI>();
-            text.text = "✦";
-            text.alignment = TextAlignmentOptions.Center;
-            text.fontSize = 58f;
-            text.color = new Color(1f, 0.82f, 0.28f, 0f);
-            text.raycastTarget = false;
+            Image image = sparkle.GetComponent<Image>();
+            image.sprite = unseenCardSparkleSprites[i % unseenCardSparkleSprites.Count];
+            image.preserveAspect = true;
+            image.color = new Color(1f, 0.92f, 0.62f, 0f);
+            image.raycastTarget = false;
             unseenCardSparkles.Add(sparkle);
         }
 
         unseenCardSparkleRoutine = StartCoroutine(AnimateUnseenCardSparkles());
+    }
+
+    private void EnsureUnseenCardSparkleSprites()
+    {
+        if (unseenCardSparkleSprites.Count > 0)
+            return;
+
+        Texture2D[] textures = Resources.LoadAll<Texture2D>("UI/Sparkles");
+        foreach (Texture2D texture in textures)
+        {
+            if (texture == null)
+                continue;
+
+            Sprite sprite = Sprite.Create(texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f), 100f);
+            sprite.name = texture.name + "RuntimeSprite";
+            unseenCardSparkleSprites.Add(sprite);
+        }
     }
 
     private IEnumerator AnimateUnseenCardSparkles()
@@ -1075,12 +1099,14 @@ public class HotSeatSetupUI : MonoBehaviour
                 float phase = Mathf.Repeat(
                     elapsed / cycleDuration + i * 0.19f, 1f);
                 float glow = Mathf.Pow(Mathf.Sin(phase * Mathf.PI), 2f);
-                TMP_Text text = sparkle.GetComponent<TMP_Text>();
-                if (text != null)
-                    text.color = new Color(1f, 0.82f, 0.28f,
-                        Mathf.Lerp(0.16f, 0.95f, glow));
+                Image image = sparkle.GetComponent<Image>();
+                if (image != null)
+                    image.color = new Color(1f, 0.92f, 0.62f,
+                        Mathf.Lerp(0.12f, 0.92f, glow));
                 sparkle.transform.localScale = Vector3.one *
-                    Mathf.Lerp(0.65f, 1.18f, glow) * (i % 2 == 0 ? 1f : 0.86f);
+                    Mathf.Lerp(0.72f, 1.12f, glow) * (i % 2 == 0 ? 1f : 0.88f);
+                sparkle.transform.localRotation = Quaternion.Euler(
+                    0f, 0f, Mathf.Sin(elapsed * 0.7f + i) * 5f);
             }
             yield return null;
         }
@@ -2560,6 +2586,14 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void OnDestroy()
     {
+        ClearUnseenCardSparkles();
+        foreach (Sprite sprite in unseenCardSparkleSprites)
+        {
+            if (sprite != null)
+                Destroy(sprite);
+        }
+        unseenCardSparkleSprites.Clear();
+
         if (bidController != null)
         {
             bidController.RaiseConfirmed -= HandleRaiseConfirmed;
