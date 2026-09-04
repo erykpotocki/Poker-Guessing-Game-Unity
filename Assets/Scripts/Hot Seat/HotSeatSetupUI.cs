@@ -790,8 +790,9 @@ public class HotSeatSetupUI : MonoBehaviour
 
         Outline outline = cardObject.AddComponent<Outline>();
         outline.effectColor = new Color(1f, 0.75f, 0.12f, 1f);
-        outline.effectDistance = new Vector2(6f, -6f);
+        outline.effectDistance = new Vector2(8f, -8f);
         outline.useGraphicAlpha = true;
+        outline.enabled = false;
 
         roundRevealCards.Add(new RoundRevealCard
         {
@@ -850,12 +851,35 @@ public class HotSeatSetupUI : MonoBehaviour
 
         foreach (RoundRevealCard reveal in roundRevealCards)
         {
-            if (reveal.Outline != null &&
-                IsCardRelevantToHand(handId, reveal.Card))
+            bool relevant = IsCardRelevantToHand(handId, reveal.Card);
+            if (reveal.Outline != null)
             {
-                reveal.Outline.enabled = true;
+                reveal.Outline.enabled = relevant;
                 reveal.Outline.effectColor = finalColor;
             }
+
+            if (reveal.Image != null)
+            {
+                reveal.Image.rectTransform.localScale = relevant
+                    ? Vector3.one * 1.08f
+                    : Vector3.one;
+                Color baseCardColor = reveal.Image.sprite != null
+                    ? Color.white
+                    : cardFrontColor;
+                reveal.Image.color = relevant
+                    ? Color.Lerp(baseCardColor, finalColor, 0.16f)
+                    : baseCardColor;
+
+                if (relevant)
+                    reveal.Image.transform.SetAsLastSibling();
+            }
+        }
+
+        // Keep player labels readable after matching cards are brought forward.
+        foreach (GameObject resultObject in roundResultObjects)
+        {
+            if (resultObject != null && resultObject.name == "HS_ResultPlayerName")
+                resultObject.transform.SetAsLastSibling();
         }
 
         string verdict = declaredRankExists
@@ -891,6 +915,10 @@ public class HotSeatSetupUI : MonoBehaviour
             reveal.Outline.enabled = relevant;
             reveal.Outline.effectColor = matchColor;
         }
+
+        reveal.Image.rectTransform.localScale = relevant
+            ? Vector3.one * 1.04f
+            : Vector3.one;
     }
 
     private static void ShuffleIndexes(List<int> values)
