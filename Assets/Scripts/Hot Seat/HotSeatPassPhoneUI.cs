@@ -121,14 +121,14 @@ public class HotSeatPassPhoneUI : MonoBehaviour
             textRect.anchorMin = new Vector2(0.5f, 0.5f);
             textRect.anchorMax = new Vector2(0.5f, 0.5f);
             textRect.pivot = new Vector2(0.5f, 0.5f);
-            textRect.anchoredPosition = new Vector2(0f, 80f);
-            textRect.sizeDelta = new Vector2(820f, 520f);
+            textRect.anchoredPosition = new Vector2(0f, -38f);
+            textRect.sizeDelta = new Vector2(850f, 590f);
 
             passPhoneText.alignment = TextAlignmentOptions.Center;
             passPhoneText.textWrappingMode = TextWrappingModes.Normal;
             passPhoneText.enableAutoSizing = true;
-            passPhoneText.fontSizeMin = 24f;
-            passPhoneText.fontSizeMax = 39f;
+            passPhoneText.fontSizeMin = 29f;
+            passPhoneText.fontSizeMax = 46f;
             passPhoneText.lineSpacing = 8f;
             passPhoneText.color = Color.white;
         }
