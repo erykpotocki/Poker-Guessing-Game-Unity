@@ -109,6 +109,7 @@ public class BackToMenu : MonoBehaviourPunCallbacks
 
     public void GoMainMenu()
     {
+        HotSeatOrientationLock.LockPortrait();
         ClearResumeData();
 
         if (PhotonNetwork.InRoom)
@@ -122,6 +123,7 @@ public class BackToMenu : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
+        HotSeatOrientationLock.LockPortrait();
         ClearResumeData();
         SceneManager.LoadScene("MainMenu");
     }

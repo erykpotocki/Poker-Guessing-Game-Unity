@@ -68,6 +68,7 @@ public class GameEndSequenceController : MonoBehaviourPunCallbacks
             return;
 
         isLeavingRoom = true;
+        HotSeatOrientationLock.LockPortrait();
 
         if (loadingOverlay != null)
         {
@@ -86,6 +87,7 @@ public class GameEndSequenceController : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
+        HotSeatOrientationLock.LockPortrait();
         SceneManager.LoadScene(mainMenuSceneName);
     }
 }

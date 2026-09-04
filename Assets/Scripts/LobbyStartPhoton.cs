@@ -27,6 +27,16 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
     public override void OnPlayerLeftRoom(Player otherPlayer) => RefreshStartButton();
     public override void OnMasterClientSwitched(Player newMasterClient) => RefreshStartButton();
 
+    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+    {
+        if (propertiesThatChanged != null &&
+            propertiesThatChanged.TryGetValue(GameStartedKey, out object value) &&
+            value is bool started && started)
+        {
+            HotSeatOrientationLock.LockLandscape();
+        }
+    }
+
     private void RefreshStartButton()
     {
         if (startButton == null) return;
@@ -47,6 +57,7 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
         roomProps[GameStartedKey] = true;
         PhotonNetwork.CurrentRoom.SetCustomProperties(roomProps);
 
+        HotSeatOrientationLock.LockLandscape();
         PhotonNetwork.LoadLevel(gameSceneName);
     }
 }

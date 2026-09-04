@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class HotSeatOrientationLock : MonoBehaviour
 {
@@ -6,6 +7,8 @@ public class HotSeatOrientationLock : MonoBehaviour
     private static void LockPortraitBeforeFirstScene()
     {
         LockPortrait();
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
     }
 
     private void Awake()
@@ -26,5 +29,22 @@ public class HotSeatOrientationLock : MonoBehaviour
         Screen.autorotateToPortraitUpsideDown = false;
         Screen.autorotateToLandscapeLeft = false;
         Screen.autorotateToLandscapeRight = false;
+    }
+
+    public static void LockLandscape()
+    {
+        Screen.autorotateToPortrait = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToLandscapeLeft = true;
+        Screen.autorotateToLandscapeRight = true;
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
+    }
+
+    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "Game")
+            LockLandscape();
+        else if (scene.name == "MainMenu" || scene.name == "Hot Seat")
+            LockPortrait();
     }
 }

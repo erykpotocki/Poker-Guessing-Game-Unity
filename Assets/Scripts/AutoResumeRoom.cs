@@ -89,6 +89,9 @@ public class AutoResumeRoom : MonoBehaviourPunCallbacks
         }
 
         ClearResumePrefs();
+        if (gameStarted)
+            HotSeatOrientationLock.LockLandscape();
+
         SceneManager.LoadScene(gameStarted ? gameSceneName : lobbySceneName);
     }
 

@@ -17,6 +17,8 @@ public class DealtCardView : MonoBehaviour
         }
 
         cardImage.sprite = frontSprite;
+        cardImage.color = Color.white;
         cardImage.preserveAspect = true;
+        cardImage.enabled = true;
     }
 }

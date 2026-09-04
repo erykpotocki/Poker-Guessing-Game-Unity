@@ -209,6 +209,30 @@ public class CardDealTest : MonoBehaviour
         return new List<CardSpriteEntry>(allDealtCardsThisRound);
     }
 
+    public List<CardSpriteEntry> GetAllRoundCardsForEvaluation()
+    {
+        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom != null &&
+            PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                RoundCardsSnapshotKey, out object rawSnapshot) &&
+            rawSnapshot is string snapshot && !string.IsNullOrWhiteSpace(snapshot))
+        {
+            Dictionary<int, List<CardSpriteEntry>> parsed =
+                DeserializeRoundSnapshot(snapshot);
+            List<CardSpriteEntry> snapshotCards = new List<CardSpriteEntry>();
+
+            foreach (KeyValuePair<int, List<CardSpriteEntry>> pair in parsed)
+            {
+                if (pair.Value != null)
+                    snapshotCards.AddRange(pair.Value);
+            }
+
+            if (snapshotCards.Count > 0)
+                return snapshotCards;
+        }
+
+        return GetAllDealtCards();
+    }
+
     public void RevealAllDealtCards()
     {
         foreach (KeyValuePair<int, List<DealtCardView>> pair in dealtViewsByPlayerId)
@@ -1177,7 +1201,7 @@ public class CardDealTest : MonoBehaviour
     private CardView CreateBackCard(Vector2 anchoredPos)
     {
         CardView spawnedCard = Instantiate(cardPrefab, cardsParent);
-        spawnedCard.SetBack(cardBackDatabase, backIndex);
+        spawnedCard.SetMultiplayerBack(cardBackDatabase, backIndex);
 
         RectTransform rect = spawnedCard.GetComponent<RectTransform>();
         if (rect == null)

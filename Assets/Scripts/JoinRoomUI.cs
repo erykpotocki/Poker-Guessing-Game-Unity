@@ -100,6 +100,9 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
                 gameStarted = boolValue;
         }
 
+        if (gameStarted)
+            HotSeatOrientationLock.LockLandscape();
+
         SceneManager.LoadScene(gameStarted ? gameSceneName : lobbySceneName);
     }
 

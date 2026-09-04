@@ -1304,7 +1304,7 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
             return false;
         }
 
-        List<CardSpriteEntry> dealtCards = cardDealTest.GetAllDealtCards();
+        List<CardSpriteEntry> dealtCards = cardDealTest.GetAllRoundCardsForEvaluation();
         if (dealtCards == null || dealtCards.Count == 0)
             return false;
 
