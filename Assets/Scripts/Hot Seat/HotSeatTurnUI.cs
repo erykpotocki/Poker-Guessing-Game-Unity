@@ -105,6 +105,11 @@ public class HotSeatTurnUI : MonoBehaviour
 
     public void SetCheckAvailable(bool available)
     {
+        // Returning from the hand-selection panel must restore the primary
+        // action as well; it was hidden while the chooser was open.
+        if (raiseButton != null)
+            raiseButton.gameObject.SetActive(true);
+
         if (checkButton != null)
             checkButton.gameObject.SetActive(available);
 

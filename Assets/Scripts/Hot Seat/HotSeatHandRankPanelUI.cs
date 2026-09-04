@@ -162,7 +162,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         if (background == null)
             background = gameObject.AddComponent<Image>();
 
-        background.color = new Color(0.015f, 0.09f, 0.052f, 1f);
+        background.color = new Color(0.005f, 0.005f, 0.007f, 0.88f);
         background.raycastTarget = true;
 
         foreach (Button button in GetComponentsInChildren<Button>(true))
@@ -488,7 +488,9 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
         label.text = "WRÓĆ DO KARTY";
         label.alignment = TextAlignmentOptions.Center;
-        label.fontSize = 26f;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 28f;
+        label.fontSizeMax = 38f;
         label.fontStyle = FontStyles.Bold;
         label.color = Color.white;
         label.raycastTarget = false;
@@ -504,8 +506,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             panelRect.anchorMin = new Vector2(0.5f, 0f);
             panelRect.anchorMax = new Vector2(0.5f, 0f);
             panelRect.pivot = new Vector2(0.5f, 0f);
-            panelRect.anchoredPosition = new Vector2(0f, 42f);
-            panelRect.sizeDelta = new Vector2(940f, 800f);
+            panelRect.anchoredPosition = new Vector2(0f, 54f);
+            panelRect.sizeDelta = new Vector2(980f, 1280f);
         }
 
         if (handRankTitle != null)
@@ -514,22 +516,22 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             titleRect.anchorMin = new Vector2(0f, 1f);
             titleRect.anchorMax = new Vector2(1f, 1f);
             titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.anchoredPosition = new Vector2(0f, -18f);
-            titleRect.sizeDelta = new Vector2(-48f, 64f);
+            titleRect.anchoredPosition = new Vector2(0f, -24f);
+            titleRect.sizeDelta = new Vector2(-54f, 104f);
 
             handRankTitle.alignment = TextAlignmentOptions.Center;
             handRankTitle.textWrappingMode = TextWrappingModes.NoWrap;
             handRankTitle.enableAutoSizing = true;
-            handRankTitle.fontSizeMin = 20f;
-            handRankTitle.fontSizeMax = 31f;
+            handRankTitle.fontSizeMin = 27f;
+            handRankTitle.fontSizeMax = 40f;
         }
 
         if (rankScrollViewRect != null)
         {
             rankScrollViewRect.anchorMin = Vector2.zero;
             rankScrollViewRect.anchorMax = Vector2.one;
-            rankScrollViewRect.offsetMin = new Vector2(70f, 226f);
-            rankScrollViewRect.offsetMax = new Vector2(-70f, -112f);
+            rankScrollViewRect.offsetMin = new Vector2(52f, 264f);
+            rankScrollViewRect.offsetMax = new Vector2(-52f, -142f);
         }
 
         if (rankScrollRect != null)
@@ -569,8 +571,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             actionRect.anchorMin = new Vector2(0f, 0f);
             actionRect.anchorMax = new Vector2(1f, 0f);
             actionRect.pivot = new Vector2(0.5f, 0f);
-            actionRect.anchoredPosition = new Vector2(0f, 24f);
-            actionRect.sizeDelta = new Vector2(-40f, 76f);
+            actionRect.anchoredPosition = new Vector2(0f, 28f);
+            actionRect.sizeDelta = new Vector2(-52f, 112f);
         }
 
         if (cancelSelectionButton != null && cancelSelectionButton.transform is RectTransform cancelRect)
@@ -578,8 +580,8 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             cancelRect.anchorMin = new Vector2(0.5f, 0f);
             cancelRect.anchorMax = new Vector2(0.5f, 0f);
             cancelRect.pivot = new Vector2(0.5f, 0.5f);
-            cancelRect.anchoredPosition = new Vector2(0f, 164f);
-            cancelRect.sizeDelta = new Vector2(320f, 62f);
+            cancelRect.anchoredPosition = new Vector2(0f, 198f);
+            cancelRect.sizeDelta = new Vector2(480f, 92f);
         }
 
         ConfigureOptionButtons(categoryList);
@@ -604,7 +606,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
         VerticalLayoutGroup layout = listObject.GetComponent<VerticalLayoutGroup>();
         if (layout != null)
-            layout.spacing = 14f;
+            layout.spacing = 18f;
 
         foreach (Button button in listObject.GetComponentsInChildren<Button>(true))
         {
@@ -614,15 +616,15 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
             element.enabled = true;
 
-            element.minHeight = 82f;
-            element.preferredHeight = 82f;
+            element.minHeight = 116f;
+            element.preferredHeight = 116f;
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
             {
                 label.enableAutoSizing = true;
-                label.fontSizeMin = 24f;
-                label.fontSizeMax = 32f;
+                label.fontSizeMin = 30f;
+                label.fontSizeMax = 42f;
             }
         }
     }
