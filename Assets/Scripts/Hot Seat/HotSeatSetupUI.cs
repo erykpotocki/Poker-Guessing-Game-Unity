@@ -1331,12 +1331,35 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void FinishEditingPlayerName(TMP_InputField input)
     {
-        if (input == null || !string.IsNullOrWhiteSpace(input.text))
+        if (input == null)
             return;
 
-        int index = playerInputs.IndexOf(input);
-        if (index >= 0)
-            input.SetTextWithoutNotify(GetDefaultPlayerName(index + 1));
+        if (string.IsNullOrWhiteSpace(input.text))
+        {
+            int index = playerInputs.IndexOf(input);
+            if (index >= 0)
+                input.SetTextWithoutNotify(GetDefaultPlayerName(index + 1));
+        }
+
+        StartCoroutine(RestoreDefaultPlayerListView());
+    }
+
+    private IEnumerator RestoreDefaultPlayerListView()
+    {
+        yield return null;
+        foreach (TMP_InputField playerInput in playerInputs)
+        {
+            if (playerInput != null && playerInput.isFocused)
+                yield break;
+        }
+
+        if (playerListRoot is RectTransform listRect)
+            listRect.anchoredPosition = playerListBasePosition;
+        if (playerListScrollRect != null)
+        {
+            playerListScrollRect.StopMovement();
+            playerListScrollRect.verticalNormalizedPosition = 1f;
+        }
     }
 
     private void FocusPlayerInput(TMP_InputField input)
@@ -1457,8 +1480,8 @@ public class HotSeatSetupUI : MonoBehaviour
         playerListViewport.anchorMin = new Vector2(0.5f, 1f);
         playerListViewport.anchorMax = new Vector2(0.5f, 1f);
         playerListViewport.pivot = new Vector2(0.5f, 1f);
-        playerListViewport.anchoredPosition = new Vector2(0f, -500f);
-        playerListViewport.sizeDelta = new Vector2(920f, 680f);
+        playerListViewport.anchoredPosition = new Vector2(0f, -390f);
+        playerListViewport.sizeDelta = new Vector2(920f, 800f);
 
         Image viewportImage = viewportObject.GetComponent<Image>();
         viewportImage.color = Color.clear;
@@ -2279,11 +2302,14 @@ public class HotSeatSetupUI : MonoBehaviour
             addPlayerButton.transform is RectTransform addRect)
         {
             addRect.sizeDelta = new Vector2(900f, 126f);
-            addRect.anchoredPosition = new Vector2(0f, -350f);
+            addRect.anchoredPosition = new Vector2(0f, -245f);
         }
 
         if (startButton != null && startButton.transform is RectTransform startRect)
+        {
             startRect.anchoredPosition = new Vector2(0f, 404f);
+            startRect.sizeDelta = new Vector2(620f, 126f);
+        }
 
         if (playerListRoot is RectTransform listRect)
             listRect.anchoredPosition = new Vector2(0f, listRect.anchoredPosition.y);
@@ -2302,7 +2328,7 @@ public class HotSeatSetupUI : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 1f);
         rect.anchorMax = new Vector2(0.5f, 1f);
         rect.pivot = new Vector2(0.5f, 1f);
-        rect.anchoredPosition = new Vector2(0f, -246f);
+        rect.anchoredPosition = new Vector2(0f, -140f);
         rect.sizeDelta = new Vector2(900f, 72f);
 
         TextMeshProUGUI heading = headingObject.GetComponent<TextMeshProUGUI>();
@@ -2345,7 +2371,7 @@ public class HotSeatSetupUI : MonoBehaviour
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 244f);
-            rect.sizeDelta = new Vector2(720f, 108f);
+            rect.sizeDelta = new Vector2(620f, 126f);
         }
 
         TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
@@ -2353,8 +2379,17 @@ public class HotSeatSetupUI : MonoBehaviour
         {
             label.text = "WSTECZ";
             label.enableAutoSizing = true;
-            label.fontSizeMin = 27f;
-            label.fontSizeMax = 38f;
+            label.fontSizeMin = 30f;
+            label.fontSizeMax = 42f;
+        }
+
+        TMP_Text startLabel = startButton.GetComponentInChildren<TMP_Text>(true);
+        if (startLabel != null)
+        {
+            startLabel.enableAutoSizing = true;
+            startLabel.fontSizeMin = 30f;
+            startLabel.fontSizeMax = 42f;
+            startLabel.fontStyle = FontStyles.Bold;
         }
 
         PokerButtonTheme.ApplyTo(button);
