@@ -2279,8 +2279,11 @@ public class HotSeatSetupUI : MonoBehaviour
             addPlayerButton.transform is RectTransform addRect)
         {
             addRect.sizeDelta = new Vector2(900f, 126f);
-            addRect.anchoredPosition = new Vector2(0f, addRect.anchoredPosition.y);
+            addRect.anchoredPosition = new Vector2(0f, -350f);
         }
+
+        if (startButton != null && startButton.transform is RectTransform startRect)
+            startRect.anchoredPosition = new Vector2(0f, 404f);
 
         if (playerListRoot is RectTransform listRect)
             listRect.anchoredPosition = new Vector2(0f, listRect.anchoredPosition.y);
@@ -2299,17 +2302,17 @@ public class HotSeatSetupUI : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 1f);
         rect.anchorMax = new Vector2(0.5f, 1f);
         rect.pivot = new Vector2(0.5f, 1f);
-        rect.anchoredPosition = new Vector2(0f, -410f);
-        rect.sizeDelta = new Vector2(900f, 86f);
+        rect.anchoredPosition = new Vector2(0f, -246f);
+        rect.sizeDelta = new Vector2(900f, 72f);
 
         TextMeshProUGUI heading = headingObject.GetComponent<TextMeshProUGUI>();
         heading.text = "USTAW GRACZY";
         heading.alignment = TextAlignmentOptions.Center;
         heading.enableAutoSizing = true;
-        heading.fontSizeMin = 34f;
-        heading.fontSizeMax = 52f;
+        heading.fontSizeMin = 32f;
+        heading.fontSizeMax = 46f;
         heading.fontStyle = FontStyles.Bold;
-        heading.characterSpacing = 3f;
+        heading.characterSpacing = 2f;
         heading.color = new Color(1f, 0.82f, 0.30f, 1f);
         heading.raycastTarget = false;
     }
@@ -2341,7 +2344,7 @@ public class HotSeatSetupUI : MonoBehaviour
             rect.anchorMin = new Vector2(0.5f, 0f);
             rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 104f);
+            rect.anchoredPosition = new Vector2(0f, 244f);
             rect.sizeDelta = new Vector2(720f, 108f);
         }
 
