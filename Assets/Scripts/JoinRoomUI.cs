@@ -38,11 +38,6 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
 
     private void ConfigureResponsiveLayout()
     {
-        SetCentered(FindRect("AvatarPreview"), 0.68f, 390f, 390f);
-        SetCentered(nickInput != null ? nickInput.transform as RectTransform : null, 0.50f, 520f, 78f);
-        SetCentered(roomIdInput != null ? roomIdInput.transform as RectTransform : null, 0.435f, 520f, 78f);
-        Button rollButton = FindButtonWithLabel("Losuj");
-        SetCentered(rollButton != null ? rollButton.transform as RectTransform : null, 0.37f, 500f, 82f);
         SetCentered(joinButton != null ? joinButton.transform as RectTransform : null, 0.235f, 560f, 104f);
         if (joinButton != null) PokerButtonTheme.ApplyTo(joinButton);
     }
@@ -61,23 +56,6 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
         if (mobileUx == null)
             mobileUx = gameObject.AddComponent<MobileInputFieldUX>();
         mobileUx.Configure(0f, nickInput, roomIdInput);
-    }
-
-    private RectTransform FindRect(string objectName)
-    {
-        foreach (RectTransform rect in GetComponentsInChildren<RectTransform>(true))
-            if (rect.name == objectName) return rect;
-        return null;
-    }
-
-    private Button FindButtonWithLabel(string value)
-    {
-        foreach (Button button in GetComponentsInChildren<Button>(true))
-        {
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null && label.text.Trim().Equals(value, System.StringComparison.OrdinalIgnoreCase)) return button;
-        }
-        return null;
     }
 
     private static void SetCentered(RectTransform rect, float anchorY, float width, float height)
