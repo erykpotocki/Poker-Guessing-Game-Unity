@@ -82,6 +82,9 @@ public class HotSeatSetupUI : MonoBehaviour
     private Coroutine inputFocusRoutine;
     private CanvasGroup cardPanelCanvasGroup;
     private Coroutine cardPanelEntranceRoutine;
+    private Coroutine previewTransitionRoutine;
+    private Coroutine unseenCardSparkleRoutine;
+    private readonly List<GameObject> unseenCardSparkles = new List<GameObject>();
     private readonly Vector3[] inputWorldCorners = new Vector3[4];
 
     private sealed class RoundRevealCard
@@ -186,7 +189,7 @@ public class HotSeatSetupUI : MonoBehaviour
         StylePlayerInput(input);
         playerInputs.Add(input);
         RefreshButtons();
-        StartCoroutine(SelectNewPlayerInput(input, row.transform));
+        StartCoroutine(RevealNewPlayerRow(row.transform));
     }
 
     private void CreateRemovePlayerButton(
@@ -413,6 +416,7 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void ShowCardFront()
     {
+        ClearUnseenCardSparkles();
         cardVisible = true;
 
         HotSeatPlayer player = players[currentPlayerIndex];
@@ -953,16 +957,45 @@ public class HotSeatSetupUI : MonoBehaviour
 
     private void HideCardAndContinuePreview()
     {
-        if (currentPhase != HotSeatPhase.FirstCardPreview || !previewCardSeen)
+        if (currentPhase != HotSeatPhase.FirstCardPreview || !previewCardSeen ||
+            previewTransitionRoutine != null)
             return;
+
+        previewTransitionRoutine = StartCoroutine(TransitionToNextPreview());
+    }
+
+    private IEnumerator TransitionToNextPreview()
+    {
+        if (previewContinueButton != null)
+            previewContinueButton.interactable = false;
+
+        if (cardPanelCanvasGroup == null && cardPanel != null)
+        {
+            cardPanelCanvasGroup = cardPanel.GetComponent<CanvasGroup>();
+            if (cardPanelCanvasGroup == null)
+                cardPanelCanvasGroup = cardPanel.AddComponent<CanvasGroup>();
+        }
+
+        float elapsed = 0f;
+        const float fadeOutDuration = 0.18f;
+        while (elapsed < fadeOutDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            if (cardPanelCanvasGroup != null)
+                cardPanelCanvasGroup.alpha = 1f - Mathf.Clamp01(elapsed / fadeOutDuration);
+            yield return null;
+        }
 
         cardVisible = false;
         firstPreviewCount++;
 
         if (firstPreviewCount >= GetActivePlayerCount())
         {
+            if (cardPanelCanvasGroup != null)
+                cardPanelCanvasGroup.alpha = 1f;
+            previewTransitionRoutine = null;
             ShowPassPhoneScreen();
-            return;
+            yield break;
         }
 
         currentPlayerIndex =
@@ -970,6 +1003,101 @@ public class HotSeatSetupUI : MonoBehaviour
 
         previewCardSeen = false;
         ShowCardBack();
+
+        elapsed = 0f;
+        const float fadeInDuration = 0.24f;
+        while (elapsed < fadeInDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            if (cardPanelCanvasGroup != null)
+                cardPanelCanvasGroup.alpha = Mathf.Clamp01(elapsed / fadeInDuration);
+            yield return null;
+        }
+
+        if (cardPanelCanvasGroup != null)
+            cardPanelCanvasGroup.alpha = 1f;
+        if (previewContinueButton != null)
+            previewContinueButton.interactable = true;
+
+        PlayUnseenCardSparkles();
+        previewTransitionRoutine = null;
+    }
+
+    private void PlayUnseenCardSparkles()
+    {
+        ClearUnseenCardSparkles();
+        if (cardImage == null)
+            return;
+
+        Vector2[] anchors =
+        {
+            new Vector2(0.08f, 0.88f), new Vector2(0.92f, 0.82f),
+            new Vector2(0.12f, 0.14f), new Vector2(0.88f, 0.18f)
+        };
+
+        foreach (Vector2 anchor in anchors)
+        {
+            GameObject sparkle = new GameObject(
+                "UnseenCardSparkle", typeof(RectTransform), typeof(TextMeshProUGUI));
+            sparkle.transform.SetParent(cardImage.transform, false);
+            RectTransform rect = sparkle.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.sizeDelta = new Vector2(90f, 90f);
+            rect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI text = sparkle.GetComponent<TextMeshProUGUI>();
+            text.text = "✦";
+            text.alignment = TextAlignmentOptions.Center;
+            text.fontSize = 58f;
+            text.color = new Color(1f, 0.82f, 0.28f, 0f);
+            text.raycastTarget = false;
+            unseenCardSparkles.Add(sparkle);
+        }
+
+        unseenCardSparkleRoutine = StartCoroutine(AnimateUnseenCardSparkles());
+    }
+
+    private IEnumerator AnimateUnseenCardSparkles()
+    {
+        float elapsed = 0f;
+        const float duration = 1.05f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float glow = Mathf.Sin(t * Mathf.PI);
+            for (int i = 0; i < unseenCardSparkles.Count; i++)
+            {
+                GameObject sparkle = unseenCardSparkles[i];
+                if (sparkle == null)
+                    continue;
+                TMP_Text text = sparkle.GetComponent<TMP_Text>();
+                if (text != null)
+                    text.color = new Color(1f, 0.82f, 0.28f, glow);
+                sparkle.transform.localScale = Vector3.one *
+                    Mathf.Lerp(0.65f, 1.18f, glow) * (i % 2 == 0 ? 1f : 0.86f);
+            }
+            yield return null;
+        }
+
+        unseenCardSparkleRoutine = null;
+        ClearUnseenCardSparkles();
+    }
+
+    private void ClearUnseenCardSparkles()
+    {
+        if (unseenCardSparkleRoutine != null)
+        {
+            StopCoroutine(unseenCardSparkleRoutine);
+            unseenCardSparkleRoutine = null;
+        }
+
+        foreach (GameObject sparkle in unseenCardSparkles)
+        {
+            if (sparkle != null)
+                Destroy(sparkle);
+        }
+        unseenCardSparkles.Clear();
     }
 
     private void ShowPassPhoneScreen()
@@ -1113,8 +1241,8 @@ public class HotSeatSetupUI : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0f);
         rect.anchorMax = new Vector2(0.5f, 0f);
         rect.pivot = new Vector2(0.5f, 0f);
-        rect.anchoredPosition = new Vector2(0f, 74f);
-        rect.sizeDelta = new Vector2(720f, 112f);
+        rect.anchoredPosition = new Vector2(0f, 126f);
+        rect.sizeDelta = new Vector2(790f, 136f);
 
         Image image = buttonObject.GetComponent<Image>();
         image.sprite = pokerButtonSprite;
@@ -1139,8 +1267,8 @@ public class HotSeatSetupUI : MonoBehaviour
         label.text = "ZAKRYJ I PODAJ DALEJ";
         label.alignment = TextAlignmentOptions.Center;
         label.enableAutoSizing = true;
-        label.fontSizeMin = 24f;
-        label.fontSizeMax = 34f;
+        label.fontSizeMin = 29f;
+        label.fontSizeMax = 41f;
         label.fontStyle = FontStyles.Bold;
         label.color = Color.white;
         label.raycastTarget = false;
@@ -1148,10 +1276,10 @@ public class HotSeatSetupUI : MonoBehaviour
         buttonObject.SetActive(false);
     }
 
-    private IEnumerator SelectNewPlayerInput(TMP_InputField input, Transform row)
+    private IEnumerator RevealNewPlayerRow(Transform row)
     {
         yield return null;
-        if (input == null || row == null)
+        if (row == null)
             yield break;
 
         CanvasGroup group = row.GetComponent<CanvasGroup>();
@@ -1173,11 +1301,6 @@ public class HotSeatSetupUI : MonoBehaviour
 
         row.localScale = Vector3.one;
         group.alpha = 1f;
-        input.Select();
-        input.ActivateInputField();
-        input.caretPosition = input.text.Length;
-        input.selectionStringAnchorPosition = input.text.Length;
-        input.selectionStringFocusPosition = input.text.Length;
     }
 
     private void BeginEditingPlayerName(TMP_InputField input)
@@ -1185,13 +1308,23 @@ public class HotSeatSetupUI : MonoBehaviour
         if (input == null)
             return;
 
-        if (IsDefaultPlayerName(input.text))
-            input.SetTextWithoutNotify(string.Empty);
+        input.ActivateInputField();
+        StartCoroutine(SelectWholePlayerName(input));
+        FocusPlayerInput(input);
+    }
+
+    private static IEnumerator SelectWholePlayerName(TMP_InputField input)
+    {
+        // TMP updates the caret once more after the pointer event. Waiting one
+        // frame keeps the familiar mobile behaviour: tap, select all, type.
+        yield return null;
+        if (input == null || !input.isFocused)
+            yield break;
 
         input.caretPosition = input.text.Length;
-        input.selectionStringAnchorPosition = input.text.Length;
+        input.selectionStringAnchorPosition = 0;
         input.selectionStringFocusPosition = input.text.Length;
-        FocusPlayerInput(input);
+        input.ForceLabelUpdate();
     }
 
     private void FinishEditingPlayerName(TMP_InputField input)
@@ -1225,6 +1358,39 @@ public class HotSeatSetupUI : MonoBehaviour
                 continue;
 
             LayoutRebuilder.ForceRebuildLayoutImmediate(listRect);
+
+            if (playerListScrollRect != null && playerListViewport != null)
+            {
+                inputRect.GetWorldCorners(inputWorldCorners);
+                Vector3 inputTopWorld = inputWorldCorners[1];
+                Vector3 viewportTopWorld = playerListViewport.TransformPoint(
+                    new Vector3(0f, playerListViewport.rect.yMax - 24f, 0f));
+                Canvas listCanvas = input.GetComponentInParent<Canvas>();
+                Camera listCamera = listCanvas != null &&
+                    listCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                    ? listCanvas.worldCamera
+                    : null;
+                float listScale = listCanvas != null
+                    ? Mathf.Max(0.01f, listCanvas.scaleFactor)
+                    : 1f;
+                float inputTop = RectTransformUtility.WorldToScreenPoint(
+                    listCamera, inputTopWorld).y;
+                float viewportTop = RectTransformUtility.WorldToScreenPoint(
+                    listCamera, viewportTopWorld).y;
+                float scrollUp = viewportTop - inputTop;
+
+                if (scrollUp > 0f)
+                {
+                    float maximumScrollY = Mathf.Max(playerListBasePosition.y,
+                        playerListBasePosition.y + listRect.rect.height -
+                        playerListViewport.rect.height);
+                    listRect.anchoredPosition = new Vector2(
+                        playerListBasePosition.x,
+                        Mathf.Clamp(listRect.anchoredPosition.y + scrollUp / listScale,
+                            playerListBasePosition.y, maximumScrollY));
+                    playerListScrollRect.StopMovement();
+                }
+            }
 
             float keyboardHeight = GetKeyboardHeight();
             if (keyboardHeight <= 0f)
@@ -2219,13 +2385,16 @@ public class HotSeatSetupUI : MonoBehaviour
         }
 
         if (input.placeholder is TMP_Text placeholder)
+        {
+            placeholder.text = string.Empty;
             placeholder.color = new Color(0.78f, 0.70f, 0.58f, 0.65f);
+        }
 
         input.customCaretColor = true;
         input.caretColor = new Color(1f, 0.82f, 0.30f, 1f);
         input.caretBlinkRate = 0.55f;
         input.caretWidth = 4;
-        input.onFocusSelectAll = false;
+        input.onFocusSelectAll = true;
         input.keepTextSelectionVisible = true;
         input.selectionColor = new Color(0.72f, 0.49f, 0.08f, 0.55f);
     }

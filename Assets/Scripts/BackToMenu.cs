@@ -64,7 +64,7 @@ public class BackToMenu : MonoBehaviourPunCallbacks
         buttonRect.anchoredPosition = new Vector2(
             Mathf.Max(28f, leftInset + 20f),
             -Mathf.Max(116f, topInset + 28f));
-        buttonRect.sizeDelta = new Vector2(82f, 82f);
+        buttonRect.sizeDelta = new Vector2(148f, 148f);
         buttonRect.localScale = Vector3.one;
 
         Image background = cornerBackButton.targetGraphic as Image;
@@ -87,7 +87,7 @@ public class BackToMenu : MonoBehaviourPunCallbacks
             label.color = new Color(0.95f, 0.82f, 0.42f, 0.96f);
             label.fontStyle = FontStyles.Normal;
             label.enableAutoSizing = false;
-            label.fontSize = 54f;
+            label.fontSize = 108f;
 
             Shadow shadow = label.GetComponent<Shadow>();
             if (shadow == null)

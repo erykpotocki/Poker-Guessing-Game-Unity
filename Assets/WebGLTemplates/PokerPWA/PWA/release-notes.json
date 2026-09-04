@@ -1,10 +1,10 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "title": "Dostępna aktualizacja",
   "changes": [
-    "Połączono dwa etapy ładowania w jeden ekran.",
-    "Ujednolicono napisy, przyciski cofania oraz tempo animacji.",
-    "Ulepszono edycję i przewijanie nazw graczy przy otwartej klawiaturze.",
-    "Poprzednia deklaracja pozostaje widoczna podczas wybierania wyższego układu."
+    "Usunięto miganie przycisków i niebieski błysk podczas przechodzenia do gry offline.",
+    "Powiększono przycisk cofania w lewym górnym rogu.",
+    "Wyśrodkowano menu i dopasowano grę do pełnej wysokości ekranu.",
+    "Poprawiono edycję nazw oraz automatyczne przewijanie listy graczy nad klawiaturę."
   ]
 }

@@ -42,7 +42,8 @@ public class MainMenuUI : MonoBehaviour
     {
         PokerButtonTheme.EnsureController();
         BuildMenu();
-        StartCoroutine(AnimateMenuEntrance());
+        if (screenCanvasGroup != null)
+            screenCanvasGroup.alpha = 1f;
     }
 
     private void BuildMenu()
@@ -72,17 +73,16 @@ public class MainMenuUI : MonoBehaviour
             return;
 
         menuGroup.localScale = new Vector3(3.25f, 2.5f, 1f);
-
         primaryButton = CreateMenuButton(
-            "PrimaryModeButton", styleSource, new Vector2(62.8f, -94f), new Vector2(218f, 52f), true);
+            "PrimaryModeButton", styleSource, new Vector2(73.23f, -94f), new Vector2(218f, 52f), true);
         secondaryButton = CreateMenuButton(
-            "SecondaryModeButton", styleSource, new Vector2(62.8f, -166f), new Vector2(218f, 52f), true);
+            "SecondaryModeButton", styleSource, new Vector2(73.23f, -166f), new Vector2(218f, 52f), true);
         rulesButton = CreateMenuButton(
-            "RulesButton", styleSource, new Vector2(6.3f, -232f), new Vector2(105f, 34f), false);
+            "RulesButton", styleSource, new Vector2(16.73f, -232f), new Vector2(105f, 34f), false);
         settingsButton = CreateMenuButton(
-            "SettingsButton", styleSource, new Vector2(119.3f, -232f), new Vector2(105f, 34f), false);
+            "SettingsButton", styleSource, new Vector2(129.73f, -232f), new Vector2(105f, 34f), false);
         backButton = CreateMenuButton(
-            "ModeBackButton", styleSource, new Vector2(62.8f, -238f), new Vector2(218f, 38f), false);
+            "ModeBackButton", styleSource, new Vector2(73.23f, -238f), new Vector2(218f, 38f), false);
 
         Canvas canvas = menuGroup.GetComponentInParent<Canvas>();
         if (canvas != null)
@@ -292,7 +292,7 @@ public class MainMenuUI : MonoBehaviour
         rulesButton.gameObject.SetActive(true);
         settingsButton.gameObject.SetActive(true);
         backButton.gameObject.SetActive(false);
-        StartCoroutine(AnimateButtons(primaryButton, secondaryButton, rulesButton, settingsButton));
+        ShowButtonsImmediately(primaryButton, secondaryButton, rulesButton, settingsButton);
     }
 
     private void ShowMultiplayerOptions()
@@ -306,7 +306,7 @@ public class MainMenuUI : MonoBehaviour
         rulesButton.gameObject.SetActive(false);
         settingsButton.gameObject.SetActive(false);
         backButton.gameObject.SetActive(true);
-        StartCoroutine(AnimateButtons(primaryButton, secondaryButton, backButton));
+        ShowButtonsImmediately(primaryButton, secondaryButton, backButton);
     }
 
     private static void ConfigureButton(
@@ -383,31 +383,11 @@ public class MainMenuUI : MonoBehaviour
         {
             infoOverlay.SetActive(false);
             menuGroup.gameObject.SetActive(true);
-            StartCoroutine(AnimateButtons(primaryButton, secondaryButton, rulesButton, settingsButton));
+            ShowButtonsImmediately(primaryButton, secondaryButton, rulesButton, settingsButton);
         }
     }
 
-    private IEnumerator AnimateMenuEntrance()
-    {
-        yield return null;
-        if (screenCanvasGroup != null)
-            screenCanvasGroup.alpha = 0f;
-
-        float elapsed = 0f;
-        const float duration = 0.48f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            if (screenCanvasGroup != null)
-                screenCanvasGroup.alpha = EaseOut(Mathf.Clamp01(elapsed / duration));
-            yield return null;
-        }
-
-        if (screenCanvasGroup != null)
-            screenCanvasGroup.alpha = 1f;
-    }
-
-    private IEnumerator AnimateButtons(params Button[] buttons)
+    private static void ShowButtonsImmediately(params Button[] buttons)
     {
         foreach (Button button in buttons)
         {
@@ -417,22 +397,10 @@ public class MainMenuUI : MonoBehaviour
             CanvasGroup group = button.GetComponent<CanvasGroup>();
             if (group == null)
                 group = button.gameObject.AddComponent<CanvasGroup>();
-            group.alpha = 0f;
-            button.transform.localScale = Vector3.one;
-
-            float elapsed = 0f;
-            const float duration = 0.42f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = EaseOut(Mathf.Clamp01(elapsed / duration));
-                group.alpha = t;
-                yield return null;
-            }
-
             group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
             button.transform.localScale = Vector3.one;
-            yield return new WaitForSecondsRealtime(0.08f);
         }
     }
 
@@ -456,26 +424,10 @@ public class MainMenuUI : MonoBehaviour
 
     private void StartSceneTransition(string sceneName)
     {
-        if (!transitionInProgress)
-            StartCoroutine(FadeOutAndLoad(sceneName));
-    }
+        if (transitionInProgress)
+            return;
 
-    private IEnumerator FadeOutAndLoad(string sceneName)
-    {
         transitionInProgress = true;
-        float startAlpha = screenCanvasGroup != null ? screenCanvasGroup.alpha : 1f;
-        float elapsed = 0f;
-        const float duration = 0.32f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            if (screenCanvasGroup != null)
-                screenCanvasGroup.alpha = Mathf.Lerp(startAlpha, 0f,
-                    Mathf.Clamp01(elapsed / duration));
-            yield return null;
-        }
-
         SceneManager.LoadScene(sceneName);
     }
 }
