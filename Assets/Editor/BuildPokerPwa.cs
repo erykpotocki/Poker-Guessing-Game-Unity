@@ -64,7 +64,7 @@ public static class BuildPokerPwa
         string settings = File.ReadAllText(PhotonSettingsPath);
         Match appId = Regex.Match(
             settings,
-            @"^\s*AppIdRealtime:\s*(\S.*?)\s*$",
+            @"^[ \t]*AppIdRealtime:[ \t]*(\S.*?)[ \t]*$",
             RegexOptions.Multiline);
 
         if (!appId.Success || string.IsNullOrWhiteSpace(appId.Groups[1].Value))
