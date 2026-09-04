@@ -2313,6 +2313,11 @@ public class HotSeatSetupUI : MonoBehaviour
 
         if (playerListRoot is RectTransform listRect)
             listRect.anchoredPosition = new Vector2(0f, listRect.anchoredPosition.y);
+
+        VerticalLayoutGroup playerLayout =
+            playerListRoot != null ? playerListRoot.GetComponent<VerticalLayoutGroup>() : null;
+        if (playerLayout != null)
+            playerLayout.spacing = 22f;
     }
 
     private void CreateSetupHeader()
