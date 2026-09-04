@@ -15,6 +15,7 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        ConfigureMobileInput();
         if (roomCodeText != null)
             roomCodeText.text = "";
 
@@ -26,6 +27,18 @@ public class CreateRoomUI : MonoBehaviourPunCallbacks
         }
 
         ValidateCreateButton();
+    }
+
+    private void ConfigureMobileInput()
+    {
+        if (nickInput == null)
+            return;
+
+        nickInput.keyboardType = TouchScreenKeyboardType.Default;
+        MobileInputFieldUX mobileUx = GetComponent<MobileInputFieldUX>();
+        if (mobileUx == null)
+            mobileUx = gameObject.AddComponent<MobileInputFieldUX>();
+        mobileUx.Configure(250f, nickInput);
     }
 
     private void Update()

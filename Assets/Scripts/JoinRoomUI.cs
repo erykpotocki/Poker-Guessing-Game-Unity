@@ -19,6 +19,7 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        ConfigureMobileInputs();
         if (joinButton != null)
         {
             joinButton.onClick.RemoveAllListeners();
@@ -32,6 +33,22 @@ public class JoinRoomUI : MonoBehaviourPunCallbacks
             roomIdInput.onValueChanged.AddListener(_ => Validate());
 
         Validate();
+    }
+
+    private void ConfigureMobileInputs()
+    {
+        if (nickInput != null)
+            nickInput.keyboardType = TouchScreenKeyboardType.Default;
+        if (roomIdInput != null)
+        {
+            roomIdInput.keyboardType = TouchScreenKeyboardType.ASCIICapable;
+            roomIdInput.characterValidation = TMP_InputField.CharacterValidation.Alphanumeric;
+        }
+
+        MobileInputFieldUX mobileUx = GetComponent<MobileInputFieldUX>();
+        if (mobileUx == null)
+            mobileUx = gameObject.AddComponent<MobileInputFieldUX>();
+        mobileUx.Configure(250f, nickInput, roomIdInput);
     }
 
     private void Update()

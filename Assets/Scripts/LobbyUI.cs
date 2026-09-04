@@ -14,6 +14,7 @@ public class LobbyUI : MonoBehaviourPunCallbacks
     private void Start()
     {
         ConfigureCodeCopyButton();
+        ConfigureHeaderSpacing();
         RefreshUI();
     }
 
@@ -41,12 +42,28 @@ public class LobbyUI : MonoBehaviourPunCallbacks
         if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom != null)
         {
             roomCode = PhotonNetwork.CurrentRoom.Name;
-            codeText.text = $"ID: {roomCode}\n<color=#D7B36A><size=65%>DOTKNIJ, ABY SKOPIOWAĆ</size></color>";
+            codeText.text = $"ID: {roomCode}\n<line-height=145%><color=#A8997A99><size=40%>DOTKNIJ, ABY SKOPIOWAĆ</size></color></line-height>";
         }
         else
         {
             roomCode = string.Empty;
             codeText.text = "ID: -";
+        }
+    }
+
+    private void ConfigureHeaderSpacing()
+    {
+        if (codeText != null)
+        {
+            RectTransform rect = codeText.rectTransform;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -105f);
+            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 120f);
+        }
+
+        if (gameModeText != null)
+        {
+            RectTransform rect = gameModeText.rectTransform;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -245f);
         }
     }
 
@@ -79,7 +96,7 @@ public class LobbyUI : MonoBehaviourPunCallbacks
 
     private IEnumerator ShowCopyFeedback()
     {
-        codeText.text = $"ID: {roomCode}\n<color=#F5C451><size=65%>SKOPIOWANO KOD ✓</size></color>";
+        codeText.text = $"ID: {roomCode}\n<line-height=145%><color=#BDAA7FAA><size=40%>SKOPIOWANO KOD ✓</size></color></line-height>";
         yield return new WaitForSecondsRealtime(1.4f);
         copyFeedbackRoutine = null;
         RefreshCode();

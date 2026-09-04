@@ -42,7 +42,9 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
         if (startButton == null) return;
 
         bool isMaster = PhotonNetwork.IsMasterClient;
-        int count = PhotonNetwork.CurrentRoom != null ? PhotonNetwork.CurrentRoom.PlayerCount : 0;
+        int count = PhotonNetwork.CurrentRoom != null
+            ? PhotonNetwork.CurrentRoom.PlayerCount + LobbyDebugFakePlayers.BotCount
+            : 0;
 
         startButton.interactable = isMaster && (count >= minPlayers);
     }
@@ -51,7 +53,7 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
     {
         if (!PhotonNetwork.IsMasterClient) return;
         if (PhotonNetwork.CurrentRoom == null) return;
-        if (PhotonNetwork.CurrentRoom.PlayerCount < minPlayers) return;
+        if (PhotonNetwork.CurrentRoom.PlayerCount + LobbyDebugFakePlayers.BotCount < minPlayers) return;
 
         Hashtable roomProps = new Hashtable();
         roomProps[GameStartedKey] = true;

@@ -36,9 +36,24 @@ public sealed class PokerButtonTheme : MonoBehaviour
             return;
 
         GameObject controller = new GameObject("PokerButtonTheme");
-        DontDestroyOnLoad(controller);
+        if (Application.isPlaying)
+            DontDestroyOnLoad(controller);
+        else
+            controller.hideFlags = HideFlags.HideAndDontSave;
         instance = controller.AddComponent<PokerButtonTheme>();
     }
+
+#if UNITY_EDITOR
+    public static void RefreshEditorPreview()
+    {
+        if (Application.isPlaying)
+            return;
+
+        EnsureController();
+        if (instance != null)
+            instance.ApplyThemeToAllButtons();
+    }
+#endif
 
     public static void ApplyTo(Button button)
     {
@@ -60,7 +75,8 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
         SceneManager.sceneLoaded += HandleSceneLoaded;
         ApplyThemeToAllButtons();
-        InvokeRepeating(nameof(ApplyThemeToAllButtons), 0.25f, 0.75f);
+        if (Application.isPlaying)
+            InvokeRepeating(nameof(ApplyThemeToAllButtons), 0.25f, 0.75f);
     }
 
     private void OnDestroy()
@@ -100,7 +116,8 @@ public sealed class PokerButtonTheme : MonoBehaviour
         if (background == null)
             return;
 
-        ConfigureMobileTouchTarget(button);
+        if (Application.isPlaying)
+            ConfigureMobileTouchTarget(button);
 
         bool firstApplication = background.sprite != buttonSprite;
         if (firstApplication)
@@ -114,7 +131,8 @@ public sealed class PokerButtonTheme : MonoBehaviour
             background.raycastTarget = true;
 
             DisableLegacyOutline(background);
-            ConfigureShadow(background);
+            if (Application.isPlaying)
+                ConfigureShadow(background);
             ConfigureButtonTransitions(button);
         }
 
@@ -127,6 +145,9 @@ public sealed class PokerButtonTheme : MonoBehaviour
         bool usesCompactMainMenuFont =
             button.gameObject.scene.name == "MainMenu" &&
             !button.name.StartsWith("Info");
+        bool usesCompactModeFont =
+            button.gameObject.scene.name == "GameModeSelect" &&
+            button.name.StartsWith("Mode");
         bool isMainMenuUtilityButton =
             button.name == "RulesButton" || button.name == "SettingsButton";
 
@@ -139,26 +160,33 @@ public sealed class PokerButtonTheme : MonoBehaviour
         }
         else
         {
-            label.fontSizeMin = usesCompactMainMenuFont ? 10f : 24f;
-            label.fontSizeMax = usesCompactMainMenuFont ? 14f : 36f;
+            label.fontSizeMin = usesCompactMainMenuFont ? 10f :
+                usesCompactModeFont ? 18f : 24f;
+            label.fontSizeMax = usesCompactMainMenuFont ? 14f :
+                usesCompactModeFont ? 28f : 36f;
         }
         label.characterSpacing = usesCompactMainMenuFont ? 0.5f : 1f;
         label.margin = usesCompactMainMenuFont
             ? new Vector4(isMainMenuUtilityButton ? 8f : 14f, 6f,
                 isMainMenuUtilityButton ? 8f : 14f, 6f)
-            : new Vector4(18f, 6f, 18f, 6f);
+            : usesCompactModeFont
+                ? new Vector4(14f, 4f, 14f, 4f)
+                : new Vector4(18f, 6f, 18f, 6f);
 
         Navigation navigation = button.navigation;
         navigation.mode = Navigation.Mode.None;
         button.navigation = navigation;
 
-        Shadow textShadow = GetExactShadow(label.gameObject);
-        if (textShadow == null)
-            textShadow = label.gameObject.AddComponent<Shadow>();
+        if (Application.isPlaying)
+        {
+            Shadow textShadow = GetExactShadow(label.gameObject);
+            if (textShadow == null)
+                textShadow = label.gameObject.AddComponent<Shadow>();
 
-        textShadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
-        textShadow.effectDistance = new Vector2(1.5f, -1.5f);
-        textShadow.useGraphicAlpha = true;
+            textShadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
+            textShadow.effectDistance = new Vector2(1.5f, -1.5f);
+            textShadow.useGraphicAlpha = true;
+        }
     }
 
     private static void ConfigureMobileTouchTarget(Button button)

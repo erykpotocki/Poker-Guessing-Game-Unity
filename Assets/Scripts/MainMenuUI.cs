@@ -20,6 +20,10 @@ public class MainMenuUI : MonoBehaviour
     private CanvasGroup infoCanvasGroup;
     private CanvasGroup screenCanvasGroup;
     private bool transitionInProgress;
+#if UNITY_EDITOR
+    private Vector3 editorOriginalMenuScale;
+    private bool editorPreviewBuilt;
+#endif
 
     private const string RulesText =
         "<b>CEL GRY</b>\nZostań ostatnim graczem, który nie odpadł.\n\n" +
@@ -45,6 +49,68 @@ public class MainMenuUI : MonoBehaviour
         if (screenCanvasGroup != null)
             screenCanvasGroup.alpha = 1f;
     }
+
+#if UNITY_EDITOR
+    public void RefreshEditorPreview()
+    {
+        if (Application.isPlaying || editorPreviewBuilt)
+            return;
+
+        PokerButtonTheme.EnsureController();
+        BuildMenu();
+        editorPreviewBuilt = primaryButton != null;
+        if (editorPreviewBuilt)
+        {
+            HidePreviewObject(primaryButton.gameObject);
+            HidePreviewObject(secondaryButton.gameObject);
+            HidePreviewObject(rulesButton.gameObject);
+            HidePreviewObject(settingsButton.gameObject);
+            HidePreviewObject(backButton.gameObject);
+            HidePreviewObject(infoOverlay);
+        }
+    }
+
+    public void ClearEditorPreview()
+    {
+        if (Application.isPlaying || !editorPreviewBuilt)
+            return;
+
+        DestroyPreviewObject(primaryButton);
+        DestroyPreviewObject(secondaryButton);
+        DestroyPreviewObject(rulesButton);
+        DestroyPreviewObject(settingsButton);
+        DestroyPreviewObject(backButton);
+        if (infoOverlay != null)
+            DestroyImmediate(infoOverlay);
+
+        if (menuGroup != null)
+        {
+            menuGroup.localScale = editorOriginalMenuScale;
+            foreach (Button button in menuGroup.GetComponentsInChildren<Button>(true))
+            {
+                if (button.name == "Ustawienia" || button.name.Contains("Stwórz") ||
+                    button.name.Contains("Dołącz") || button.name == "Hot Seat")
+                    button.gameObject.SetActive(true);
+            }
+        }
+
+        primaryButton = secondaryButton = rulesButton = settingsButton = backButton = null;
+        infoOverlay = null;
+        editorPreviewBuilt = false;
+    }
+
+    private static void HidePreviewObject(GameObject target)
+    {
+        if (target != null)
+            target.hideFlags = HideFlags.DontSaveInEditor;
+    }
+
+    private static void DestroyPreviewObject(Button button)
+    {
+        if (button != null)
+            DestroyImmediate(button.gameObject);
+    }
+#endif
 
     private void BuildMenu()
     {
@@ -72,6 +138,10 @@ public class MainMenuUI : MonoBehaviour
         if (menuGroup == null)
             return;
 
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+            editorOriginalMenuScale = menuGroup.localScale;
+#endif
         menuGroup.localScale = new Vector3(3.25f, 2.5f, 1f);
         primaryButton = CreateMenuButton(
             "PrimaryModeButton", styleSource, new Vector2(73.23f, -88f), new Vector2(240f, 64f), true);

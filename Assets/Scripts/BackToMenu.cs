@@ -72,6 +72,32 @@ public class BackToMenu : MonoBehaviourPunCallbacks
         float leftInset = Screen.safeArea.xMin / canvasScale;
         float topInset = (Screen.height - Screen.safeArea.yMax) / canvasScale;
 
+        bool useBottomBackButton = SceneManager.GetActiveScene().name != "Game" &&
+                                   SceneManager.GetActiveScene().name != "BootLoading";
+
+        if (useBottomBackButton)
+        {
+            float bottomInset = Screen.safeArea.yMin / canvasScale;
+            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(0.5f, 0f);
+            buttonRect.pivot = new Vector2(0.5f, 0f);
+            buttonRect.anchoredPosition = new Vector2(0f, bottomInset + 38f);
+            buttonRect.sizeDelta = new Vector2(380f, 92f);
+            buttonRect.localScale = Vector3.one;
+
+            TMP_Text bottomLabel = cornerBackButton.GetComponentInChildren<TMP_Text>(true);
+            if (bottomLabel != null)
+            {
+                bottomLabel.text = "COFNIJ";
+                bottomLabel.fontStyle = FontStyles.Bold;
+                bottomLabel.enableAutoSizing = true;
+                bottomLabel.fontSizeMin = 22f;
+                bottomLabel.fontSizeMax = 32f;
+            }
+
+            PokerButtonTheme.ApplyTo(cornerBackButton);
+            return;
+        }
+
         buttonRect.anchorMin = new Vector2(0f, 1f);
         buttonRect.anchorMax = new Vector2(0f, 1f);
         buttonRect.pivot = new Vector2(0f, 1f);

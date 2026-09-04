@@ -69,5 +69,27 @@ public class HotSeatOrientationLock : MonoBehaviour
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
         }
+
+        OverscanFullScreenBackgrounds();
+    }
+
+    private static void OverscanFullScreenBackgrounds()
+    {
+        Image[] images = Object.FindObjectsByType<Image>(
+            FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (Image image in images)
+        {
+            if (image == null ||
+                (image.name != "Background" && image.name != "BackgroundGame" && image.name != "Czarne"))
+                continue;
+
+            RectTransform rect = image.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(-32f, -32f);
+            rect.offsetMax = new Vector2(32f, 32f);
+            image.preserveAspect = false;
+        }
     }
 }

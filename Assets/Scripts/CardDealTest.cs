@@ -38,7 +38,7 @@ public class CardDealTest : MonoBehaviour
 
     [Header("Card settings")]
     [SerializeField] private int backIndex = 0;
-    [SerializeField, Min(1f)] private float multiplayerCardSizeMultiplier = 2f;
+    [SerializeField, Min(0.5f)] private float multiplayerCardSizeMultiplier = 1f;
 
     [Header("Resume / restore")]
     [SerializeField] private bool tryRestoreSnapshotOnStart = true;

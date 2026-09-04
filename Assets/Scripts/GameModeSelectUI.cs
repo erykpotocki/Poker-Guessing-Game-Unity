@@ -15,6 +15,7 @@ public class GameModeSelectUI : MonoBehaviour
     private RectTransform closeButtonRect;
     private Vector2 closeButtonBasePosition;
     private Rect lastSafeArea;
+    private Vector2Int lastScreenSize;
 
     private void Start()
     {
@@ -24,8 +25,14 @@ public class GameModeSelectUI : MonoBehaviour
 
     private void Update()
     {
-        // BackToMenu applies one shared safe-area layout to the close button.
+        Vector2Int size = new Vector2Int(Screen.width, Screen.height);
+        if (size != lastScreenSize || Screen.safeArea != lastSafeArea)
+            ConfigureModeButtons();
     }
+
+#if UNITY_EDITOR
+    public void RefreshEditorPreview() => ConfigureModeButtons();
+#endif
 
     public void SelectBeginnerMode()
     {
@@ -67,6 +74,15 @@ public class GameModeSelectUI : MonoBehaviour
 
     private void ConfigureModeButtons()
     {
+        lastScreenSize = new Vector2Int(Screen.width, Screen.height);
+        lastSafeArea = Screen.safeArea;
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+        RectTransform canvasRect = canvas != null ? canvas.transform as RectTransform : null;
+        float availableWidth = canvasRect != null ? canvasRect.rect.width : 1080f;
+        float buttonWidth = Mathf.Clamp(availableWidth * 0.76f, 520f, 760f);
+        RectTransform modePanel = null;
+
         foreach (Button button in GetComponentsInChildren<Button>(true))
         {
             if (!button.name.StartsWith("Mode"))
@@ -81,10 +97,22 @@ public class GameModeSelectUI : MonoBehaviour
 
             layout.enabled = true;
 
-            layout.minWidth = 560f;
-            layout.preferredWidth = 620f;
-            layout.minHeight = 88f;
+            layout.ignoreLayout = false;
+            layout.minWidth = buttonWidth;
+            layout.preferredWidth = buttonWidth;
+            layout.minHeight = 96f;
             layout.preferredHeight = 96f;
+
+            if (modePanel == null)
+                modePanel = button.transform.parent as RectTransform;
+
+            if (button.transform is RectTransform buttonRect)
+            {
+                buttonRect.pivot = new Vector2(0.5f, 0.5f);
+                buttonRect.anchoredPosition = Vector2.zero;
+                buttonRect.sizeDelta = new Vector2(buttonWidth, 96f);
+                buttonRect.localScale = Vector3.one;
+            }
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
@@ -94,6 +122,49 @@ public class GameModeSelectUI : MonoBehaviour
                 label.fontSizeMin = 20f;
                 label.fontSizeMax = 30f;
             }
+        }
+
+        if (modePanel != null)
+        {
+            modePanel.localScale = Vector3.one;
+            modePanel.anchorMin = modePanel.anchorMax = new Vector2(0.5f, 0.45f);
+            modePanel.pivot = new Vector2(0.5f, 0.5f);
+            modePanel.anchoredPosition = Vector2.zero;
+
+            VerticalLayoutGroup group = modePanel.GetComponent<VerticalLayoutGroup>();
+            if (group != null)
+            {
+                group.spacing = 24f;
+                group.childAlignment = TextAnchor.MiddleCenter;
+                group.childControlWidth = true;
+                group.childControlHeight = true;
+                group.childForceExpandWidth = false;
+                group.childForceExpandHeight = false;
+            }
+        }
+
+        TMP_Text heading = null;
+        foreach (TMP_Text text in GetComponentsInChildren<TMP_Text>(true))
+        {
+            if (text.text.Trim().Equals("Wybierz Tryb", System.StringComparison.OrdinalIgnoreCase))
+            {
+                heading = text;
+                break;
+            }
+        }
+
+        if (heading != null)
+        {
+            RectTransform headingRect = heading.rectTransform;
+            headingRect.localScale = Vector3.one;
+            headingRect.anchorMin = headingRect.anchorMax = new Vector2(0.5f, 0.69f);
+            headingRect.pivot = new Vector2(0.5f, 0.5f);
+            headingRect.anchoredPosition = Vector2.zero;
+            headingRect.sizeDelta = new Vector2(buttonWidth, 100f);
+            heading.enableAutoSizing = true;
+            heading.fontSizeMin = 30f;
+            heading.fontSizeMax = 46f;
+            heading.textWrappingMode = TextWrappingModes.NoWrap;
         }
     }
 

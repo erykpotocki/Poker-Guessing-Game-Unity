@@ -79,7 +79,33 @@ public class HandRankPanelUI : MonoBehaviour
         RefreshStaticButtonLabels();
         BindButtons();
         CacheNormalButtonColors();
+        ConfigureModernPanelStyle();
         SetFirstMoveState();
+    }
+
+    private void ConfigureModernPanelStyle()
+    {
+        if (handRankTitle != null)
+        {
+            handRankTitle.text = string.Empty;
+            handRankTitle.gameObject.SetActive(false);
+        }
+
+        Button topBackButton = GetButton(categoryList, "BackButton");
+        if (topBackButton != null && topBackButton.transform is RectTransform backRect)
+        {
+            backRect.anchoredPosition += Vector2.left * 34f;
+            PokerButtonTheme.ApplyTo(topBackButton);
+        }
+
+        if (checkButton != null && checkButton.transform is RectTransform checkRect)
+        {
+            checkRect.offsetMin += new Vector2(18f, 14f);
+            checkRect.offsetMax += new Vector2(-30f, -12f);
+            PokerButtonTheme.ApplyTo(checkButton);
+            if (checkButtonVisual != null)
+                checkButtonVisual.color = Color.white;
+        }
     }
 
     private void ResolveReferences()
@@ -292,7 +318,7 @@ public class HandRankPanelUI : MonoBehaviour
     public void ShowCategories()
     {
         ClearSelectedRank();
-        SetTitle("Podbij:");
+        SetTitle(string.Empty);
         SetOnlyOneListActive(categoryList);
     }
 
