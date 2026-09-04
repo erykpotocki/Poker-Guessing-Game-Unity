@@ -1481,7 +1481,7 @@ public class HotSeatSetupUI : MonoBehaviour
         playerListViewport.anchorMax = new Vector2(0.5f, 1f);
         playerListViewport.pivot = new Vector2(0.5f, 1f);
         playerListViewport.anchoredPosition = new Vector2(0f, -480f);
-        playerListViewport.sizeDelta = new Vector2(920f, 800f);
+        playerListViewport.sizeDelta = new Vector2(920f, 920f);
 
         Image viewportImage = viewportObject.GetComponent<Image>();
         viewportImage.color = Color.clear;
