@@ -148,6 +148,9 @@ public sealed class PokerButtonTheme : MonoBehaviour
         bool usesCompactModeFont =
             button.gameObject.scene.name == "GameModeSelect" &&
             button.name.StartsWith("Mode");
+        bool keepsGameplayFont =
+            button.gameObject.scene.name == "Game" ||
+            button.gameObject.scene.name == "Hot Seat";
         bool isMainMenuUtilityButton =
             button.name == "RulesButton" || button.name == "SettingsButton";
 
@@ -161,9 +164,11 @@ public sealed class PokerButtonTheme : MonoBehaviour
         else
         {
             label.fontSizeMin = usesCompactMainMenuFont ? 10f :
-                usesCompactModeFont ? 18f : 24f;
+                usesCompactModeFont ? 38f :
+                keepsGameplayFont ? 24f : 30f;
             label.fontSizeMax = usesCompactMainMenuFont ? 14f :
-                usesCompactModeFont ? 28f : 36f;
+                usesCompactModeFont ? 52f :
+                keepsGameplayFont ? 36f : 44f;
         }
         label.characterSpacing = usesCompactMainMenuFont ? 0.5f : 1f;
         label.margin = usesCompactMainMenuFont
