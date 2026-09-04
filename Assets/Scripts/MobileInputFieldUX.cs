@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MobileInputFieldUX : MonoBehaviour
 {
@@ -33,6 +34,33 @@ public class MobileInputFieldUX : MonoBehaviour
             field.contentType = TMP_InputField.ContentType.Custom;
             field.inputType = TMP_InputField.InputType.Standard;
             field.richText = false;
+        }
+
+        RegisterFormCompanions();
+    }
+
+    private void RegisterFormCompanions()
+    {
+        if (parentCanvas == null)
+            return;
+
+        foreach (RectTransform rect in parentCanvas.GetComponentsInChildren<RectTransform>(true))
+        {
+            if (rect == null || basePositions.ContainsKey(rect))
+                continue;
+
+            bool isAvatar = rect.name == "AvatarPreview";
+            bool isRollButton = false;
+            Button button = rect.GetComponent<Button>();
+            if (button != null)
+            {
+                TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+                isRollButton = label != null &&
+                    label.text.Trim().Equals("Losuj", System.StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (isAvatar || isRollButton)
+                basePositions[rect] = rect.anchoredPosition;
         }
     }
 
