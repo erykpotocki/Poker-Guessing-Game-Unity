@@ -1060,28 +1060,28 @@ public class HotSeatSetupUI : MonoBehaviour
     private IEnumerator AnimateUnseenCardSparkles()
     {
         float elapsed = 0f;
-        const float duration = 1.05f;
-        while (elapsed < duration)
+        const float cycleDuration = 1.8f;
+        while (true)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / duration);
-            float glow = Mathf.Sin(t * Mathf.PI);
             for (int i = 0; i < unseenCardSparkles.Count; i++)
             {
                 GameObject sparkle = unseenCardSparkles[i];
                 if (sparkle == null)
                     continue;
+
+                float phase = Mathf.Repeat(
+                    elapsed / cycleDuration + i * 0.19f, 1f);
+                float glow = Mathf.Pow(Mathf.Sin(phase * Mathf.PI), 2f);
                 TMP_Text text = sparkle.GetComponent<TMP_Text>();
                 if (text != null)
-                    text.color = new Color(1f, 0.82f, 0.28f, glow);
+                    text.color = new Color(1f, 0.82f, 0.28f,
+                        Mathf.Lerp(0.16f, 0.95f, glow));
                 sparkle.transform.localScale = Vector3.one *
                     Mathf.Lerp(0.65f, 1.18f, glow) * (i % 2 == 0 ? 1f : 0.86f);
             }
             yield return null;
         }
-
-        unseenCardSparkleRoutine = null;
-        ClearUnseenCardSparkles();
     }
 
     private void ClearUnseenCardSparkles()
