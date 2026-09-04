@@ -78,9 +78,10 @@ public class HotSeatPassPhoneUI : MonoBehaviour
         if (passPhoneText != null)
         {
             passPhoneText.text =
-                "<color=#F4C75E><size=125%>" + title + "</size></color>\n\n" +
+                "<color=#F4C75E><size=112%><nobr>" + title + "</nobr></size></color>\n\n" +
                 "<size=82%>" + message + "</size>\n\n" +
-                "<color=#FFF0C2><size=112%>" + playerName.ToUpper() + "</size></color>";
+                "<color=#FFF0C2><size=108%><nobr>" + playerName.ToUpper() +
+                "</nobr></size></color>";
         }
 
         TMP_Text label = startTurnButton != null
