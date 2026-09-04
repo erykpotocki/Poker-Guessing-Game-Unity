@@ -154,6 +154,14 @@ public sealed class PokerButtonTheme : MonoBehaviour
         bool isMainMenuUtilityButton =
             button.name == "RulesButton" || button.name == "SettingsButton";
 
+        if (!keepsGameplayFont && TMP_Settings.defaultFontAsset != null)
+        {
+            label.font = TMP_Settings.defaultFontAsset;
+            label.fontSharedMaterial = TMP_Settings.defaultFontAsset.material;
+            label.fontWeight = FontWeight.Bold;
+            label.fontStyle = FontStyles.Bold;
+        }
+
         label.enableAutoSizing = !isMainMenuUtilityButton && !usesCompactModeFont;
         if (usesCompactModeFont)
         {
