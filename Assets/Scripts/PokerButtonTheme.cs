@@ -110,6 +110,11 @@ public sealed class PokerButtonTheme : MonoBehaviour
         if (button == null || IsExcludedFromTheme(button))
             return;
 
+        // Awake is not guaranteed for a controller created in edit mode.
+        // Recreate the transient sprite after editor/domain reloads as well.
+        if (buttonSprite == null)
+            buttonSprite = CreateModernButtonSprite();
+
         Image background = button.targetGraphic as Image;
         if (background == null)
             background = button.GetComponent<Image>();

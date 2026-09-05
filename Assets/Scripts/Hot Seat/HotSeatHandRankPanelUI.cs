@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class HotSeatHandRankPanelUI : MonoBehaviour
 {
+    private const float OptionHeight = 116f;
+    private const float OptionSpacing = 18f;
     [Header("Selection")]
     [SerializeField] private Color selectedOptionColor =
         new Color(0.35f, 0.75f, 0.35f, 1f);
@@ -123,6 +125,7 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         inputLocked = false;
 
         gameObject.SetActive(true);
+        ConfigureResponsiveLayout();
 
         if (panelCanvasGroup != null)
         {
@@ -507,11 +510,16 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             panelRect.anchorMax = new Vector2(0.5f, 0f);
             panelRect.pivot = new Vector2(0.5f, 0f);
             panelRect.anchoredPosition = new Vector2(0f, 54f);
-            panelRect.sizeDelta = new Vector2(980f, 1280f);
+            RectTransform parentRect = panelRect.parent as RectTransform;
+            panelRect.localScale = Vector3.one;
+            panelRect.sizeDelta = new Vector2(
+                parentRect != null ? Mathf.Min(980f, parentRect.rect.width - 48f) : 980f,
+                parentRect != null ? Mathf.Min(1280f, parentRect.rect.height - 108f) : 1280f);
         }
 
         if (handRankTitle != null)
         {
+            handRankTitle.gameObject.SetActive(true);
             RectTransform titleRect = handRankTitle.rectTransform;
             titleRect.anchorMin = new Vector2(0f, 1f);
             titleRect.anchorMax = new Vector2(1f, 1f);
@@ -530,12 +538,19 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
         {
             rankScrollViewRect.anchorMin = Vector2.zero;
             rankScrollViewRect.anchorMax = Vector2.one;
-            rankScrollViewRect.offsetMin = new Vector2(52f, 264f);
+            rankScrollViewRect.offsetMin = new Vector2(52f, 328f);
             rankScrollViewRect.offsetMax = new Vector2(-52f, -142f);
+            rankScrollViewRect.localScale = Vector3.one;
+            Image scrollHitArea = rankScrollViewRect.GetComponent<Image>();
+            if (scrollHitArea == null)
+                scrollHitArea = rankScrollViewRect.gameObject.AddComponent<Image>();
+            scrollHitArea.color = Color.clear;
+            scrollHitArea.raycastTarget = true;
         }
 
         if (rankScrollRect != null)
         {
+            rankScrollRect.enabled = true;
             rankScrollRect.content = rankContentRect;
             rankScrollRect.viewport = rankViewportRect;
             rankScrollRect.horizontal = false;
@@ -555,6 +570,9 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             rankViewportRect.offsetMin = Vector2.zero;
             rankViewportRect.offsetMax = Vector2.zero;
             rankViewportRect.pivot = new Vector2(0.5f, 0.5f);
+            rankViewportRect.localScale = Vector3.one;
+            if (rankViewportRect.GetComponent<RectMask2D>() == null)
+                rankViewportRect.gameObject.AddComponent<RectMask2D>();
         }
 
         if (rankContentRect != null)
@@ -564,6 +582,10 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             rankContentRect.pivot = new Vector2(0.5f, 1f);
             rankContentRect.anchoredPosition = Vector2.zero;
             rankContentRect.sizeDelta = new Vector2(0f, 720f);
+            rankContentRect.localScale = Vector3.one;
+            ContentSizeFitter contentFitter = rankContentRect.GetComponent<ContentSizeFitter>();
+            if (contentFitter != null)
+                contentFitter.enabled = false;
         }
 
         if (actionButton != null && actionButton.transform is RectTransform actionRect)
@@ -571,17 +593,35 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             actionRect.anchorMin = new Vector2(0f, 0f);
             actionRect.anchorMax = new Vector2(1f, 0f);
             actionRect.pivot = new Vector2(0.5f, 0f);
-            actionRect.anchoredPosition = new Vector2(0f, 28f);
-            actionRect.sizeDelta = new Vector2(-52f, 112f);
+            actionRect.anchoredPosition = new Vector2(0f, 44f);
+            actionRect.sizeDelta = new Vector2(-104f, 104f);
+            actionRect.localScale = Vector3.one;
+            if (actionButtonVisual != null)
+            {
+                RectTransform visualRect = actionButtonVisual.rectTransform;
+                visualRect.anchorMin = Vector2.zero;
+                visualRect.anchorMax = Vector2.one;
+                visualRect.offsetMin = visualRect.offsetMax = Vector2.zero;
+                visualRect.localScale = Vector3.one;
+            }
+            if (actionButtonText != null)
+            {
+                RectTransform labelRect = actionButtonText.rectTransform;
+                labelRect.anchorMin = Vector2.zero;
+                labelRect.anchorMax = Vector2.one;
+                labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+                labelRect.localScale = Vector3.one;
+                actionButtonText.alignment = TextAlignmentOptions.Center;
+            }
         }
 
         if (cancelSelectionButton != null && cancelSelectionButton.transform is RectTransform cancelRect)
         {
-            cancelRect.anchorMin = new Vector2(0.5f, 0f);
-            cancelRect.anchorMax = new Vector2(0.5f, 0f);
-            cancelRect.pivot = new Vector2(0.5f, 0.5f);
-            cancelRect.anchoredPosition = new Vector2(0f, 198f);
-            cancelRect.sizeDelta = new Vector2(480f, 92f);
+            cancelRect.anchorMin = new Vector2(0f, 0f);
+            cancelRect.anchorMax = new Vector2(1f, 0f);
+            cancelRect.pivot = new Vector2(0.5f, 0f);
+            cancelRect.anchoredPosition = new Vector2(0f, 176f);
+            cancelRect.sizeDelta = new Vector2(-104f, 104f);
         }
 
         ConfigureOptionButtons(categoryList);
@@ -602,11 +642,23 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
             listRect.pivot = new Vector2(0.5f, 1f);
             listRect.anchoredPosition = Vector2.zero;
             listRect.sizeDelta = new Vector2(0f, 720f);
+            listRect.localScale = Vector3.one;
         }
 
+        ContentSizeFitter fitter = listObject.GetComponent<ContentSizeFitter>();
+        if (fitter != null)
+            fitter.enabled = false;
+
         VerticalLayoutGroup layout = listObject.GetComponent<VerticalLayoutGroup>();
-        if (layout != null)
-            layout.spacing = 18f;
+        if (layout == null)
+            layout = listObject.AddComponent<VerticalLayoutGroup>();
+        layout.enabled = true;
+        layout.spacing = OptionSpacing;
+        layout.padding = new RectOffset(0, 0, 0, 0);
+        layout.childControlWidth = layout.childControlHeight = true;
+        layout.childForceExpandWidth = true;
+        layout.childForceExpandHeight = false;
+        layout.childAlignment = TextAnchor.UpperCenter;
 
         foreach (Button button in listObject.GetComponentsInChildren<Button>(true))
         {
@@ -616,8 +668,9 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
 
             element.enabled = true;
 
-            element.minHeight = 116f;
-            element.preferredHeight = 116f;
+            element.minHeight = OptionHeight;
+            element.preferredHeight = OptionHeight;
+            element.flexibleHeight = 0f;
 
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
@@ -1244,15 +1297,13 @@ public class HotSeatHandRankPanelUI : MonoBehaviour
                 visibleButtons++;
         }
 
-        const float buttonHeight = 82f;
-        const float spacing = 14f;
         float viewportHeight = rankViewportRect != null
             ? rankViewportRect.rect.height
             : 0f;
         float listHeight = Mathf.Max(
             viewportHeight,
-            visibleButtons * buttonHeight +
-            Mathf.Max(0, visibleButtons - 1) * spacing
+            visibleButtons * OptionHeight +
+            Mathf.Max(0, visibleButtons - 1) * OptionSpacing
         );
 
         if (activeList.transform is RectTransform listRect)

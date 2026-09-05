@@ -121,7 +121,9 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
         for (int i = 0; i < bots.Count; i++)
         {
             LobbyBotInfo bot = bots[i];
-            SpawnRow(bot.ActorNumber, iRow, bot.Name, bot.AvatarIndex);
+            SpawnRow(bot.ActorNumber, iRow,
+                bot.Name + "\n<size=65%><color=#B8AA8A>Początkujący</color></size>",
+                bot.AvatarIndex);
 
             iRow++;
         }
@@ -145,6 +147,8 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
             nameText.fontSizeMin = 28f;
             nameText.fontSizeMax = 36f;
             nameText.textWrappingMode = TextWrappingModes.NoWrap;
+            nameText.alignment = TextAlignmentOptions.MidlineLeft;
+            nameText.rectTransform.sizeDelta = new Vector2(400f, currentRowHeight - 20f);
         }
 
         if (avatarImg != null && avatarDatabase != null &&
@@ -183,6 +187,10 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
             horizontal.padding = new RectOffset(20, 20, 10, 10);
             horizontal.spacing = 24f;
             horizontal.childAlignment = TextAnchor.MiddleLeft;
+            horizontal.childControlWidth = true;
+            horizontal.childControlHeight = true;
+            horizontal.childForceExpandWidth = false;
+            horizontal.childForceExpandHeight = false;
         }
     }
 

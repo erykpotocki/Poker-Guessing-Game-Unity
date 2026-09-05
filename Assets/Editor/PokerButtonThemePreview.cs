@@ -14,6 +14,11 @@ internal static class PokerButtonThemePreview
         EditorSceneManager.sceneOpened += (_, _) => QueueRefresh();
         EditorSceneManager.sceneSaving += (_, _) => ClearMainMenuPreview();
         EditorSceneManager.sceneSaved += _ => QueueRefresh();
+        EditorApplication.playModeStateChanged += state =>
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+                QueueRefresh();
+        };
         QueueRefresh();
     }
 
@@ -38,6 +43,7 @@ internal static class PokerButtonThemePreview
             foreach (GameModeSelectUI modeScreen in Object.FindObjectsByType<GameModeSelectUI>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None))
                 modeScreen.RefreshEditorPreview();
+            PokerButtonTheme.RefreshEditorPreview();
         }
     }
 

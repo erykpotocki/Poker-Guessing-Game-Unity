@@ -95,7 +95,7 @@ public static class LobbyBotRegistry
     }
 }
 
-public class LobbyDebugFakePlayers : MonoBehaviourPunCallbacks
+public class FakePlayers : MonoBehaviourPunCallbacks
 {
     private static readonly string[] BotNames =
     {
@@ -120,6 +120,14 @@ public class LobbyDebugFakePlayers : MonoBehaviourPunCallbacks
     private LobbyPlayersListUI playersListUI;
 
     public static int BotCount => LobbyBotRegistry.GetBots().Count;
+
+    public void Initialize(Button lobbyStartButton)
+    {
+        startButton = lobbyStartButton;
+        SyncBotsFromRoom();
+        CreateAddBotButton();
+        RefreshUI();
+    }
 
     private void Start()
     {
@@ -213,17 +221,6 @@ public class LobbyDebugFakePlayers : MonoBehaviourPunCallbacks
         if (!PhotonNetwork.InRoom || !PhotonNetwork.IsMasterClient || addBotButton != null)
             return;
 
-        foreach (Button button in FindObjectsByType<Button>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null && label.text.ToUpperInvariant().Contains("ROZPOCZNIJ"))
-            {
-                startButton = button;
-                break;
-            }
-        }
-
         if (startButton == null)
             return;
 
@@ -241,8 +238,11 @@ public class LobbyDebugFakePlayers : MonoBehaviourPunCallbacks
         }
 
         addBotButtonLabel = addBotButton.GetComponentInChildren<TMP_Text>(true);
-        addBotButton.onClick.RemoveAllListeners();
+        // A cloned UnityEvent retains the scene's persistent Start listener.
+        // Replace the event so adding a bot can never also start the game.
+        addBotButton.onClick = new Button.ButtonClickedEvent();
         addBotButton.onClick.AddListener(AddBot);
+        addBotButton.gameObject.SetActive(true);
         PokerButtonTheme.ApplyTo(addBotButton);
     }
 
@@ -269,6 +269,7 @@ public class LobbyDebugFakePlayers : MonoBehaviourPunCallbacks
 
         if (addBotButton != null)
         {
+            addBotButton.gameObject.SetActive(PhotonNetwork.IsMasterClient);
             addBotButton.interactable = PhotonNetwork.IsMasterClient && bots.Count < maximumBots;
         }
 

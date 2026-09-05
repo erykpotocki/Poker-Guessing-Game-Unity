@@ -1038,9 +1038,16 @@ public class HotSeatSetupUI : MonoBehaviour
 
         Vector2[] anchors =
         {
-            new Vector2(0.10f, 0.87f), new Vector2(0.90f, 0.79f),
-            new Vector2(0.14f, 0.16f), new Vector2(0.86f, 0.20f)
+            new Vector2(0.08f, 0.87f), new Vector2(0.92f, 0.76f),
+            new Vector2(0.12f, 0.16f), new Vector2(0.88f, 0.20f),
+            new Vector2(-0.035f, 0.70f), new Vector2(1.035f, 0.48f),
+            new Vector2(-0.025f, 0.32f), new Vector2(1.025f, 0.89f),
+            new Vector2(0.24f, 1.045f), new Vector2(0.76f, 1.035f),
+            new Vector2(0.18f, -0.025f), new Vector2(0.83f, -0.025f)
         };
+        float[] relativeSizes = { 0.32f, 0.18f, 0.15f, 0.23f,
+            0.25f, 0.29f, 0.16f, 0.20f, 0.30f, 0.21f, 0.13f, 0.16f };
+        float cardWidth = Mathf.Max(1f, cardImage.rectTransform.rect.width);
 
         for (int i = 0; i < anchors.Length; i++)
         {
@@ -1049,7 +1056,7 @@ public class HotSeatSetupUI : MonoBehaviour
             sparkle.transform.SetParent(cardImage.transform, false);
             RectTransform rect = sparkle.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = anchors[i];
-            float size = i % 2 == 0 ? 150f : 118f;
+            float size = cardWidth * relativeSizes[i];
             rect.sizeDelta = new Vector2(size, size);
             rect.anchoredPosition = Vector2.zero;
 
@@ -1086,7 +1093,6 @@ public class HotSeatSetupUI : MonoBehaviour
     private IEnumerator AnimateUnseenCardSparkles()
     {
         float elapsed = 0f;
-        const float cycleDuration = 1.8f;
         while (true)
         {
             elapsed += Time.unscaledDeltaTime;
@@ -1096,15 +1102,18 @@ public class HotSeatSetupUI : MonoBehaviour
                 if (sparkle == null)
                     continue;
 
+                float cycleDuration = 2.4f + (i % 4) * 0.35f;
                 float phase = Mathf.Repeat(
-                    elapsed / cycleDuration + i * 0.19f, 1f);
-                float glow = Mathf.Pow(Mathf.Sin(phase * Mathf.PI), 2f);
+                    elapsed / cycleDuration + i * 0.173f, 1f);
+                float glow = Mathf.Pow(Mathf.Sin(phase * Mathf.PI), 4f);
+                // Bottom accents stay quiet next to the reveal instructions.
+                float peakAlpha = i >= 10 ? 0.42f : i >= 4 ? 0.82f : 0.68f;
                 Image image = sparkle.GetComponent<Image>();
                 if (image != null)
                     image.color = new Color(1f, 0.92f, 0.62f,
-                        Mathf.Lerp(0.12f, 0.92f, glow));
+                        peakAlpha * glow);
                 sparkle.transform.localScale = Vector3.one *
-                    Mathf.Lerp(0.72f, 1.12f, glow) * (i % 2 == 0 ? 1f : 0.88f);
+                    Mathf.Lerp(0.70f, 1.10f, glow);
                 sparkle.transform.localRotation = Quaternion.Euler(
                     0f, 0f, Mathf.Sin(elapsed * 0.7f + i) * 5f);
             }

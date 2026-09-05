@@ -1384,7 +1384,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2398f50b115aeab4cb374780c9bf444c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LobbyDebugFakePlayers
+  m_EditorClassIdentifier: Assembly-CSharp::FakePlayers
   playersListText: {fileID: 0}
   playersCountText: {fileID: 398693133}
   maxPlayers: 6

@@ -19,6 +19,10 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        FakePlayers bots = FindFirstObjectByType<FakePlayers>();
+        if (bots == null)
+            bots = gameObject.AddComponent<FakePlayers>();
+        bots.Initialize(startButton);
         RefreshStartButton();
     }
 
