@@ -97,6 +97,7 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
     private bool isRoundTransitionInProgress = false;
     private bool isHandPanelEventsBound = false;
     private bool isGameOver = false;
+    private Coroutine beginnerBotTurnRoutine;
 
     private int currentTurnIndex = -1;
     private int starterPlayerId = -1;
@@ -257,7 +258,8 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
 
             if (PhotonNetwork.CurrentRoom != null &&
                 PhotonNetwork.CurrentRoom.Players != null &&
-                PhotonNetwork.CurrentRoom.Players.ContainsKey(actorNumber))
+                (PhotonNetwork.CurrentRoom.Players.ContainsKey(actorNumber) ||
+                 LobbyBotRegistry.IsBot(actorNumber)))
             {
                 activePlayerOrder.Add(actorNumber);
                 playerPenaltyStageByActorNumber[actorNumber] = 0;
@@ -790,6 +792,7 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
 
         RefreshActiveHighlight(actorNumber);
         RefreshLocalHandPanelState();
+        ScheduleBeginnerBotTurn(actorNumber);
 
         if (logTurnFlow)
         {
@@ -797,6 +800,111 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
         }
 
         OnActivePlayerChanged?.Invoke(actorNumber);
+    }
+
+    private void ScheduleBeginnerBotTurn(int actorNumber)
+    {
+        if (beginnerBotTurnRoutine != null)
+        {
+            StopCoroutine(beginnerBotTurnRoutine);
+            beginnerBotTurnRoutine = null;
+        }
+
+        if (!PhotonNetwork.IsMasterClient || !LobbyBotRegistry.IsBot(actorNumber) ||
+            isRoundWaitingForResolution || isRoundTransitionInProgress || isGameOver)
+        {
+            return;
+        }
+
+        beginnerBotTurnRoutine = StartCoroutine(PlayBeginnerBotTurn(actorNumber));
+    }
+
+    private IEnumerator PlayBeginnerBotTurn(int actorNumber)
+    {
+        TryResolveCardDealTest();
+
+        float cardsWait = 0f;
+        while (cardsWait < 15f && GetCurrentPlayerActorNumber() == actorNumber &&
+               cardDealTest != null && cardDealTest.GetCardsForPlayer(actorNumber).Count == 0)
+        {
+            cardsWait += Time.deltaTime;
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.9f);
+
+        if (!PhotonNetwork.IsMasterClient || GetCurrentPlayerActorNumber() != actorNumber ||
+            isRoundWaitingForResolution || isRoundTransitionInProgress || isGameOver)
+        {
+            beginnerBotTurnRoutine = null;
+            yield break;
+        }
+
+        string declaration = ChooseBeginnerBotDeclaration(actorNumber);
+        beginnerBotTurnRoutine = null;
+
+        object[] data = new object[] { actorNumber, declaration };
+        RaiseEventOptions options = new RaiseEventOptions { Receivers = ReceiverGroup.All };
+        PhotonNetwork.RaiseEvent(RaiseChosenEventCode, data, options, SendOptions.SendReliable);
+    }
+
+    private string ChooseBeginnerBotDeclaration(int actorNumber)
+    {
+        string truthfulId = GetStrongestBeginnerBotHandId(actorNumber);
+        int truthfulIndex = HandRankCatalog.GetIndex(truthfulId);
+
+        if (!hasDeclarationThisRound || string.IsNullOrWhiteSpace(currentDeclaredRankText))
+            return HandRankCatalog.GetDisplayName(truthfulId);
+
+        string currentId = GetHandIdFromOptionText(currentDeclaredRankText);
+        int currentIndex = HandRankCatalog.GetIndex(currentId);
+
+        if (truthfulIndex > currentIndex)
+            return HandRankCatalog.GetDisplayName(truthfulId);
+
+        List<string> allIds = HandRankCatalog.GetAllIds();
+        int nextIndex = Mathf.Clamp(currentIndex + 1, 0, allIds.Count - 1);
+        return HandRankCatalog.GetDisplayName(allIds[nextIndex]);
+    }
+
+    private string GetStrongestBeginnerBotHandId(int actorNumber)
+    {
+        TryResolveCardDealTest();
+        List<CardSpriteEntry> cards = cardDealTest != null
+            ? cardDealTest.GetCardsForPlayer(actorNumber)
+            : new List<CardSpriteEntry>();
+
+        Dictionary<string, int> counts = new Dictionary<string, int>();
+        for (int i = 0; i < cards.Count; i++)
+        {
+            CardSpriteEntry card = cards[i];
+            if (card == null)
+                continue;
+
+            string rank = NormalizeRank(card.rank.ToString());
+            if (string.IsNullOrEmpty(rank))
+                continue;
+
+            counts[rank] = counts.TryGetValue(rank, out int count) ? count + 1 : 1;
+        }
+
+        for (int requiredCount = 3; requiredCount >= 1; requiredCount--)
+        {
+            for (int i = RankOrder.Length - 1; i >= 0; i--)
+            {
+                string rank = RankOrder[i];
+                if (!counts.TryGetValue(rank, out int count) || count < requiredCount)
+                    continue;
+
+                if (requiredCount == 3)
+                    return "TRIPS_" + rank;
+                if (requiredCount == 2)
+                    return "PAIR_" + rank;
+                return "HIGH_" + rank;
+            }
+        }
+
+        return "HIGH_9";
     }
 
     private void SetCurrentBidDisplayText(string value)
@@ -1009,6 +1117,9 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
 
     private string GetPlayerDisplayName(int actorNumber)
     {
+        if (LobbyBotRegistry.TryGetBot(actorNumber, out LobbyBotInfo bot))
+            return bot.Name;
+
         if (PhotonNetwork.CurrentRoom != null &&
             PhotonNetwork.CurrentRoom.Players != null &&
             PhotonNetwork.CurrentRoom.Players.TryGetValue(actorNumber, out Player player) &&
@@ -1027,6 +1138,12 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
     {
         if (avatarDatabase == null || avatarDatabase.avatars == null || avatarDatabase.avatars.Length == 0)
             return null;
+
+        if (LobbyBotRegistry.TryGetBot(actorNumber, out LobbyBotInfo bot))
+        {
+            int botAvatarIndex = Mathf.Clamp(bot.AvatarIndex, 0, avatarDatabase.avatars.Length - 1);
+            return avatarDatabase.avatars[botAvatarIndex];
+        }
 
         if (PhotonNetwork.CurrentRoom == null ||
             PhotonNetwork.CurrentRoom.Players == null ||
@@ -1695,7 +1812,8 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
             int actorNumber = restoredOrder[i];
 
             if (PhotonNetwork.CurrentRoom.Players != null &&
-                PhotonNetwork.CurrentRoom.Players.ContainsKey(actorNumber))
+                (PhotonNetwork.CurrentRoom.Players.ContainsKey(actorNumber) ||
+                 LobbyBotRegistry.IsBot(actorNumber)))
             {
                 validatedOrder.Add(actorNumber);
             }
@@ -2050,6 +2168,13 @@ public class TurnManager : MonoBehaviour, IOnEventCallback
         for (int i = 0; i < activePlayerOrder.Count; i++)
         {
             int actorNumber = activePlayerOrder[i];
+
+            if (LobbyBotRegistry.IsBot(actorNumber))
+            {
+                disconnectedActorNumbers.Remove(actorNumber);
+                continue;
+            }
+
             bool wasDisconnected = disconnectedActorNumbers.Contains(actorNumber);
             bool isDisconnectedNow = false;
 

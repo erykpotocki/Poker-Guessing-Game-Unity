@@ -42,7 +42,7 @@ public class LobbyUI : MonoBehaviourPunCallbacks
         if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom != null)
         {
             roomCode = PhotonNetwork.CurrentRoom.Name;
-            codeText.text = $"ID: {roomCode}\n<line-height=145%><color=#A8997A99><size=40%>DOTKNIJ, ABY SKOPIOWAĆ</size></color></line-height>";
+            codeText.text = $"ID: {roomCode}\n<line-height=175%><color=#B8AA8A99><size=30%>DOTKNIJ, ABY SKOPIOWAĆ</size></color></line-height>";
         }
         else
         {
@@ -56,15 +56,52 @@ public class LobbyUI : MonoBehaviourPunCallbacks
         if (codeText != null)
         {
             RectTransform rect = codeText.rectTransform;
-            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -105f);
-            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 120f);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -78f);
+            rect.sizeDelta = new Vector2(680f, 170f);
+            codeText.alignment = TextAlignmentOptions.Top;
+            codeText.fontSize = 68f;
+            codeText.fontWeight = FontWeight.Bold;
+            codeText.fontStyle = FontStyles.Bold;
         }
 
         if (gameModeText != null)
         {
             RectTransform rect = gameModeText.rectTransform;
-            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -245f);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -310f);
+            rect.sizeDelta = new Vector2(680f, 54f);
+            gameModeText.alignment = TextAlignmentOptions.Center;
+            gameModeText.fontSize = 34f;
+            gameModeText.fontWeight = FontWeight.Bold;
         }
+
+        TMP_Text playerCount = FindText("PlayerCountText");
+        if (playerCount != null)
+        {
+            RectTransform rect = playerCount.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -238f);
+            rect.sizeDelta = new Vector2(680f, 54f);
+            playerCount.alignment = TextAlignmentOptions.Center;
+            playerCount.fontSize = 32f;
+            playerCount.fontWeight = FontWeight.Bold;
+        }
+    }
+
+    private static TMP_Text FindText(string objectName)
+    {
+        foreach (TMP_Text text in FindObjectsByType<TMP_Text>(
+                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (text != null && text.name == objectName)
+                return text;
+        }
+
+        return null;
     }
 
     private void ConfigureCodeCopyButton()
@@ -96,7 +133,7 @@ public class LobbyUI : MonoBehaviourPunCallbacks
 
     private IEnumerator ShowCopyFeedback()
     {
-        codeText.text = $"ID: {roomCode}\n<line-height=145%><color=#BDAA7FAA><size=40%>SKOPIOWANO KOD ✓</size></color></line-height>";
+        codeText.text = $"ID: {roomCode}\n<line-height=175%><color=#CBB98FAA><size=30%>SKOPIOWANO KOD ✓</size></color></line-height>";
         yield return new WaitForSecondsRealtime(1.4f);
         copyFeedbackRoutine = null;
         RefreshCode();
@@ -107,6 +144,6 @@ public class LobbyUI : MonoBehaviourPunCallbacks
         if (gameModeText == null)
             return;
 
-        gameModeText.text = $"Tryb: {GameModeSelectUI.GetSelectedGameMode()}";
+        gameModeText.text = $"TRYB: {GameModeSelectUI.GetSelectedGameMode().ToUpperInvariant()}";
     }
 }

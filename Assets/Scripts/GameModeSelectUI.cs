@@ -117,11 +117,18 @@ public class GameModeSelectUI : MonoBehaviour
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
             {
-                label.fontStyle = FontStyles.Bold;
+                if (TMP_Settings.defaultFontAsset != null)
+                {
+                    label.font = TMP_Settings.defaultFontAsset;
+                    label.fontSharedMaterial = TMP_Settings.defaultFontAsset.material;
+                }
+                label.fontWeight = FontWeight.Bold;
+                label.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
                 label.enableAutoSizing = false;
                 label.fontSize = 44f;
                 label.fontSizeMin = 44f;
                 label.fontSizeMax = 44f;
+                label.characterSpacing = 0.5f;
             }
         }
 

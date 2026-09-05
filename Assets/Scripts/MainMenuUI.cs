@@ -142,17 +142,19 @@ public class MainMenuUI : MonoBehaviour
         if (!Application.isPlaying)
             editorOriginalMenuScale = menuGroup.localScale;
 #endif
-        menuGroup.localScale = new Vector3(3.25f, 2.5f, 1f);
+        // Keep typography undistorted. The previous 3.25 x 2.5 scale made this
+        // scene's letters 30% wider than the exact same font in other menus.
+        menuGroup.localScale = new Vector3(2.5f, 2.5f, 1f);
         primaryButton = CreateMenuButton(
-            "PrimaryModeButton", styleSource, new Vector2(73.23f, -88f), new Vector2(240f, 64f), true);
+            "PrimaryModeButton", styleSource, new Vector2(95.2f, -88f), new Vector2(312f, 64f), true);
         secondaryButton = CreateMenuButton(
-            "SecondaryModeButton", styleSource, new Vector2(73.23f, -170f), new Vector2(240f, 64f), true);
+            "SecondaryModeButton", styleSource, new Vector2(95.2f, -170f), new Vector2(312f, 64f), true);
         rulesButton = CreateMenuButton(
-            "RulesButton", styleSource, new Vector2(11.23f, -250f), new Vector2(116f, 44f), false);
+            "RulesButton", styleSource, new Vector2(14.6f, -250f), new Vector2(151f, 44f), false);
         settingsButton = CreateMenuButton(
-            "SettingsButton", styleSource, new Vector2(135.23f, -250f), new Vector2(116f, 44f), false);
+            "SettingsButton", styleSource, new Vector2(175.8f, -250f), new Vector2(151f, 44f), false);
         backButton = CreateMenuButton(
-            "ModeBackButton", styleSource, new Vector2(73.23f, -250f), new Vector2(240f, 48f), false);
+            "ModeBackButton", styleSource, new Vector2(95.2f, -250f), new Vector2(312f, 48f), false);
 
         Canvas canvas = menuGroup.GetComponentInParent<Canvas>();
         if (canvas != null)

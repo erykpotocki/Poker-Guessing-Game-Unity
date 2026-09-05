@@ -117,7 +117,11 @@ public class TurnDebugUI : MonoBehaviour
         {
             string playerDisplayName = "Gracz " + actorNumber;
 
-            if (PhotonNetwork.CurrentRoom != null &&
+            if (LobbyBotRegistry.TryGetBot(actorNumber, out LobbyBotInfo bot))
+            {
+                playerDisplayName = bot.Name;
+            }
+            else if (PhotonNetwork.CurrentRoom != null &&
                 PhotonNetwork.CurrentRoom.Players != null &&
                 PhotonNetwork.CurrentRoom.Players.TryGetValue(actorNumber, out Photon.Realtime.Player player) &&
                 player != null &&

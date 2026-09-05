@@ -141,7 +141,6 @@ public sealed class PokerButtonTheme : MonoBehaviour
             return;
 
         label.color = button.interactable ? LabelColor : DisabledLabelColor;
-        label.fontStyle = FontStyles.Bold;
         bool usesCompactMainMenuFont =
             button.gameObject.scene.name == "MainMenu" &&
             !button.name.StartsWith("Info");
@@ -159,6 +158,10 @@ public sealed class PokerButtonTheme : MonoBehaviour
             label.font = TMP_Settings.defaultFontAsset;
             label.fontSharedMaterial = TMP_Settings.defaultFontAsset.material;
             label.fontWeight = FontWeight.Bold;
+            label.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
+        }
+        else
+        {
             label.fontStyle = FontStyles.Bold;
         }
 
@@ -168,7 +171,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
             label.fontSize = 44f;
             label.fontSizeMin = 44f;
             label.fontSizeMax = 44f;
-            label.fontStyle = FontStyles.Bold;
+            label.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
         }
         else if (isMainMenuUtilityButton)
         {
@@ -183,7 +186,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
             label.fontSizeMax = usesCompactMainMenuFont ? 14f :
                 keepsGameplayFont ? 36f : 44f;
         }
-        label.characterSpacing = usesCompactMainMenuFont ? 0.5f : 1f;
+        label.characterSpacing = usesCompactMainMenuFont || usesCompactModeFont ? 0.5f : 1f;
         label.margin = usesCompactMainMenuFont
             ? new Vector4(isMainMenuUtilityButton ? 8f : 14f, 6f,
                 isMainMenuUtilityButton ? 8f : 14f, 6f)

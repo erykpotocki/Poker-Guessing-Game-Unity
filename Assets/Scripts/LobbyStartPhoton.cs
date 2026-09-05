@@ -30,6 +30,12 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
     public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
     {
         if (propertiesThatChanged != null &&
+            propertiesThatChanged.ContainsKey(LobbyBotRegistry.RoomPropertyKey))
+        {
+            RefreshStartButton();
+        }
+
+        if (propertiesThatChanged != null &&
             propertiesThatChanged.TryGetValue(GameStartedKey, out object value) &&
             value is bool started && started)
         {
@@ -37,13 +43,13 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
         }
     }
 
-    private void RefreshStartButton()
+    public void RefreshStartButton()
     {
         if (startButton == null) return;
 
         bool isMaster = PhotonNetwork.IsMasterClient;
         int count = PhotonNetwork.CurrentRoom != null
-            ? PhotonNetwork.CurrentRoom.PlayerCount + LobbyDebugFakePlayers.BotCount
+            ? PhotonNetwork.CurrentRoom.PlayerCount + LobbyBotRegistry.GetBots().Count
             : 0;
 
         startButton.interactable = isMaster && (count >= minPlayers);
@@ -53,7 +59,7 @@ public class LobbyStartPhoton : MonoBehaviourPunCallbacks
     {
         if (!PhotonNetwork.IsMasterClient) return;
         if (PhotonNetwork.CurrentRoom == null) return;
-        if (PhotonNetwork.CurrentRoom.PlayerCount + LobbyDebugFakePlayers.BotCount < minPlayers) return;
+        if (PhotonNetwork.CurrentRoom.PlayerCount + LobbyBotRegistry.GetBots().Count < minPlayers) return;
 
         Hashtable roomProps = new Hashtable();
         roomProps[GameStartedKey] = true;

@@ -102,13 +102,19 @@ public class TableSeatSpawner : MonoBehaviour
             int sharedIndex = (localIndexInSharedOrder + localSeatIndex) % sharedSeatOrder.Count;
             int actorNumber = sharedSeatOrder[sharedIndex];
 
-            if (!playersByActorNumber.TryGetValue(actorNumber, out Player player))
+            if (playersByActorNumber.TryGetValue(actorNumber, out Player player))
             {
-                Debug.LogWarning("TableSeatSpawner: nie znaleziono gracza dla ActorNumber = " + actorNumber);
+                SpawnPlayerSeat(player, localSeatAngles[localSeatIndex], localSeatIndex);
                 continue;
             }
 
-            SpawnPlayerSeat(player, localSeatAngles[localSeatIndex], localSeatIndex);
+            if (LobbyBotRegistry.TryGetBot(actorNumber, out LobbyBotInfo bot))
+            {
+                SpawnBotSeat(bot, localSeatAngles[localSeatIndex], localSeatIndex);
+                continue;
+            }
+
+            Debug.LogWarning("TableSeatSpawner: nie znaleziono gracza ani bota dla ActorNumber = " + actorNumber);
         }
 
         SpawnDealerSeat(90f);
@@ -139,9 +145,15 @@ public class TableSeatSpawner : MonoBehaviour
             actorNumbers.Add(players[i].ActorNumber);
         }
 
+        List<LobbyBotInfo> bots = LobbyBotRegistry.GetBots();
+        for (int i = 0; i < bots.Count; i++)
+        {
+            actorNumbers.Add(bots[i].ActorNumber);
+        }
+
         actorNumbers.Sort();
 
-        int sharedGameSeed = PhotonNetwork.ServerTimestamp ^ (players.Length * 48611) ^ Guid.NewGuid().GetHashCode();
+        int sharedGameSeed = PhotonNetwork.ServerTimestamp ^ (actorNumbers.Count * 48611) ^ Guid.NewGuid().GetHashCode();
 
         System.Random rng = new System.Random(sharedGameSeed);
 
@@ -305,6 +317,41 @@ public class TableSeatSpawner : MonoBehaviour
         {
             cardDealTest.SetSeatOccupant(seatRT, p.ActorNumber);
         }
+    }
+
+    private void SpawnBotSeat(LobbyBotInfo bot, float angleDeg, int seatIndex)
+    {
+        if (bot == null)
+            return;
+
+        float angleRad = angleDeg * Mathf.Deg2Rad;
+        Vector2 pos = new Vector2(
+            Mathf.Cos(angleRad) * radiusX,
+            Mathf.Sin(angleRad) * radiusY
+        );
+
+        GameObject seatGO = Instantiate(seatPrefab, tableCenter.parent);
+        seatGO.name = $"Seat_{seatIndex}_{bot.ActorNumber}_{bot.Name}";
+
+        RectTransform seatRT = seatGO.GetComponent<RectTransform>();
+        seatRT.anchoredPosition = tableCenter.anchoredPosition + pos;
+
+        SeatUIView view = seatGO.GetComponent<SeatUIView>();
+        if (view != null)
+        {
+            Sprite avatar = null;
+            if (avatarDatabase != null && avatarDatabase.avatars != null &&
+                avatarDatabase.avatars.Length > 0)
+            {
+                int avatarIndex = Mathf.Clamp(bot.AvatarIndex, 0, avatarDatabase.avatars.Length - 1);
+                avatar = avatarDatabase.avatars[avatarIndex];
+            }
+
+            view.Set(bot.Name, avatar);
+        }
+
+        if (cardDealTest != null)
+            cardDealTest.SetSeatOccupant(seatRT, bot.ActorNumber);
     }
 
     private void SpawnDealerSeat(float angleDeg)

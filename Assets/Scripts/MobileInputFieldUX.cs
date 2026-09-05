@@ -42,6 +42,8 @@ public class MobileInputFieldUX : MonoBehaviour
         if (parentCanvas == null)
             return;
 
+        Canvas.ForceUpdateCanvases();
+
         List<RectTransform> formParts = new List<RectTransform>();
         foreach (TMP_InputField field in fields)
         {
@@ -82,12 +84,18 @@ public class MobileInputFieldUX : MonoBehaviour
             GameObject groupObject = new GameObject("__MobileFormLiftGroup", typeof(RectTransform));
             groupRect = groupObject.GetComponent<RectTransform>();
             groupRect.SetParent(parentCanvas.transform, false);
-            groupRect.anchorMin = Vector2.zero;
-            groupRect.anchorMax = Vector2.one;
-            groupRect.offsetMin = Vector2.zero;
-            groupRect.offsetMax = Vector2.zero;
-            groupRect.pivot = new Vector2(0.5f, 0.5f);
         }
+
+        // A fixed-size centered group prevents differently anchored form parts
+        // from reflowing independently when a mobile keyboard resizes the canvas.
+        RectTransform canvasRect = parentCanvas.transform as RectTransform;
+        Vector2 referenceSize = canvasRect != null && canvasRect.rect.size.sqrMagnitude > 1f
+            ? canvasRect.rect.size
+            : new Vector2(1080f, 1920f);
+        groupRect.anchorMin = groupRect.anchorMax = new Vector2(0.5f, 0.5f);
+        groupRect.pivot = new Vector2(0.5f, 0.5f);
+        groupRect.sizeDelta = referenceSize;
+        groupRect.anchoredPosition = Vector2.zero;
 
         int earliestSibling = groupRect.GetSiblingIndex();
         foreach (RectTransform part in formParts)
@@ -97,7 +105,6 @@ public class MobileInputFieldUX : MonoBehaviour
             part.SetParent(groupRect, true);
         }
         groupRect.SetSiblingIndex(earliestSibling);
-        groupRect.anchoredPosition = Vector2.zero;
         basePositions[groupRect] = Vector2.zero;
     }
 
