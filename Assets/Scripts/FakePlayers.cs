@@ -226,14 +226,19 @@ public class FakePlayers : MonoBehaviourPunCallbacks
 
         RectTransform startRect = startButton.transform as RectTransform;
         if (startRect != null)
+        {
+            startRect.anchorMin = startRect.anchorMax = new Vector2(0.5f, 0.18f);
+            startRect.anchoredPosition = Vector2.zero;
             startRect.sizeDelta = new Vector2(560f, 104f);
+        }
 
         addBotButton = Instantiate(startButton, startButton.transform.parent);
         addBotButton.name = "AddTestBotButton";
         RectTransform addRect = addBotButton.transform as RectTransform;
         if (addRect != null && startRect != null)
         {
-            addRect.anchoredPosition = startRect.anchoredPosition + Vector2.up * 138f;
+            addRect.anchorMin = addRect.anchorMax = new Vector2(0.5f, 0.27f);
+            addRect.anchoredPosition = Vector2.zero;
             addRect.sizeDelta = new Vector2(560f, 104f);
         }
 

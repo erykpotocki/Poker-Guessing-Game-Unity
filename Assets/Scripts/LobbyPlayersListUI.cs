@@ -215,13 +215,27 @@ public class LobbyPlayersListUI : MonoBehaviourPunCallbacks
             currentAvatarSize = 66f;
         }
 
-        rect.sizeDelta = new Vector2(600f, 640f);
+        // Reserve the middle of the lobby for participants; actions live below.
+        rect.anchorMin = new Vector2(0.5f, 0.36f);
+        rect.anchorMax = new Vector2(0.5f, 0.76f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(600f, 0f);
+        ContentSizeFitter fitter = container.GetComponent<ContentSizeFitter>();
+        if (fitter != null)
+            fitter.enabled = false;
+
+        float spacing = participantCount <= 3 ? 20f : participantCount == 4 ? 14f : 10f;
+        float availableRowHeight = (rect.rect.height - 24f -
+            Mathf.Max(0, participantCount - 1) * spacing) / Mathf.Max(1, participantCount);
+        currentRowHeight = Mathf.Min(currentRowHeight, Mathf.Max(48f, availableRowHeight));
+        currentAvatarSize = Mathf.Min(currentAvatarSize, currentRowHeight - 20f);
 
         VerticalLayoutGroup vertical = container.GetComponent<VerticalLayoutGroup>();
         if (vertical != null)
         {
             vertical.padding = new RectOffset(20, 20, 12, 12);
-            vertical.spacing = participantCount <= 3 ? 20f : participantCount == 4 ? 14f : 10f;
+            vertical.spacing = spacing;
             vertical.childAlignment = TextAnchor.MiddleCenter;
             vertical.childControlWidth = true;
             vertical.childControlHeight = true;

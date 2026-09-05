@@ -66,6 +66,10 @@ public class GameModeSelectUI : MonoBehaviour
 
     private void SelectModeAndGoToCreateRoom(string modeName)
     {
+        // Also guard direct UnityEvent calls, not just pointer interaction.
+        if (modeName != ClassicModeName)
+            return;
+
         PlayerPrefs.SetString(SelectedGameModeKey, modeName);
         PlayerPrefs.Save();
 
@@ -89,7 +93,9 @@ public class GameModeSelectUI : MonoBehaviour
                 continue;
 
             button.enabled = true;
-            button.interactable = true;
+            bool available = button.name == "Mode2";
+            button.interactable = available;
+            ConfigureAvailability(button, available);
 
             LayoutElement layout = button.GetComponent<LayoutElement>();
             if (layout == null)
@@ -165,6 +171,53 @@ public class GameModeSelectUI : MonoBehaviour
             heading.fontSizeMax = 60f;
             heading.textWrappingMode = TextWrappingModes.NoWrap;
         }
+    }
+
+    private static void ConfigureAvailability(Button button, bool available)
+    {
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            string title = label.text.Split('\n')[0];
+            label.text = available ? title : title +
+                "\n<size=55%><color=#B8AA8A>NIEDOSTĘPNY</color></size>";
+        }
+
+        Transform existing = button.transform.Find("ModeLock");
+        if (existing != null)
+        {
+            existing.gameObject.SetActive(!available);
+            return;
+        }
+        if (available)
+            return;
+
+        GameObject lockObject = new GameObject("ModeLock", typeof(RectTransform));
+        RectTransform lockRect = lockObject.GetComponent<RectTransform>();
+        lockRect.SetParent(button.transform, false);
+        lockRect.anchorMin = lockRect.anchorMax = new Vector2(0f, 0.5f);
+        lockRect.anchoredPosition = new Vector2(42f, 0f);
+        lockRect.sizeDelta = new Vector2(36f, 46f);
+        // UI geometry avoids depending on an emoji glyph in the menu font.
+        CreateLockPart(lockRect, "Body", new Vector2(0f, -7f), new Vector2(32f, 26f));
+        CreateLockPart(lockRect, "ShackleTop", new Vector2(0f, 19f), new Vector2(22f, 5f));
+        CreateLockPart(lockRect, "ShackleLeft", new Vector2(-9f, 11f), new Vector2(5f, 16f));
+        CreateLockPart(lockRect, "ShackleRight", new Vector2(9f, 11f), new Vector2(5f, 16f));
+        Image keyhole = CreateLockPart(lockRect, "Keyhole", new Vector2(0f, -7f), new Vector2(5f, 11f));
+        keyhole.color = new Color(0.15f, 0.07f, 0.04f);
+    }
+
+    private static Image CreateLockPart(Transform parent, string name, Vector2 position, Vector2 size)
+    {
+        GameObject part = new GameObject(name, typeof(RectTransform), typeof(Image));
+        RectTransform rect = part.GetComponent<RectTransform>();
+        rect.SetParent(parent, false);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+        Image image = part.GetComponent<Image>();
+        image.color = new Color(0.72f, 0.64f, 0.44f);
+        image.raycastTarget = false;
+        return image;
     }
 
     private void ResolveCloseButton()
