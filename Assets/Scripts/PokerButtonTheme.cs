@@ -12,6 +12,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
 {
     private const float MinimumTouchWidth = 116f;
     private const float MinimumTouchHeight = 116f;
+    private const float MenuLabelCanvasSize = 40f;
     private static readonly Color LabelColor = new Color(1f, 0.94f, 0.76f);
     private static readonly Color DisabledLabelColor = new Color(0.67f, 0.62f, 0.54f, 0.72f);
 
@@ -165,28 +166,35 @@ public sealed class PokerButtonTheme : MonoBehaviour
             label.fontStyle = FontStyles.Bold;
         }
 
-        label.enableAutoSizing = !isMainMenuUtilityButton && !usesCompactModeFont;
-        if (usesCompactModeFont)
+        float labelCanvasScale = 1f;
+        if (!keepsGameplayFont)
         {
-            label.fontSize = 44f;
-            label.fontSizeMin = 44f;
-            label.fontSizeMax = 44f;
-            label.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
-        }
-        else if (isMainMenuUtilityButton)
-        {
-            label.fontSize = 11f;
-            label.fontSizeMin = 11f;
-            label.fontSizeMax = 11f;
+            // Compare sizes in canvas units, not in differently scaled parents.
+            Canvas canvas = label.GetComponentInParent<Canvas>();
+            Transform canvasTransform = canvas != null ? canvas.rootCanvas.transform : null;
+            Vector3 parentScale = Vector3.one;
+            for (Transform parent = label.transform.parent;
+                 parent != null && parent != canvasTransform; parent = parent.parent)
+                parentScale = Vector3.Scale(parentScale, parent.localScale);
+
+            labelCanvasScale = Mathf.Max(0.001f, Mathf.Abs(parentScale.y));
+            label.rectTransform.localScale = new Vector3(
+                labelCanvasScale / Mathf.Max(0.001f, Mathf.Abs(parentScale.x)), 1f, 1f);
+            float localFontSize = MenuLabelCanvasSize / labelCanvasScale;
+            label.enableAutoSizing = false;
+            label.fontSize = localFontSize;
+            label.fontSizeMin = localFontSize;
+            label.fontSizeMax = localFontSize;
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.characterSpacing = 0f;
         }
         else
         {
-            label.fontSizeMin = usesCompactMainMenuFont ? 10f :
-                keepsGameplayFont ? 24f : 30f;
-            label.fontSizeMax = usesCompactMainMenuFont ? 14f :
-                keepsGameplayFont ? 36f : 44f;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 24f;
+            label.fontSizeMax = 36f;
+            label.characterSpacing = 1f;
         }
-        label.characterSpacing = usesCompactMainMenuFont || usesCompactModeFont ? 0.5f : 1f;
         label.margin = usesCompactMainMenuFont
             ? new Vector4(isMainMenuUtilityButton ? 8f : 14f, 6f,
                 isMainMenuUtilityButton ? 8f : 14f, 6f)
@@ -205,7 +213,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
                 textShadow = label.gameObject.AddComponent<Shadow>();
 
             textShadow.effectColor = new Color(0f, 0f, 0f, 0.72f);
-            textShadow.effectDistance = new Vector2(1.5f, -1.5f);
+            textShadow.effectDistance = new Vector2(1.5f, -1.5f) / labelCanvasScale;
             textShadow.useGraphicAlpha = true;
         }
     }

@@ -203,13 +203,6 @@ public class MainMenuUI : MonoBehaviour
         titleRect.anchorMax = withSubtitle ? new Vector2(1f, 0.96f) : Vector2.one;
         titleRect.offsetMin = new Vector2(9f, withSubtitle ? 0f : 3f);
         titleRect.offsetMax = new Vector2(-9f, withSubtitle ? -1f : -3f);
-        title.fontSizeMin = withSubtitle ? 9.5f : 7f;
-        title.fontSizeMax = withSubtitle ? 14f : 11f;
-        if (!withSubtitle)
-        {
-            title.enableAutoSizing = false;
-            title.fontSize = 12.5f;
-        }
 
         if (withSubtitle)
         {

@@ -114,22 +114,6 @@ public class GameModeSelectUI : MonoBehaviour
                 buttonRect.localScale = Vector3.one;
             }
 
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null)
-            {
-                if (TMP_Settings.defaultFontAsset != null)
-                {
-                    label.font = TMP_Settings.defaultFontAsset;
-                    label.fontSharedMaterial = TMP_Settings.defaultFontAsset.material;
-                }
-                label.fontWeight = FontWeight.Bold;
-                label.fontStyle = FontStyles.Bold | FontStyles.UpperCase;
-                label.enableAutoSizing = false;
-                label.fontSize = 44f;
-                label.fontSizeMin = 44f;
-                label.fontSizeMax = 44f;
-                label.characterSpacing = 0.5f;
-            }
         }
 
         if (modePanel != null)
@@ -149,6 +133,13 @@ public class GameModeSelectUI : MonoBehaviour
                 group.childForceExpandWidth = false;
                 group.childForceExpandHeight = false;
             }
+        }
+
+        // Apply the shared typography after the panel scale has been normalized.
+        foreach (Button button in GetComponentsInChildren<Button>(true))
+        {
+            if (button.name.StartsWith("Mode"))
+                PokerButtonTheme.ApplyTo(button);
         }
 
         TMP_Text heading = null;
