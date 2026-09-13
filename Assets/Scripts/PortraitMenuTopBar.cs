@@ -207,8 +207,8 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         float height = safeTop + 100f; bar.sizeDelta = new Vector2(0f, height);
         RectTransform spin = transform.Find("Spin") as RectTransform, profile = transform.Find("Profile") as RectTransform;
         float unit=(canvasRect.rect.width-safeLeft-safeRight)/1000f;
-        Place(profile,Vector2.one,Vector2.one,new Vector2(-safeRight-54*unit,-safeTop-50),new Vector2(72,72)*unit);
-        Place(spin,Vector2.one,Vector2.one,new Vector2(-safeRight-146*unit,-safeTop-50),new Vector2(68,68)*unit);
+        Place(profile,Vector2.one,Vector2.one,new Vector2(-safeRight-65*unit,-safeTop-50),new Vector2(94,94)*unit);
+        Place(spin,Vector2.one,Vector2.one,new Vector2(-safeRight-165*unit,-safeTop-50),new Vector2(68,68)*unit);
         goldText.fontSize=diamondText.fontSize=34*unit;
         goldText.enableAutoSizing=diamondText.enableAutoSizing=true;
         goldText.fontSizeMin=diamondText.fontSizeMin=22*unit;
@@ -224,7 +224,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         Place(diamondIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(diamondX,-safeTop-50),Vector2.one*42*unit);
         PlaceLeft(diamondText.rectTransform,new Vector2(diamondValueX,-safeTop-50),new Vector2(diamondWidth,70));
         float xpLeft=diamondValueX+diamondWidth+32*unit;
-        float xpRight=canvasRect.rect.width-safeRight-204*unit;
+        float xpRight=canvasRect.rect.width-safeRight-225*unit;
         float xpWidth=Mathf.Max(120*unit,xpRight-xpLeft-28*unit);
         xpLeft+=14*unit;
         foreach(var text in new[]{levelText,experienceText}){text.fontSizeMin=14*unit;text.fontSizeMax=26*unit;}
@@ -247,7 +247,33 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         rect.sizeDelta = size;
     }
 
-    private void ShowProfile() { if (owner != null) { PlayerProfileUI.Show(owner); UnlockPresentationUI.ShowPending(owner); } }
+    private void ShowProfile()
+    {
+        if(owner==null)return;
+        var old=owner.transform.Find("ProfileDropdown");if(old!=null){Destroy(old.gameObject);return;}
+        var overlay=ShopUI.Overlay(owner,"ProfileDropdown");overlay.GetComponent<Canvas>().sortingOrder=740;
+        overlay.GetComponent<Image>().color=new Color(0,0,0,.35f);
+        var dismiss=overlay.gameObject.AddComponent<Button>();dismiss.transition=Selectable.Transition.None;dismiss.onClick.AddListener(()=>Destroy(overlay.gameObject));
+        float width=Mathf.Min(460,overlay.rect.width-40);
+        var panel=ShopUI.Rect("UtilityProfileDropdownCard",overlay,0,0,width,380);
+        panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(1,1);panel.anchoredPosition=new Vector2(-20,-12);
+        panel.gameObject.AddComponent<Image>().color=new Color(.02f,.065f,.05f,1);
+        System.Action<System.Action> open=action=>{Destroy(overlay.gameObject);action();};
+        ShopUI.Button(panel,"MÓJ PROFIL",18,18,width-36,72,()=>open(()=>PlayerProfileUI.Show(owner)));
+        ShopUI.Button(panel,"MISJE",18,106,width-36,72,()=>open(()=>MissionsUI.Show(owner)));
+        ShopUI.Button(panel,"PRZYGODA",18,194,width-36,72,()=>open(()=>
+        {
+            var menu=FindFirstObjectByType<MainMenuUI>();
+            if(menu!=null)menu.ShowAdventure();
+            else
+            {
+                var info=ShopUI.Overlay(owner,"AdventurePreview");
+                ShopUI.Text(info,"PRZYGODA — WKRÓTCE",30,80,info.rect.width-60,100,40);
+                ShopUI.Button(info,"WRÓĆ",30,220,info.rect.width-60,70,()=>Destroy(info.gameObject));
+            }
+        }));
+        ShopUI.Button(panel,"USTAWIENIA",18,282,width-36,72,()=>open(()=>GameUtilityBar.ShowSettings(owner)));
+    }
     private void ShowSpin() { if (owner != null) SpinRewardUI.Show(owner); }
     private void OnDestroy() { PlayerProfileService.Changed -= Refresh; }
 

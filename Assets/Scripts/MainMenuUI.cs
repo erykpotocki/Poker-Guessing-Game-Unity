@@ -47,6 +47,8 @@ public class MainMenuUI : MonoBehaviour
         BuildMenu();
         if (FindFirstObjectByType<AutoResumeRoom>() == null) gameObject.AddComponent<AutoResumeRoom>();
         ProfileTestTools.InstallLogo(transform.root);
+        foreach(var image in transform.root.GetComponentsInChildren<Image>(true))
+            if(image.name=="Logo")image.rectTransform.anchoredPosition+=new Vector2(0,-24);
         if (screenCanvasGroup != null)
             screenCanvasGroup.alpha = 1f;
     }
@@ -368,24 +370,22 @@ public class MainMenuUI : MonoBehaviour
         if (transitionInProgress || primaryButton == null)
             return;
 
-        ConfigureButton(primaryButton, "GRAJ", "Wybierz tryb gry", ShowPlayOptions);
+        ConfigureButton(primaryButton, "MULTIPLAYER", "Graj online", ShowMultiplayerOptions);
         ConfigureButton(secondaryButton, "GRA NA JEDNYM TELEFONIE", "Graj offline", GoHotSeat);
         ConfigureButton(rulesButton, "ZASADY", string.Empty, ShowRules);
         ConfigureButton(settingsButton, "USTAWIENIA", string.Empty, ShowSettings);
         ConfigureButton(shopButton, "SKLEP", string.Empty, ShowShop);
         ConfigureButton(missionsButton,"MISJE",string.Empty,()=>MissionsUI.Show(menuGroup.GetComponentInParent<Canvas>()));
         ConfigureButton(adventureButton,"PRZYGODA",string.Empty,()=>ShowInfo("PRZYGODA","WKRÓTCE","Pokonuj kolejnych przeciwników w trybie dla jednego gracza. Ten tryb jest w przygotowaniu."));
-        missionsButton.gameObject.SetActive(true);adventureButton.gameObject.SetActive(true);
-        rulesButton.gameObject.SetActive(false);
-        secondaryButton.gameObject.SetActive(false);
-        ((RectTransform)primaryButton.transform).anchoredPosition=new Vector2(95.2f,-40f);
-        ((RectTransform)shopButton.transform).anchoredPosition=new Vector2(95.2f,-122f);
-        ((RectTransform)missionsButton.transform).anchoredPosition=new Vector2(14.6f,-188f);
-        ((RectTransform)adventureButton.transform).anchoredPosition=new Vector2(175.8f,-188f);
-        ((RectTransform)settingsButton.transform).anchoredPosition=new Vector2(95.2f,-252f);
-        ((RectTransform)settingsButton.transform).sizeDelta=new Vector2(312f,44f);
-        settingsButton.gameObject.SetActive(true);
-        shopButton.gameObject.SetActive(true);
+        missionsButton.gameObject.SetActive(false);adventureButton.gameObject.SetActive(false);
+        rulesButton.gameObject.SetActive(true);
+        secondaryButton.gameObject.SetActive(true);
+        ((RectTransform)primaryButton.transform).anchoredPosition=new Vector2(95.2f,-104f);
+        ((RectTransform)secondaryButton.transform).anchoredPosition=new Vector2(95.2f,-186f);
+        ((RectTransform)shopButton.transform).anchoredPosition=new Vector2(95.2f,-266f);
+        ((RectTransform)rulesButton.transform).anchoredPosition=new Vector2(95.2f,-334f);
+        ((RectTransform)rulesButton.transform).sizeDelta=new Vector2(312f,44f);
+        settingsButton.gameObject.SetActive(false);        shopButton.gameObject.SetActive(true);
         backButton.gameObject.SetActive(false);
         ShowButtonsImmediately(primaryButton, secondaryButton, shopButton, rulesButton, settingsButton, missionsButton, adventureButton);
     }
@@ -409,7 +409,7 @@ public class MainMenuUI : MonoBehaviour
         ((RectTransform)backButton.transform).anchoredPosition=new Vector2(95.2f,-204f);
         ConfigureButton(primaryButton, "STWÓRZ POKÓJ", "Załóż nową grę online", GoCreateRoom);
         ConfigureButton(secondaryButton, "DOŁĄCZ DO POKOJU", "Wpisz kod pokoju", GoJoinRoom);
-        ConfigureButton(backButton, "WRÓĆ", string.Empty, ShowPlayOptions);
+        ConfigureButton(backButton, "WRÓĆ", string.Empty, ShowMainChoices);
         rulesButton.gameObject.SetActive(false);
         settingsButton.gameObject.SetActive(false);
         shopButton.gameObject.SetActive(false);
@@ -464,6 +464,7 @@ public class MainMenuUI : MonoBehaviour
         PlayerProfileService.Data.RulesRead=true;PlayerProfileService.Save();
     }
 
+    public void ShowAdventure() => ShowInfo("PRZYGODA","WKRÓTCE","Pokonuj kolejnych przeciwników w trybie dla jednego gracza. Ten tryb jest w przygotowaniu.");
     private void ShowSettings()
     {
         Canvas canvas = GetComponentInParent<Canvas>();

@@ -18,6 +18,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
     private static PokerButtonTheme instance;
 
+    private readonly System.Collections.Generic.Dictionary<int,Sprite> aspectSprites=new System.Collections.Generic.Dictionary<int,Sprite>();
     private Sprite buttonSprite;
     private Texture2D buttonTexture;
     private Sprite primarySprite;
@@ -84,6 +85,8 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
     private void OnDestroy()
     {
+        foreach(var sprite in aspectSprites.Values){if(sprite!=null){Destroy(sprite.texture);Destroy(sprite);}}
+        aspectSprites.Clear();
         SceneManager.sceneLoaded -= HandleSceneLoaded;
 
         if (instance == this)
@@ -133,12 +136,18 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
         bool primary = button.gameObject.scene.name == "Game" && button.name == "CheckButton";
         if (primary && primarySprite == null) primarySprite = CreateModernButtonSprite(true);
-        Sprite styleSprite = primary ? primarySprite : buttonSprite;
+        // A sliced sprite can squeeze the gradient into a thin band on short buttons.
+        // Render at the target aspect ratio and stretch uniformly instead.
+        float ratio=background.rectTransform.rect.height/Mathf.Max(1,background.rectTransform.rect.width);
+        int textureHeight=Mathf.Clamp(Mathf.RoundToInt(512*ratio),48,512);
+        int key=textureHeight+(primary?1000:0);
+        if(!aspectSprites.TryGetValue(key,out Sprite styleSprite))
+        {styleSprite=CreateModernButtonSprite(primary,512,textureHeight);aspectSprites[key]=styleSprite;}
         bool firstApplication = background.sprite != styleSprite;
         if (firstApplication)
         {
             background.sprite = styleSprite;
-            background.type = Image.Type.Sliced;
+            background.type = Image.Type.Simple;
             background.preserveAspect = false;
             background.fillCenter = true;
             background.material = null;
@@ -315,13 +324,13 @@ public sealed class PokerButtonTheme : MonoBehaviour
         return null;
     }
 
-    private Sprite CreateModernButtonSprite(bool primary = false)
+    private Sprite CreateModernButtonSprite(bool primary = false,int size=96,int height=96)
     {
-        const int size = 96;
+
         const float radius = 23f;
         const float border = 3.5f;
 
-        Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        Texture2D texture = new Texture2D(size, height, TextureFormat.RGBA32, false)
         {
             name = "PokerButtonModern",
             filterMode = FilterMode.Bilinear,
@@ -341,16 +350,16 @@ public sealed class PokerButtonTheme : MonoBehaviour
             bottomBorder = new Color(0.90f, 0.61f, 0.23f);
         }
 
-        for (int y = 0; y < size; y++)
+        for (int y = 0; y < height; y++)
         {
-            float vertical = y / (size - 1f);
+            float vertical = y / (height - 1f);
             Color fill = Color.Lerp(bottomFill, topFill, vertical);
             Color gold = Color.Lerp(bottomBorder, topBorder, vertical);
 
             for (int x = 0; x < size; x++)
             {
-                float outerCoverage = RoundedRectCoverage(x, y, size, radius, 0f);
-                float innerCoverage = RoundedRectCoverage(x, y, size, radius, border);
+                float outerCoverage = RoundedRectCoverage(x, y, size, radius, 0f,height);
+                float innerCoverage = RoundedRectCoverage(x, y, size, radius, border,height);
                 float borderCoverage = Mathf.Clamp01(outerCoverage - innerCoverage);
 
                 Color pixel = Color.Lerp(fill, gold, borderCoverage);
@@ -366,12 +375,11 @@ public sealed class PokerButtonTheme : MonoBehaviour
         }
 
         texture.Apply(false, true);
-        if (primary) primaryTexture = texture;
-        else buttonTexture = texture;
+        if(size==96){if (primary) primaryTexture = texture; else buttonTexture = texture;}
 
         Sprite sprite = Sprite.Create(
             texture,
-            new Rect(0f, 0f, size, size),
+            new Rect(0f, 0f, size, height),
             new Vector2(0.5f, 0.5f),
             100f,
             0,
@@ -388,15 +396,15 @@ public sealed class PokerButtonTheme : MonoBehaviour
         float y,
         float size,
         float radius,
-        float inset)
+        float inset,int height)
     {
         float half = size * 0.5f - inset;
         float localRadius = Mathf.Max(1f, radius - inset);
         Vector2 point = new Vector2(
             Mathf.Abs(x + 0.5f - size * 0.5f),
-            Mathf.Abs(y + 0.5f - size * 0.5f)
+            Mathf.Abs(y + 0.5f - height * 0.5f)
         );
-        Vector2 corner = point - new Vector2(half - localRadius, half - localRadius);
+        Vector2 corner = point - new Vector2(half - localRadius, height*.5f-inset-localRadius);
         Vector2 outside = new Vector2(Mathf.Max(corner.x, 0f), Mathf.Max(corner.y, 0f));
         float distance = outside.magnitude + Mathf.Min(Mathf.Max(corner.x, corner.y), 0f) - localRadius;
         return Mathf.Clamp01(0.5f - distance);
@@ -406,7 +414,7 @@ public sealed class PokerButtonTheme : MonoBehaviour
     {
         if(button.GetComponentInParent<PortraitMenuTopBar>()!=null)return true;
         string name = button.name.ToLowerInvariant();
-        if(name=="category" || name=="avatartile" || name=="frametile")return true;
+        if(name=="profiledropdown" || name=="category" || name=="avatartile" || name=="frametile")return true;
         if (name.StartsWith("utility") || name == "spinrewardoverlay" || name=="logo") return true;
 
         if (name.Contains("removeplayer") ||
