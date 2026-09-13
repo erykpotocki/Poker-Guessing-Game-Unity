@@ -18,7 +18,7 @@ public sealed class AudioSettingsPanelState : MonoBehaviour
     private void Update()
     {
         if (box == null) return;
-        string caption="TERAZ GRA:   "+CasinoAudio.TrackNames[CasinoAudio.SelectedTrack];
+        string caption="TERAZ GRA:   "+CasinoAudio.TrackNames[CasinoAudio.SelectedTrack]+"   •   Mircea Iancu (Surprising_Media) / Pixabay";
         float viewWidth=((RectTransform)track.transform.parent).rect.width;
         if(lastTrack!=caption){lastTrack=caption;track.text=caption;tickerOffset=viewWidth;}
         float textWidth=Mathf.Max(viewWidth,track.preferredWidth+24);
