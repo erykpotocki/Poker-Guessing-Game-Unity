@@ -18,7 +18,7 @@ public sealed class AudioSettingsPanelState : MonoBehaviour
     private void Update()
     {
         if (box == null) return;
-        string caption="TERAZ GRA:   "+CasinoAudio.TrackNames[CasinoAudio.SelectedTrack]+"   •   Mircea Iancu (Surprising_Media) / Pixabay";
+        string caption="TERAZ GRA:   "+CasinoAudio.TrackNames[CasinoAudio.SelectedTrack]+"   •   "+CasinoAudio.SelectedCredit;
         float viewWidth=((RectTransform)track.transform.parent).rect.width;
         if(lastTrack!=caption){lastTrack=caption;track.text=caption;tickerOffset=viewWidth;}
         float textWidth=Mathf.Max(viewWidth,track.preferredWidth+24);
@@ -26,6 +26,7 @@ public sealed class AudioSettingsPanelState : MonoBehaviour
         tickerOffset-=Time.unscaledDeltaTime*48f;
         if(tickerOffset < -textWidth)tickerOffset=viewWidth;
         track.rectTransform.anchoredPosition=new Vector2(tickerOffset,0);
+        var next=box.Find("UtilityNextTrack");if(next!=null){next.GetComponent<Button>().interactable=CasinoAudio.CanSkip;next.GetComponentInChildren<TMP_Text>().text=CasinoAudio.CanSkip?"NASTĘPNY":"TYLKO HOST";}
         musicMute.text = GameAudioSettings.MusicMuted ? "WŁĄCZ MUZYKĘ" : "WYCISZ MUZYKĘ";
         effectsMute.text = GameAudioSettings.EffectsMuted ? "WŁĄCZ SFX" : "WYCISZ SFX";
         haptics.text = GameAudioSettings.Haptics ? "WIBRACJE: WŁĄCZONE" : "WIBRACJE: WYŁĄCZONE";

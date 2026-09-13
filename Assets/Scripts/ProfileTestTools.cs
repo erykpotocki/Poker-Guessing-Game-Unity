@@ -11,29 +11,37 @@ public static class ProfileTestTools
     public static void InstallHotSeatSettings(Canvas canvas)
     {
         if(canvas==null)return;
-        var r=Box(canvas.rootCanvas.transform,"UtilityHotSeatSettings",-48,-48,76,76);
+        canvas=canvas.rootCanvas;
+        if(canvas.transform.Find("UtilityHotSeatSettings")!=null)return;
+        var r=ShopUI.Rect("UtilityHotSeatSettings",canvas.transform,0,0,170,64);
         r.anchorMin=r.anchorMax=r.pivot=Vector2.one;
-        r.anchoredPosition=new Vector2(-24,-Mathf.Max(24,(Screen.height-Screen.safeArea.yMax)*((RectTransform)canvas.rootCanvas.transform).rect.height/Screen.height));
-        var layer=r.gameObject.AddComponent<Canvas>();layer.overrideSorting=true;layer.sortingOrder=1700;r.gameObject.AddComponent<GraphicRaycaster>();
-        r.gameObject.AddComponent<Image>().color=new Color(0,0,0,.2f);
-        var icon=Box(r,"SettingsIcon",0,14,48,48);var glyph=icon.gameObject.AddComponent<GameUtilityGlyph>();glyph.settings=true;glyph.color=Color.white;glyph.raycastTarget=false;
-        var button=r.gameObject.AddComponent<Button>();button.transition=Selectable.Transition.None;
-        button.onClick.AddListener(()=>{
-            if(canvas.rootCanvas.transform.Find("HotSeatOptions")!=null)return;
-            var panel=Box(canvas.rootCanvas.transform,"HotSeatOptions",0,0,720,600);
-            panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(.5f,.5f);
-            panel.gameObject.AddComponent<Image>().color=new Color(.02f,.05f,.035f,1);
-            var modal=panel.gameObject.AddComponent<Canvas>();modal.overrideSorting=true;modal.sortingOrder=1800;panel.gameObject.AddComponent<GraphicRaycaster>();
-            var bounds=((RectTransform)canvas.rootCanvas.transform).rect;panel.localScale=Vector3.one*Mathf.Min(1,Mathf.Min(bounds.width/750,bounds.height/630));
-            var title=Label(panel,"TEMPO ODKRYWANIA KART",680,60);title.rectTransform.anchoredPosition=new Vector2(0,490);
-            float[] speeds={2.28f,1.14f,.38f};string[] names={"WOLNO","NORMALNIE","SZYBKO"};
-            for(int i=0;i<3;i++){float delay=speeds[i];string name=names[i];Action(panel,name,(i-1)*225,380,210,()=>{PlayerPrefs.SetFloat("hotseat.revealDelay",delay);PlayerPrefs.Save();title.text="TEMPO: "+name;});}
-            bool confirmed=false;Button exit=null;
-            exit=Action(panel,"WYJDŹ DO MENU",0,220,600,()=>{if(!confirmed){confirmed=true;exit.GetComponentInChildren<TMP_Text>().text="POTWIERDŹ ZAKOŃCZENIE GRY";}else UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");});
-            Action(panel,"WRÓĆ DO GRY",0,85,600,()=>Object.Destroy(panel.gameObject));
-        });
+        float scaleY=((RectTransform)canvas.transform).rect.height/Mathf.Max(1,Screen.height);
+        r.anchoredPosition=new Vector2(-24,-((Screen.height-Screen.safeArea.yMax)*scaleY+16));
+        var layer=r.gameObject.AddComponent<Canvas>();layer.overrideSorting=true;layer.sortingOrder=4000;r.gameObject.AddComponent<GraphicRaycaster>();
+        ShopUI.Button(r,"MENU",0,0,170,64,()=>ShowHotSeatMenu(canvas));
     }
-    private static int taps;
+    private static void ShowHotSeatMenu(Canvas canvas)
+    {
+        if(canvas.transform.Find("HotSeatOptions")!=null)return;
+        var overlay=ShopUI.Overlay(canvas,"HotSeatOptions");overlay.GetComponent<Canvas>().sortingOrder=4100;overlay.GetComponent<Image>().color=new Color(0,0,0,.88f);
+        var panel=ShopUI.Rect("UtilityHotSeatCard",overlay,0,0,720,720);panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(.5f,.5f);panel.anchoredPosition=Vector2.zero;
+        panel.gameObject.AddComponent<Image>().color=new Color(.02f,.065f,.05f);
+        panel.localScale=Vector3.one*Mathf.Min(1,Mathf.Min((overlay.rect.width-40)/720,(overlay.rect.height-40)/720));
+        ShopUI.Text(panel,"MENU GRY",30,30,660,64,38);
+        var title=ShopUI.Text(panel,"TEMPO ODKRYWANIA KART",30,120,660,55,27);
+        float[] speeds={2.28f,1.14f,.38f};string[] names={"WOLNO","NORMALNIE","SZYBKO"};
+        for(int i=0;i<3;i++){float delay=speeds[i];string name=names[i];ShopUI.Button(panel,name,30+i*225,192,210,66,()=>{PlayerPrefs.SetFloat("hotseat.revealDelay",delay);PlayerPrefs.Save();title.text="TEMPO: "+name;});}
+        ShopUI.Button(panel,"DŹWIĘK / NASTĘPNY UTWÓR",60,300,600,76,()=>{Object.Destroy(overlay.gameObject);GameUtilityBar.ShowSettings(canvas);});
+        ShopUI.Button(panel,"ZAKOŃCZ GRĘ",60,410,600,76,()=>
+        {
+            foreach(Transform child in panel){child.gameObject.SetActive(false);Object.Destroy(child.gameObject);}
+            ShopUI.Text(panel,"ZAKOŃCZYĆ GRĘ?",40,125,640,80,40);
+            ShopUI.Text(panel,"Czy na pewno chcesz zakończyć grę?\nBieżąca rozgrywka zostanie przerwana.",50,235,620,130,30);
+            ShopUI.Button(panel,"TAK, ZAKOŃCZ",60,420,600,80,()=>{Object.Destroy(overlay.gameObject);UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");});
+            ShopUI.Button(panel,"NIE, WRÓĆ DO GRY",60,530,600,80,()=>Object.Destroy(overlay.gameObject));
+        });
+        ShopUI.Button(panel,"WRÓĆ DO GRY",60,550,600,76,()=>Object.Destroy(overlay.gameObject));
+    }    private static int taps;
     public static void ShowResumePrompt(Canvas canvas,AutoResumeRoom resume)
     {
         if(canvas.rootCanvas.transform.Find("ResumePrompt")!=null)return;

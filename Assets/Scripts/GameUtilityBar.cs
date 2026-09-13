@@ -168,8 +168,9 @@ public sealed class GameUtilityBar : MonoBehaviour
         var outline=box.gameObject.AddComponent<Outline>();outline.effectColor=new Color(.7f,.5f,.2f);outline.effectDistance=new Vector2(2,-2);
         ShopUI.Text(box,"USTAWIENIA",40,26,500,60,38).alignment=TextAlignmentOptions.Left;
         ShopUI.Button(box,"×",590,26,56,56,()=>{PlayerPrefs.Save();Destroy(overlay.gameObject);});
-        var ticker=ShopUI.Rect("NowPlaying",box,40,108,600,58);ticker.gameObject.AddComponent<Image>().color=new Color(.04f,.12f,.095f);
+        var ticker=ShopUI.Rect("NowPlaying",box,40,108,410,58);ticker.gameObject.AddComponent<Image>().color=new Color(.04f,.12f,.095f);
         ticker.gameObject.AddComponent<RectMask2D>();
+        var next=ShopUI.Button(box,"NASTĘPNY",468,108,172,58,CasinoAudio.NextTrack);next.name="UtilityNextTrack";next.interactable=CasinoAudio.CanSkip;
         var track=ShopUI.Text(ticker,"",0,0,600,58,26);track.enableAutoSizing=false;track.textWrappingMode=TextWrappingModes.NoWrap;track.overflowMode=TextOverflowModes.Overflow;track.alignment=TextAlignmentOptions.MidlineLeft;
         AddSlider(box,"Muzyka",-195,GameAudioSettings.Music,GameAudioSettings.SetMusic);
         var musicMute=SettingsAction(box,"MusicMute","",0,-302,GameAudioSettings.ToggleMusicMute);
