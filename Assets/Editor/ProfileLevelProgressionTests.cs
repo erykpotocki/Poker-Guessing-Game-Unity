@@ -5,6 +5,19 @@ using PokerProfile;
 public class ProfileLevelProgressionTests
 {
     [Test]
+    public void AvatarOffersResolveImportedSpriteNamesIncludingSubassets()
+    {
+        var sprites=UnityEngine.Resources.LoadAll<UnityEngine.Sprite>("ShopAvatars");
+        Assert.That(sprites.Length,Is.GreaterThan(0));
+        foreach(var sprite in sprites)
+        {
+            string id="download:"+sprite.name;
+            Assert.That(CosmeticCatalog.Get("avatar",id).Sprite,Is.SameAs(sprite),id);
+            Assert.That(PlayerProfileService.ResolveSpinPreview(new SpinPrize{Category="avatar",ItemId=id}),Is.SameAs(sprite),id);
+        }
+        Assert.That(CosmeticCatalog.All("frame").Exists(offer=>offer.Id=="classic_wood"),Is.True);
+    }
+    [Test]
     public void ResumeExpiresAfterFiveMinutesAndRejectsLegacyOrFutureDates()
     {
         long now=DateTime.UtcNow.Ticks;

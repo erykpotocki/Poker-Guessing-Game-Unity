@@ -5,6 +5,21 @@ using PokerProfile;
 
 public static class CosmeticCatalog
 {
+    private static readonly Dictionary<string,Sprite> avatarSprites=new Dictionary<string,Sprite>();
+    public static Sprite ResolveAvatar(string id)
+    {
+        if(string.IsNullOrEmpty(id)||!id.StartsWith("download:"))return null;
+        if(avatarSprites.Count==0)
+        {
+            foreach(var sprite in Resources.LoadAll<Sprite>("ShopAvatars"))avatarSprites[sprite.name]=sprite;
+            var database=Resources.Load<AvatarDatabase>("ProfileAvatars");
+            if(database!=null&&database.avatars!=null)
+                for(int i=10;i<database.avatars.Length;i++)
+                    if(database.avatars[i]!=null)avatarSprites[database.avatars[i].name]=database.avatars[i];
+        }
+        avatarSprites.TryGetValue(id.Substring(9),out var found);
+        return found;
+    }
     public sealed class Offer
     {
         public string Category, Id, Title;
@@ -18,7 +33,7 @@ public static class CosmeticCatalog
         var o=new Offer{Category=category,Id=id,Title=id};
         if(category=="avatar" && id.StartsWith("download:"))
         {
-            string name=id.Substring(9); o.Sprite=Resources.Load<Sprite>("ShopAvatars/"+name);
+            string name=id.Substring(9); o.Sprite=ResolveAvatar(id);
             int group=AvatarCategories.Category(10,name);
             o.Title=group==1?"Zwierzęta":group==2?"Halloween":group==3?"Wakacje":"Pokerzyści";
             if(group==1){o.Gold=5000;o.Spin=true;}
@@ -70,9 +85,18 @@ public static class CosmeticCatalog
     public static List<Offer> All(string category)
     {
         var result=new List<Offer>();
-        if(category=="avatar")foreach(var s in Resources.LoadAll<Sprite>("ShopAvatars"))result.Add(Get(category,"download:"+s.name));
+        if(category=="avatar")
+        {
+            ResolveAvatar("download:");
+            var names=new List<string>(avatarSprites.Keys);names.Sort(StringComparer.Ordinal);
+            foreach(var name in names)result.Add(Get(category,"download:"+name));
+        }
         if(category=="back")foreach(var s in CardBackDatabase.OnlineSprites)result.Add(Get(category,s.name));
-        if(category=="frame")foreach(int level in LevelFrameCatalog.Levels)result.Add(Get(category,"level:"+level));
+        if(category=="frame")
+        {
+            result.Add(Get(category,"classic_wood"));
+            foreach(int level in LevelFrameCatalog.Levels)result.Add(Get(category,"level:"+level));
+        }
         return result;
     }
 }

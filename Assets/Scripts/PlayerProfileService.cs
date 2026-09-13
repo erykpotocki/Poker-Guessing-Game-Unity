@@ -265,7 +265,7 @@ public static class PlayerProfileService
     }
     public static Sprite ResolveSpinPreview(SpinPrize prize)
     {
-        if(prize.Category=="avatar")return Resources.Load<Sprite>("ShopAvatars/"+prize.ItemId.Substring(9));
+        if(prize.Category=="avatar")return CosmeticCatalog.ResolveAvatar(prize.ItemId);
         if(prize.Category=="back")return CardBackDatabase.FindOnline(prize.ItemId);
         if(prize.Category=="frame")return LevelFrameCatalog.Resolve(prize.ItemId);
         return null;

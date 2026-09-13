@@ -244,9 +244,8 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
             float icon = cell-14f;
             var ordered = new System.Collections.Generic.List<int>();
             for (int i=0;i<avatars.avatars.Length;i++)
-                if(avatars.avatars[i]!=null && (avatarCategory==0
-                    ?data.Inventory.OwnedAvatars.Contains(PlayerProfileService.AvatarId(i,avatars.avatars[i]))
-                    :AvatarCategories.Category(i,avatars.avatars[i].name)==avatarCategory-1))ordered.Add(i);
+                if(avatars.avatars[i]!=null && data.Inventory.OwnedAvatars.Contains(PlayerProfileService.AvatarId(i,avatars.avatars[i])) &&
+                    (avatarCategory==0||AvatarCategories.Category(i,avatars.avatars[i].name)==avatarCategory-1))ordered.Add(i);
             ordered.Sort((a,b)=> {
                 bool first=data.Inventory.OwnedAvatars.Contains(PlayerProfileService.AvatarId(a,avatars.avatars[a]));
                 bool second=data.Inventory.OwnedAvatars.Contains(PlayerProfileService.AvatarId(b,avatars.avatars[b]));
@@ -260,6 +259,7 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
                 AvatarTile(id,avatars.avatars[i],x,rowY,icon,data.Profile.SelectedAvatarId==id);
             }
             y += Mathf.Ceil(ordered.Count/(float)columns)*(icon+18f)+12f;
+            if(ordered.Count==0){Text(body,"Nie masz jeszcze avatarów w tej kategorii.\nNowe znajdziesz w sklepie.",8,y,width-16,110,28);y+=122;}
         }
         }
         if(section=="frame")
@@ -271,18 +271,23 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
         float frameLeft=8+(frameCell-frameSize)*.5f;
         float frameRowHeight=frameSize+54;
         FrameTile("none",null,frameLeft,y,frameSize,true,data.Profile.SelectedFrameId=="none");
-        FrameTile("classic_wood",Resources.Load<Sprite>("Cosmetics/ClassicWood"),frameLeft+frameCell,y,frameSize,
-            data.Inventory.OwnedFrames.Contains("classic_wood"),data.Profile.SelectedFrameId=="classic_wood");
+        int framePosition=1;
+        if(data.Inventory.OwnedFrames.Contains("classic_wood"))
+        {
+            FrameTile("classic_wood",LevelFrameCatalog.Resolve("classic_wood"),frameLeft+frameCell,y,frameSize,true,data.Profile.SelectedFrameId=="classic_wood");
+            framePosition++;
+        }
         int[] frameLevels=LevelFrameCatalog.Levels;
         for(int i=0;i<frameLevels.Length;i++)
         {
-            int position=i+2;
             string id="level:"+frameLevels[i];
+            if(!data.Inventory.OwnedFrames.Contains(id))continue;
+            int position=framePosition++;
             FrameTile(id,LevelFrameCatalog.Resolve(id),frameLeft+(position%frameColumns)*frameCell,
                 y+(position/frameColumns)*frameRowHeight,frameSize,data.Inventory.OwnedFrames.Contains(id),data.Profile.SelectedFrameId==id);
             Text(body,"LVL "+frameLevels[i],frameLeft+(position%frameColumns)*frameCell,y+(position/frameColumns)*frameRowHeight+frameSize+4,frameSize,34,26).alignment=TextAlignmentOptions.Center;
         }
-        y+=Mathf.Ceil((frameLevels.Length+2)/(float)frameColumns)*frameRowHeight;
+        y+=Mathf.Ceil(framePosition/(float)frameColumns)*frameRowHeight;
         }
         if(section=="back")
         {
@@ -295,12 +300,15 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
         const int backColumns=3;
         float backCell=(width-16)/backColumns;
         float backWidth=backCell-24, backHeight=backWidth*1.5f;
+        int backPosition=0;
         for (int i=0;i<backs.BackCount;i++)
         {
             Sprite sprite = backs.GetBackSprite(i); string id = sprite.texture.name;
-            BackTile(id,sprite,8+(i%backColumns)*backCell,y+(i/backColumns)*(backHeight+24),backWidth,backHeight,(offlineBacks?data.Profile.SelectedOfflineCardBackId:data.Profile.SelectedCardBackId)==id);
+            if(!offlineBacks&&!data.Inventory.OwnedCardBacks.Contains(id))continue;
+            int position=backPosition++;
+            BackTile(id,sprite,8+(position%backColumns)*backCell,y+(position/backColumns)*(backHeight+24),backWidth,backHeight,(offlineBacks?data.Profile.SelectedOfflineCardBackId:data.Profile.SelectedCardBackId)==id);
         }
-        y+=Mathf.Ceil(backs.BackCount/(float)backColumns)*(backHeight+24);
+        y+=Mathf.Ceil(backPosition/(float)backColumns)*(backHeight+24);
         }
         body.sizeDelta = new Vector2(width,y);
     }
@@ -338,7 +346,7 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
             icon.localScale=Vector3.one*(size/80f);
             GameModeSelectUI.DrawLock(icon);
         }
-        button.onClick.AddListener(()=>{if(owned){PlayerProfileService.Equip("avatar",id);Build();}else ShopUI.Preview(GetComponentInParent<Canvas>(),"avatar",id,Build);});
+        button.onClick.AddListener(()=>{PlayerProfileService.Equip("avatar",id);Build();});
     }
 
     private void FrameTile(string id,Sprite sprite,float x,float y,float size,bool owned,bool selected)
@@ -366,7 +374,7 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
             icon.localScale=Vector3.one*(size/80f);
             GameModeSelectUI.DrawLock(icon);
         }
-        button.onClick.AddListener(()=>{if(owned){PlayerProfileService.Equip("frame",id);Build();}else ShopUI.Preview(GetComponentInParent<Canvas>(),"frame",id,Build);});
+        button.onClick.AddListener(()=>{PlayerProfileService.Equip("frame",id);Build();});
     }
     private void BackTile(string id,Sprite sprite,float x,float y,float width,float height,bool selected)
     {
@@ -386,7 +394,7 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
             var lockRect=Rect("ModeLock",tile,width/2,height/2,36,46);lockRect.pivot=new Vector2(.5f,.5f);
             lockRect.localScale=Vector3.one*(width/90);GameModeSelectUI.DrawLock(lockRect);
         }
-        button.onClick.AddListener(()=>{if(owned){PlayerProfileService.Equip(offlineBacks?"offlineBack":"back",id);Build();}else ShopUI.Preview(GetComponentInParent<Canvas>(),"back",id,Build);});
+        button.onClick.AddListener(()=>{PlayerProfileService.Equip(offlineBacks?"offlineBack":"back",id);Build();});
     }
     private static void TileOutline(RectTransform tile,float width,float height,bool selected)
     {

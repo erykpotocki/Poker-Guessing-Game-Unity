@@ -120,15 +120,14 @@ public class SeatUIView : MonoBehaviour
         if (!isActiveTurn || isEliminated || activeTurnHighlight == null)
             return;
 
-        float pulse = 1f + Mathf.Abs(Mathf.Sin(Time.time * pulseSpeed)) * pulseScaleAmount;
+        float wave = .5f + .5f * Mathf.Sin(Time.unscaledTime * Mathf.Max(3f, pulseSpeed));
         if(turnClock==null)turnClock=FindFirstObjectByType<TurnManager>();
         bool overtime=turnClock!=null && !turnClock.IsResolutionLocked && turnClock.CurrentTurnTimeLeft<=0;
         var ring=activeTurnHighlight.GetComponent<Image>();
         if(ring!=null)ring.color=overtime?new Color(1,.16f,.12f):new Color(1,.75f,.18f);
-        if(overtime)pulse=1f+.09f*Mathf.Abs(Mathf.Sin(Time.unscaledTime*6));
-        // Pulse opacity rather than diameter: scaling opens a gap around the avatar.
-        activeTurnHighlight.localScale = highlightBaseScale;
-        if(ring!=null){Color ink=ring.color;ink.a=.78f+.22f*Mathf.Abs(Mathf.Sin(Time.unscaledTime*(overtime?6:pulseSpeed)));ring.color=ink;}
+        if(overtime)wave=.5f+.5f*Mathf.Sin(Time.unscaledTime*6);
+        activeTurnHighlight.localScale = highlightBaseScale * (1f + wave * Mathf.Clamp(pulseScaleAmount, .04f, .07f));
+        if(ring!=null){Color ink=ring.color;ink.a=.3f+.7f*wave;ring.color=ink;}
     }
 
     public void Set(string nick, Sprite avatar)
@@ -227,7 +226,7 @@ public class SeatUIView : MonoBehaviour
             return;
 
         activeTurnHighlight.gameObject.SetActive(isActive);
-        activeTurnHighlight.localScale = highlightBaseScale;
+        if(!isActive)activeTurnHighlight.localScale = highlightBaseScale;
     }
 
     public void SetEliminatedVisual(bool value)

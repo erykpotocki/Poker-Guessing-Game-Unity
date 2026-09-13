@@ -13,7 +13,7 @@ public class RoundLogUI : MonoBehaviour, IOnEventCallback, IBeginDragHandler, ID
 {
     private const byte ChatEvent=84;
     private readonly List<(string text,bool human)> messages=new();
-    private RectTransform root,canvasRoot,viewport,content,header,inputRect;
+    private RectTransform root,canvasRoot,viewport,content,header,inputRect,resizeGrip;
     private TMP_Text text,title;
     private TMP_InputField input;
     private ScrollRect scroll;
@@ -32,10 +32,17 @@ public class RoundLogUI : MonoBehaviour, IOnEventCallback, IBeginDragHandler, ID
         var background=GetComponent<Image>();if(background==null)background=gameObject.AddComponent<Image>();background.sprite=null;background.color=new Color(.015f,.02f,.02f,.94f);
         group=GetComponent<CanvasGroup>();if(group==null)group=gameObject.AddComponent<CanvasGroup>();
         header=ShopUI.Rect("ChatHeader",root,0,0,400,40);
+        header.gameObject.AddComponent<Image>().color=new Color(.15f,.12f,.05f,.8f);
         title=ShopUI.Text(header,"CZAT",8,0,230,40,22);title.alignment=TextAlignmentOptions.Left;
         var collapse=ShopUI.Button(header,"−",0,0,52,38,()=>{collapsed=!collapsed;Refresh();});collapse.name="Collapse";
+        ShopUI.Button(header,"EDYTUJ",0,0,90,38,()=>{editing=!editing;collapsed=false;Layout();}).name="EditChat";
+        resizeGrip=ShopUI.Rect("UtilityResizeGrip",root,0,0,38,24);
+        resizeGrip.gameObject.AddComponent<Image>().color=new Color(.8f,.6f,.15f,.8f);
+        var grip=resizeGrip.gameObject.AddComponent<RoundLogResizeHandle>();grip.Owner=this;
+        ShopUI.Text(resizeGrip,"///",0,0,38,24,22).raycastTarget=false;
         viewport=ShopUI.Rect("Viewport",root,8,44,384,100);viewport.gameObject.AddComponent<Image>().color=Color.clear;viewport.gameObject.AddComponent<RectMask2D>();
         content=ShopUI.Rect("Content",viewport,0,0,384,100);text=ShopUI.Text(content,"",0,0,384,100,23);text.alignment=TextAlignmentOptions.TopLeft;text.margin=Vector4.zero;text.textWrappingMode=TextWrappingModes.Normal;
+        text.enableAutoSizing=false;
         scroll=viewport.gameObject.AddComponent<ScrollRect>();scroll.viewport=viewport;scroll.content=content;scroll.horizontal=false;scroll.movementType=ScrollRect.MovementType.Clamped;
         inputRect=ShopUI.Rect("MessageInput",root,8,150,320,40);inputRect.gameObject.AddComponent<Image>().color=new Color(.12f,.14f,.13f);
         input=inputRect.gameObject.AddComponent<TMP_InputField>();input.characterLimit=180;input.lineType=TMP_InputField.LineType.SingleLine;input.richText=false;
@@ -81,15 +88,22 @@ public class RoundLogUI : MonoBehaviour, IOnEventCallback, IBeginDragHandler, ID
     {
         if(root==null||canvasRoot==null)return;
         float sx=canvasRoot.rect.width/Mathf.Max(1,Screen.width),sy=canvasRoot.rect.height/Mathf.Max(1,Screen.height);
-        float left=Screen.safeArea.xMin*sx+8,right=canvasRoot.rect.width-MultiplayerPanelLayout.PanelWidth(canvasRoot.rect.width)-18;
-        float top=(Screen.height-Screen.safeArea.yMax)*sy+100;
-        float available=Mathf.Max(250,right-left),w=Mathf.Clamp(PlayerPrefs.GetFloat("chat.width",440),250,Mathf.Min(680,available));
-        float maxHeight=Mathf.Clamp(PlayerPrefs.GetFloat("chat.height",200),150,Mathf.Min(280,canvasRoot.rect.height*.3f));
+        float left=Screen.safeArea.xMin*sx+8,right=Screen.safeArea.xMax*sx-8;
+        float top=(Screen.height-Screen.safeArea.yMax)*sy+8,bottom=canvasRoot.rect.height-Screen.safeArea.yMin*sy-8;
+        float available=Mathf.Max(1,right-left),w=Mathf.Clamp(PlayerPrefs.GetFloat("chat.width",440),Mathf.Min(250,available),available);
+        float availableHeight=Mathf.Max(150,bottom-top);
+        float maxHeight=Mathf.Clamp(PlayerPrefs.GetFloat("chat.height",200),150,availableHeight);
         float preferred=text.GetPreferredValues(text.text,w-16,0).y+8;
-        float bodyHeight=Mathf.Clamp(preferred,28,maxHeight-90),h=collapsed?40:bodyHeight+90;
-        root.sizeDelta=new Vector2(w,h);root.anchoredPosition=new Vector2(Mathf.Clamp(PlayerPrefs.GetFloat("chat.x",right-w),left,Mathf.Max(left,right-w)),-Mathf.Clamp(PlayerPrefs.GetFloat("chat.y",top),top,top+Mathf.Max(0,280-h)));
+        float footer=editing?118:90;
+        float bodyHeight=PlayerPrefs.GetInt("chat.manualSize",0)==1?Mathf.Max(28,maxHeight-footer):Mathf.Clamp(preferred,28,Mathf.Max(28,maxHeight-footer));
+        float h=collapsed?40:bodyHeight+footer;
+        float defaultX=right-MultiplayerPanelLayout.PanelWidth(canvasRoot.rect.width)-10-w;
+        root.sizeDelta=new Vector2(w,h);root.anchoredPosition=new Vector2(Mathf.Clamp(PlayerPrefs.GetFloat("chat.x",defaultX),left,Mathf.Max(left,right-w)),-Mathf.Clamp(PlayerPrefs.GetFloat("chat.y",top+92),top,Mathf.Max(top,bottom-h)));
         header.sizeDelta=new Vector2(w,40);((RectTransform)header.Find("Collapse")).anchoredPosition=new Vector2(w-54,0);
-        title.text=editing?"EDYCJA: przesuń / rozciągnij":"CZAT";
+        ((RectTransform)header.Find("EditChat")).anchoredPosition=new Vector2(w-150,0);
+        header.Find("EditChat").GetComponentInChildren<TMP_Text>().text=editing?"GOTOWE":"EDYTUJ";
+        title.rectTransform.sizeDelta=new Vector2(w-164,40);title.text=editing?"PRZESUŃ CZAT":"CZAT";
+        resizeGrip.gameObject.SetActive(editing&&!collapsed);resizeGrip.anchoredPosition=new Vector2(w-42,-h+26);resizeGrip.SetAsLastSibling();
         viewport.gameObject.SetActive(!collapsed);inputRect.gameObject.SetActive(!collapsed);root.Find("Send").gameObject.SetActive(!collapsed);
         viewport.sizeDelta=new Vector2(w-16,bodyHeight);content.sizeDelta=new Vector2(w-16,Mathf.Max(preferred,bodyHeight));text.rectTransform.sizeDelta=content.sizeDelta;
         inputRect.anchoredPosition=new Vector2(8,-(bodyHeight+48));inputRect.sizeDelta=new Vector2(w-76,36);input.textComponent.rectTransform.sizeDelta=new Vector2(w-92,34);
@@ -97,15 +111,16 @@ public class RoundLogUI : MonoBehaviour, IOnEventCallback, IBeginDragHandler, ID
         bool visible=PlayerPrefs.GetInt("chat.visible",1)!=0;group.alpha=visible?1:0;group.blocksRaycasts=visible;
     }
     public void OnBeginDrag(PointerEventData e)
+    { BeginDrag(e,false); }
+    public void BeginDrag(PointerEventData e,bool resize)
     {
         if(!editing)return;RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRoot,e.position,e.pressEventCamera,out dragStart);
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(root,e.position,e.pressEventCamera,out var p);
-        resizing=p.x>root.rect.width-60&&p.y< -root.rect.height+60;positionStart=root.anchoredPosition;sizeStart=root.sizeDelta;
+        resizing=resize;positionStart=root.anchoredPosition;sizeStart=root.sizeDelta;
     }
     public void OnDrag(PointerEventData e)
     {
         if(!editing)return;RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRoot,e.position,e.pressEventCamera,out var p);var delta=p-dragStart;
-        if(resizing){PlayerPrefs.SetFloat("chat.width",sizeStart.x+delta.x);PlayerPrefs.SetFloat("chat.height",sizeStart.y-delta.y);}
+        if(resizing){PlayerPrefs.SetInt("chat.manualSize",1);PlayerPrefs.SetFloat("chat.width",sizeStart.x+delta.x);PlayerPrefs.SetFloat("chat.height",sizeStart.y-delta.y);}
         else{PlayerPrefs.SetFloat("chat.x",positionStart.x+delta.x);PlayerPrefs.SetFloat("chat.y",-positionStart.y-delta.y);}
         Layout();
     }
@@ -118,7 +133,15 @@ public class RoundLogUI : MonoBehaviour, IOnEventCallback, IBeginDragHandler, ID
         ShopUI.Button(r,PlayerPrefs.GetInt("chat.visible",1)==1?"UKRYJ CZAT":"POKAŻ CZAT",20,100,w-40,70,()=>{PlayerPrefs.SetInt("chat.visible",1-PlayerPrefs.GetInt("chat.visible",1));Destroy(r.gameObject);chat.Refresh();});
         string[] names={"Wszystkie wiadomości","Tylko system","Tylko gracze"};
         for(int i=0;i<3;i++){int n=i;ShopUI.Button(r,names[i],20,190+i*80,w-40,70,()=>{PlayerPrefs.SetInt("chat.filter",n);chat.Refresh();Destroy(r.gameObject);});}
-        ShopUI.Button(r,chat.editing?"ZAKOŃCZ EDYCJĘ":"ZMIEŃ POZYCJĘ I ROZMIAR",20,450,w-40,70,()=>{chat.editing=!chat.editing;Destroy(r.gameObject);});
+        ShopUI.Button(r,chat.editing?"ZAKOŃCZ EDYCJĘ":"ZMIEŃ POZYCJĘ I ROZMIAR",20,450,w-40,70,()=>{chat.editing=!chat.editing;chat.collapsed=false;PlayerPrefs.SetInt("chat.visible",1);Destroy(r.gameObject);});
         ShopUI.Button(r,"ZAMKNIJ",20,540,w-40,70,()=>Destroy(r.gameObject));
     }
+}
+
+public class RoundLogResizeHandle : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
+    public RoundLogUI Owner;
+    public void OnBeginDrag(PointerEventData e)=>Owner.BeginDrag(e,true);
+    public void OnDrag(PointerEventData e)=>Owner.OnDrag(e);
+    public void OnEndDrag(PointerEventData e)=>Owner.OnEndDrag(e);
 }

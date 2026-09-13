@@ -43,7 +43,7 @@ public sealed class UnlockPresentationUI : MonoBehaviour
     private static Sprite Resolve(PendingUnlock item)
     {
         if(item.Category=="level")return Resolve(new PendingUnlock{Category="avatar",ItemId=item.ItemId});
-        if(item.Category=="avatar" && item.ItemId.StartsWith("download:")) return Resources.Load<Sprite>("ShopAvatars/"+item.ItemId.Substring(9));
+        if(item.Category=="avatar" && item.ItemId.StartsWith("download:")) return CosmeticCatalog.ResolveAvatar(item.ItemId);
         if(item.Category=="frame")return LevelFrameCatalog.Resolve(item.ItemId);
         if(item.Category=="avatar"){AvatarDatabase db=Resources.Load<AvatarDatabase>("ProfileAvatars");if(db!=null&&int.TryParse(item.ItemId.Replace("avatar_",""),out int i)&&db.avatars!=null&&i>=0&&i<db.avatars.Length)return db.avatars[i];}
         if(item.Category=="back")return CardBackDatabase.FindOnline(item.ItemId);
