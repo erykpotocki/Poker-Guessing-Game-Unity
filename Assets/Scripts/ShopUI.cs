@@ -64,7 +64,15 @@ public sealed class ShopUI : MonoBehaviour
             var art=Rect("Preview",tile,5,5,artWidth-10,artHeight-10).gameObject.AddComponent<Image>();art.sprite=offer.Sprite;art.preserveAspect=true;art.enabled=offer.Sprite!=null;art.raycastTarget=false;
             if(offer.Sprite!=null&&category=="avatar")AvatarCircleUtility.Apply(art);
             if(offer.Sprite==null)Text(tile,"Brak podglądu",6,8,artWidth-12,artHeight-16,24);
-            Text(tile,Requirement(offer),4,artHeight+8,artWidth-8,104,24);
+            if(offer.Purchasable)
+            {
+                // Stack alternative prices in narrow grid cells to keep amounts readable.
+                if(offer.Gold>0)CurrencyAmount(tile,offer.Gold,false,8,artHeight+8,artWidth-16,38);
+                if(offer.Diamonds>0)CurrencyAmount(tile,offer.Diamonds,true,8,artHeight+(offer.Gold>0?48:8),artWidth-16,38);
+                if(offer.Category=="frame")Text(tile,offer.Title.Replace("Ramka · ",""),4,artHeight+84,artWidth-8,30,20);
+                else if(offer.Gold>0&&offer.Diamonds>0)Text(tile,offer.Both?"Obie waluty":"Złoto lub diamenty",4,artHeight+84,artWidth-8,30,18);
+            }
+            else Text(tile,Requirement(offer),4,artHeight+8,artWidth-8,104,24);
             var button=tile.gameObject.AddComponent<Button>();button.targetGraphic=background;button.transition=Selectable.Transition.ColorTint;
             button.onClick.AddListener(()=>Preview(GetComponent<Canvas>(),offer.Category,offer.Id,Build));
         }
@@ -76,24 +84,63 @@ public sealed class ShopUI : MonoBehaviour
         return Price(o)+(o.Spin&&o.Purchasable?"\nTakże ze spina":"");
     }
     private static string Price(CosmeticCatalog.Offer o)=>!o.Purchasable?(o.Id=="6"?"Darmowy":o.Category=="frame"?"Nagroda za misję":o.Spin?"Tylko ze spina":"Niedostępne"):o.Gold>0&&o.Diamonds>0?$"{o.Gold} złota\n{(o.Both?"+":"lub")} {o.Diamonds} diamentów":o.Gold>0?$"{o.Gold} złota":$"{o.Diamonds} diamentów";
+    private static void CurrencyAmount(Transform parent,int amount,bool gems,float x,float y,float width,float height)
+    {
+        float iconSize=height*.72f;
+        var icon=Rect("UtilityCurrencyIcon",parent,x,y+(height-iconSize)/2,iconSize,iconSize).gameObject.AddComponent<Image>();
+        icon.sprite=Resources.Load<Sprite>(gems?"WalletIcons/diament":"WalletIcons/złoto");icon.preserveAspect=true;icon.raycastTarget=false;
+        var label=Text(parent,amount.ToString("N0"),x+iconSize+8,y,width-iconSize-8,height,height*.62f);
+        label.alignment=TextAlignmentOptions.MidlineLeft;label.fontStyle=FontStyles.Bold;
+        label.color=gems?new Color(.3f,.78f,1f):new Color(1f,.75f,.2f);
+    }
+    private static void PriceDisplay(Transform parent,CosmeticCatalog.Offer offer,float x,float y,float width,float height)
+    {
+        if(offer.Gold>0&&offer.Diamonds>0)
+        {
+            float half=(width-42)/2;
+            CurrencyAmount(parent,offer.Gold,false,x,y,half,height);
+            Text(parent,offer.Both?"+":"lub",x+half,y,42,height,height*.42f);
+            CurrencyAmount(parent,offer.Diamonds,true,x+half+42,y,half,height);
+        }
+        else CurrencyAmount(parent,offer.Gold>0?offer.Gold:offer.Diamonds,offer.Gold==0,x,y,width,height);
+    }
     public static void Preview(Canvas canvas,string category,string id,Action changed=null)
     {
-        if(canvas==null)return;var offer=CosmeticCatalog.Get(category,id);var root=Overlay(canvas,"PurchasePreview");root.GetComponent<Canvas>().sortingOrder=700;
-        float w=root.rect.width,h=root.rect.height;float artH=Mathf.Min(h*.48f,600),artW=Mathf.Min(w-60,artH);
-        Text(root,offer.Title,20,20,w-40,65,34);
-        var art=Rect("Artwork",root,(w-artW)/2,100,artW,artH).gameObject.AddComponent<Image>();art.sprite=offer.Sprite;art.preserveAspect=true;art.enabled=offer.Sprite!=null;
-        float y=110+artH;Text(root,Requirement(offer),20,y,w-40,120,30);y+=140;
-        bool owned=CosmeticCatalog.Owned(category,id);bool allowed=category!="frame"||CosmeticCatalog.CanUnlockFrame(PlayerProfileService.Data,id);
-        var status=Text(root,"",20,y+74,w-40,74,25);
-        Action<bool> buy=gems=>{if(PlayerProfileService.BuyCosmetic(category,id,gems)){Destroy(root.gameObject);changed?.Invoke();UnlockPresentationUI.ShowPending(canvas);}else status.text="Za mało środków lub przedmiot już odblokowany.";};
-        if(owned)status.text="Odblokowano — przedmiot znajdziesz w swoim profilu.";
-        else if(!allowed)status.text=id=="classic_wood"?"Ukończ pierwszą grę i odbierz ramkę w Misjach.":"Odblokuj najpierw poprzednie ramki.\nRamki otrzymujesz też za poziom.";
-        else if(offer.Both)Button(root,$"KUP: {offer.Gold} złota + {offer.Diamonds} diamentów",20,y,w-40,65,()=>buy(true));
+        if(canvas==null)return;
+        var existing=canvas.rootCanvas.transform.Find("PurchasePreview");if(existing!=null)Destroy(existing.gameObject);
+        var offer=CosmeticCatalog.Get(category,id);var root=Overlay(canvas,"PurchasePreview");root.GetComponent<Canvas>().sortingOrder=710;
+        root.GetComponent<Image>().color=new Color(0,0,0,.78f);
+        const float w=740,h=990;
+        var panel=Rect("UtilityPurchaseCard",root,0,0,w,h);panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(.5f,.5f);panel.anchoredPosition=Vector2.zero;
+        panel.localScale=Vector3.one*Mathf.Min(1,Mathf.Min((root.rect.width-40)/w,(root.rect.height-40)/h));
+        panel.gameObject.AddComponent<Image>().color=new Color(.018f,.055f,.043f);
+        var border=panel.gameObject.AddComponent<Outline>();border.effectColor=new Color(.64f,.45f,.15f,.8f);border.effectDistance=new Vector2(2,-2);
+        Text(panel,"ODBLOKUJ PRZEDMIOT",54,30,w-170,48,28).alignment=TextAlignmentOptions.Left;
+        Button(panel,"×",w-92,24,64,56,()=>Destroy(root.gameObject));
+        Text(panel,offer.Title,40,98,w-80,62,38).fontStyle=FontStyles.Bold;
+        var stage=Rect("UtilityArtworkStage",panel,160,182,420,380);stage.gameObject.AddComponent<Image>().color=new Color(.04f,.085f,.065f);
+        var art=Rect("Artwork",stage,30,20,360,340).gameObject.AddComponent<Image>();art.sprite=offer.Sprite;art.preserveAspect=true;art.enabled=offer.Sprite!=null;art.raycastTarget=false;
+        if(category=="avatar"&&offer.Sprite!=null)AvatarCircleUtility.Apply(art);
+        string detail=category=="frame"?(id=="classic_wood"?"Nagroda za pierwszą grę":offer.Title.Replace("Ramka · ","Odblokowanie za ")+" lub wcześniejszy zakup"):
+            offer.Spin?(offer.Purchasable?"Dostępny także w kole nagród":"Do zdobycia w kole nagród"):"Dodaj do swojej kolekcji";
+        Text(panel,detail,50,580,w-100,66,26).color=new Color(.72f,.8f,.74f);
+        if(offer.Purchasable)PriceDisplay(panel,offer,offer.Gold>0&&offer.Diamonds>0?100:245,665,offer.Gold>0&&offer.Diamonds>0?540:250,66);
+        bool owned=CosmeticCatalog.Owned(category,id),allowed=category!="frame"||CosmeticCatalog.CanUnlockFrame(PlayerProfileService.Data,id);
+        var status=Text(panel,"",44,852,w-88,64,25);
+        Action<bool> buy=gems=>{if(PlayerProfileService.BuyCosmetic(category,id,gems)){Destroy(root.gameObject);changed?.Invoke();UnlockPresentationUI.ShowPending(canvas);}else{status.text="Za mało środków lub przedmiot już odblokowany.";status.color=new Color(1,.55f,.4f);}};
+        if(owned)status.text="Przedmiot jest już w Twoim profilu.";
+        else if(!allowed)status.text=id=="classic_wood"?"Odbierz ramkę za pierwszą grę w Misjach.":"Najpierw odblokuj poprzednie ramki.";
         else if(offer.Purchasable)
         {
-            float bw=(w-50)/2;if(offer.Gold>0)Button(root,$"KUP: {offer.Gold} złota",20,y,bw,65,()=>buy(false));
-            if(offer.Diamonds>0)Button(root,$"KUP: {offer.Diamonds} diamentów",30+bw,y,bw,65,()=>buy(true));
+            if(offer.Both)Button(panel,"KUP PRZEDMIOT",70,760,600,80,()=>buy(true));
+            else if(offer.Gold>0&&offer.Diamonds>0)
+            {
+                Button(panel,"KUP ZA ZŁOTO",45,760,315,80,()=>buy(false));
+                Button(panel,"KUP ZA DIAMENTY",380,760,315,80,()=>buy(true));
+            }
+            else Button(panel,"KUP PRZEDMIOT",70,760,600,80,()=>buy(offer.Diamonds>0));
         }
-        Button(root,"WRÓĆ",20,h-84,w-40,64,()=>Destroy(root.gameObject));
+        else status.text="Tego przedmiotu nie można kupić.";
+        Button(panel,"WRÓĆ DO SKLEPU",180,922,380,48,()=>Destroy(root.gameObject));
     }
 }
