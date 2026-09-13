@@ -13,10 +13,19 @@ public sealed class AudioSettingsPanelState : MonoBehaviour
         haptics = hapticsLabel; mute = muteLabel;
         Update();
     }
+    private float tickerOffset;
+    private string lastTrack;
     private void Update()
     {
         if (box == null) return;
-        track.text = CasinoAudio.TrackNames[CasinoAudio.SelectedTrack];
+        string caption="TERAZ GRA:   "+CasinoAudio.TrackNames[CasinoAudio.SelectedTrack];
+        float viewWidth=((RectTransform)track.transform.parent).rect.width;
+        if(lastTrack!=caption){lastTrack=caption;track.text=caption;tickerOffset=viewWidth;}
+        float textWidth=Mathf.Max(viewWidth,track.preferredWidth+24);
+        track.rectTransform.sizeDelta=new Vector2(textWidth,58);
+        tickerOffset-=Time.unscaledDeltaTime*48f;
+        if(tickerOffset < -textWidth)tickerOffset=viewWidth;
+        track.rectTransform.anchoredPosition=new Vector2(tickerOffset,0);
         musicMute.text = GameAudioSettings.MusicMuted ? "WŁĄCZ MUZYKĘ" : "WYCISZ MUZYKĘ";
         effectsMute.text = GameAudioSettings.EffectsMuted ? "WŁĄCZ SFX" : "WYCISZ SFX";
         haptics.text = GameAudioSettings.Haptics ? "WIBRACJE: WŁĄCZONE" : "WIBRACJE: WYŁĄCZONE";
@@ -24,10 +33,11 @@ public sealed class AudioSettingsPanelState : MonoBehaviour
         RectTransform root = GetComponentInParent<Canvas>().rootCanvas.transform as RectTransform;
         if (Screen.width <= 0 || Screen.height <= 0) return;
         Rect safe = Screen.safeArea;
-        float scale = Mathf.Min(1.65f, (safe.width * root.rect.width / Screen.width - 48f) / 620f,
-            (safe.height * root.rect.height / Screen.height - 48f) / 720f);
+        float scale = Mathf.Min(1.65f, (safe.width * root.rect.width / Screen.width - 48f) / box.sizeDelta.x,
+            (safe.height * root.rect.height / Screen.height - 48f) / box.sizeDelta.y);
+        var available=(RectTransform)transform;
+        scale=Mathf.Min(scale,(available.rect.width-40)/box.sizeDelta.x,(available.rect.height-40)/box.sizeDelta.y);
         box.localScale = Vector3.one * Mathf.Max(0.1f, scale);
-        box.anchoredPosition = new Vector2((safe.center.x / Screen.width - 0.5f) * root.rect.width,
-            (safe.center.y / Screen.height - 0.5f) * root.rect.height);
+        box.anchoredPosition = Vector2.zero;
     }
 }

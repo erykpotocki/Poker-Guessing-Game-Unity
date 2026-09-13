@@ -157,57 +157,39 @@ public sealed class GameUtilityBar : MonoBehaviour
     }
     public static void ShowSettings(Canvas canvas)
     {
-        Transform root = canvas.rootCanvas.transform;
-        if (root.Find("AudioSettingsOverlay") != null) return;
-        RectTransform overlay = new GameObject("AudioSettingsOverlay", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
-        overlay.SetParent(root, false);
-        overlay.anchorMin = Vector2.zero; overlay.anchorMax = Vector2.one;
-        overlay.offsetMin = overlay.offsetMax = Vector2.zero;
-        overlay.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.85f);
-        Canvas modalCanvas = overlay.gameObject.AddComponent<Canvas>();
-        modalCanvas.overrideSorting = true;
-        modalCanvas.sortingOrder = 300;
-        overlay.gameObject.AddComponent<GraphicRaycaster>();
-        RectTransform box = new GameObject("Settings", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
-        box.SetParent(overlay, false);
-        box.sizeDelta = new Vector2(620f, 720f);
-        box.GetComponent<Image>().color = new Color(0.04f, 0.035f, 0.025f);
-        Label(box, "DŹWIĘK", -42f);
-        AddSlider(box, "Muzyka", -102f, GameAudioSettings.Music, GameAudioSettings.SetMusic);
-        AddSlider(box, "SFX / Dźwięki gry", -278f, GameAudioSettings.Effects, GameAudioSettings.SetEffects);
-        AudioSettingsPanelState state = overlay.gameObject.AddComponent<AudioSettingsPanelState>();
-        Button musicMute = SettingsAction(box, "MusicMute", "", 0f, -211f, GameAudioSettings.ToggleMusicMute);
-        (musicMute.transform as RectTransform).sizeDelta = new Vector2(500f, 64f);
-        Button effectsMute = SettingsAction(box, "EffectsMute", "", 0f, -389f, GameAudioSettings.ToggleEffectsMute);
-        (effectsMute.transform as RectTransform).sizeDelta = new Vector2(500f, 64f);
-        TMP_Text track = Label(box, "", -450f);
-        track.enableAutoSizing = true;
-        track.fontSizeMin = 24f; track.fontSizeMax = 30f;
-        Button mute = SettingsAction(box, "MasterMute", "", 0f, -572f, GameAudioSettings.ToggleMute);
-        (mute.transform as RectTransform).sizeDelta = new Vector2(500f, 56f);
-        Button haptics = SettingsAction(box, "Haptics", "", 0f, -511f, GameAudioSettings.ToggleHaptics);
-        (haptics.transform as RectTransform).sizeDelta = new Vector2(500f, 56f);
-        state.Initialize(box, track, musicMute.GetComponentInChildren<TMP_Text>(), effectsMute.GetComponentInChildren<TMP_Text>(),
-            haptics.GetComponentInChildren<TMP_Text>(), mute.GetComponentInChildren<TMP_Text>());
-        Button close = ButtonAt("UtilitySettingsClose", box, 185f, 250f, () => { PlayerPrefs.Save(); Destroy(overlay.gameObject); });
-        RectTransform closeRect = close.transform as RectTransform;
-        closeRect.anchorMin = closeRect.anchorMax = new Vector2(0.5f, 0f);
-        closeRect.pivot = new Vector2(0.5f, 0f);
-        closeRect.anchoredPosition = new Vector2(0f, 20f);
-        TMP_Text closeText = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TMP_Text>();
-        closeText.transform.SetParent(close.transform, false);
-        StyleLabel(closeText, "ZAMKNIJ", 28f);
-        ProfileTestTools.AddSettingsButton(overlay,canvas);
-        if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name=="Game")
+        Transform root=canvas.rootCanvas.transform;
+        if(root.Find("AudioSettingsOverlay")!=null)return;
+        var overlay=ShopUI.Overlay(canvas,"AudioSettingsOverlay");overlay.GetComponent<Image>().color=new Color(0,0,0,.88f);
+        overlay.GetComponent<Canvas>().sortingOrder=1800;
+        bool gameplay=UnityEngine.SceneManagement.SceneManager.GetActiveScene().name=="Game";
+        var box=ShopUI.Rect("UtilitySettingsCard",overlay,0,0,680,gameplay?1200:1000);
+        box.anchorMin=box.anchorMax=box.pivot=new Vector2(.5f,.5f);box.anchoredPosition=Vector2.zero;
+        box.gameObject.AddComponent<Image>().color=new Color(.018f,.065f,.05f,1);
+        var outline=box.gameObject.AddComponent<Outline>();outline.effectColor=new Color(.7f,.5f,.2f);outline.effectDistance=new Vector2(2,-2);
+        ShopUI.Text(box,"USTAWIENIA",40,26,500,60,38).alignment=TextAlignmentOptions.Left;
+        ShopUI.Button(box,"×",590,26,56,56,()=>{PlayerPrefs.Save();Destroy(overlay.gameObject);});
+        var ticker=ShopUI.Rect("NowPlaying",box,40,108,600,58);ticker.gameObject.AddComponent<Image>().color=new Color(.04f,.12f,.095f);
+        ticker.gameObject.AddComponent<RectMask2D>();
+        var track=ShopUI.Text(ticker,"",0,0,600,58,26);track.enableAutoSizing=false;track.textWrappingMode=TextWrappingModes.NoWrap;track.overflowMode=TextOverflowModes.Overflow;track.alignment=TextAlignmentOptions.MidlineLeft;
+        AddSlider(box,"Muzyka",-195,GameAudioSettings.Music,GameAudioSettings.SetMusic);
+        var musicMute=SettingsAction(box,"MusicMute","",0,-302,GameAudioSettings.ToggleMusicMute);
+        AddSlider(box,"Efekty dźwiękowe",-365,GameAudioSettings.Effects,GameAudioSettings.SetEffects);
+        var effectsMute=SettingsAction(box,"EffectsMute","",0,-472,GameAudioSettings.ToggleEffectsMute);
+        var haptics=SettingsAction(box,"Haptics","",0,-557,GameAudioSettings.ToggleHaptics);
+        var mute=SettingsAction(box,"MasterMute","",0,-638,GameAudioSettings.ToggleMute);
+        foreach(var button in new[]{musicMute,effectsMute,haptics,mute})((RectTransform)button.transform).sizeDelta=new Vector2(580,64);
+        var menu=FindFirstObjectByType<MainMenuUI>();
+        if(menu!=null)SettingsAction(box,"Rules","ZASADY GRY",0,-730,()=>{Destroy(overlay.gameObject);menu.ShowRules();});
+        if(gameplay)
         {
-            box.sizeDelta=new Vector2(620,970);
-            SettingsAction(box,"ChatSettings","CZAT",0,-800,()=>{Destroy(overlay.gameObject);RoundLogUI.ShowOptions(canvas);});
-            AddSlider(box,"Wielkość przycisków",-650f,PlayerPrefs.GetFloat("ui.handButtonScale",1f),v=>PlayerPrefs.SetFloat("ui.handButtonScale",v),.8f,1.6f);
+            AddSlider(box,"Wielkość przycisków",-745,PlayerPrefs.GetFloat("ui.handButtonScale",1f),v=>PlayerPrefs.SetFloat("ui.handButtonScale",v),.8f,1.6f);
+            SettingsAction(box,"ChatSettings","USTAWIENIA CZATU",0,-885,()=>{Destroy(overlay.gameObject);RoundLogUI.ShowOptions(canvas);});
         }
-        Rect bounds=((RectTransform)root).rect;
-        box.localScale=Vector3.one*Mathf.Min(1,Mathf.Min(bounds.width/(box.sizeDelta.x+40),bounds.height/(box.sizeDelta.y+40)));
-    }
-    private static Button SettingsAction(RectTransform box, string name, string caption, float x, float y, UnityEngine.Events.UnityAction action)
+        if(ProfileTestTools.Enabled)ProfileTestTools.AddSettingsButton(box,canvas);
+        else ProfileTestTools.AddCodeEntry(box);
+        var state=overlay.gameObject.AddComponent<AudioSettingsPanelState>();
+        state.Initialize(box,track,musicMute.GetComponentInChildren<TMP_Text>(),effectsMute.GetComponentInChildren<TMP_Text>(),haptics.GetComponentInChildren<TMP_Text>(),mute.GetComponentInChildren<TMP_Text>());
+    }    private static Button SettingsAction(RectTransform box, string name, string caption, float x, float y, UnityEngine.Events.UnityAction action)
     {
         Button button = ButtonAt("Utility" + name, box, 0f, 240f, action);
         RectTransform rect = button.transform as RectTransform;

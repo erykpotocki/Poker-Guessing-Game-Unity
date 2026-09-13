@@ -96,7 +96,7 @@ public static class ProfileTestTools
                 string code=input.text.Trim().ToUpperInvariant();var data=PlayerProfileService.Data;
                 if(code=="KYRE"&&!data.Receipts.Contains("code:KYRE"))
                 {data.Receipts.Add("code:KYRE");data.Wallet.Coins+=500;data.Wallet.RewardCurrency+=25;PlayerProfileService.Save();status.text="Dodano 500 złota i 25 diamentów";}
-                else if(code=="T9K4X") {PlayerPrefs.SetInt("test.enabled",1);PlayerPrefs.Save();status.text="Menu testowe dostępne w ustawieniach";}
+                else if(code=="41111") {PlayerPrefs.SetInt("test.enabled",1);PlayerPrefs.Save();status.text="Menu testowe odblokowane"; var owner=parent.GetComponentInParent<Canvas>(); if(owner!=null)Show(owner);}
                 else status.text=code=="KYRE"?"Ten kod został już wykorzystany":"Nieprawidłowy kod";
             });
             foreach(var part in new[]{new Vector3(-10,24,-45),new Vector3(8,30,45)})

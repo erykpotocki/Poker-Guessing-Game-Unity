@@ -368,7 +368,7 @@ public class MainMenuUI : MonoBehaviour
         if (transitionInProgress || primaryButton == null)
             return;
 
-        ConfigureButton(primaryButton, "MULTIPLAYER", "Graj online", ShowMultiplayerOptions);
+        ConfigureButton(primaryButton, "GRAJ", "Wybierz tryb gry", ShowPlayOptions);
         ConfigureButton(secondaryButton, "GRA NA JEDNYM TELEFONIE", "Graj offline", GoHotSeat);
         ConfigureButton(rulesButton, "ZASADY", string.Empty, ShowRules);
         ConfigureButton(settingsButton, "USTAWIENIA", string.Empty, ShowSettings);
@@ -376,11 +376,26 @@ public class MainMenuUI : MonoBehaviour
         ConfigureButton(missionsButton,"MISJE",string.Empty,()=>MissionsUI.Show(menuGroup.GetComponentInParent<Canvas>()));
         ConfigureButton(adventureButton,"PRZYGODA",string.Empty,()=>ShowInfo("PRZYGODA","WKRÓTCE","Pokonuj kolejnych przeciwników w trybie dla jednego gracza. Ten tryb jest w przygotowaniu."));
         missionsButton.gameObject.SetActive(true);adventureButton.gameObject.SetActive(true);
-        rulesButton.gameObject.SetActive(true);
+        rulesButton.gameObject.SetActive(false);
+        secondaryButton.gameObject.SetActive(false);
+        ((RectTransform)primaryButton.transform).anchoredPosition=new Vector2(95.2f,-40f);
+        ((RectTransform)shopButton.transform).anchoredPosition=new Vector2(95.2f,-122f);
+        ((RectTransform)missionsButton.transform).anchoredPosition=new Vector2(14.6f,-188f);
+        ((RectTransform)adventureButton.transform).anchoredPosition=new Vector2(175.8f,-188f);
+        ((RectTransform)settingsButton.transform).anchoredPosition=new Vector2(95.2f,-252f);
+        ((RectTransform)settingsButton.transform).sizeDelta=new Vector2(312f,44f);
         settingsButton.gameObject.SetActive(true);
         shopButton.gameObject.SetActive(true);
         backButton.gameObject.SetActive(false);
         ShowButtonsImmediately(primaryButton, secondaryButton, shopButton, rulesButton, settingsButton, missionsButton, adventureButton);
+    }
+
+    private void ShowPlayOptions()
+    {
+        ShowMultiplayerOptions();
+        ConfigureButton(primaryButton,"MULTIPLAYER","Graj online",ShowMultiplayerOptions);
+        ConfigureButton(secondaryButton,"GRA NA JEDNYM TELEFONIE","Graj offline",GoHotSeat);
+        ConfigureButton(backButton,"WRÓĆ",string.Empty,ShowMainChoices);
     }
 
     private void ShowMultiplayerOptions()
@@ -388,9 +403,13 @@ public class MainMenuUI : MonoBehaviour
         if (transitionInProgress || primaryButton == null)
             return;
 
+        secondaryButton.gameObject.SetActive(true);
+        ((RectTransform)primaryButton.transform).anchoredPosition=new Vector2(95.2f,-40f);
+        ((RectTransform)secondaryButton.transform).anchoredPosition=new Vector2(95.2f,-122f);
+        ((RectTransform)backButton.transform).anchoredPosition=new Vector2(95.2f,-204f);
         ConfigureButton(primaryButton, "STWÓRZ POKÓJ", "Załóż nową grę online", GoCreateRoom);
         ConfigureButton(secondaryButton, "DOŁĄCZ DO POKOJU", "Wpisz kod pokoju", GoJoinRoom);
-        ConfigureButton(backButton, "WRÓĆ", string.Empty, ShowMainChoices);
+        ConfigureButton(backButton, "WRÓĆ", string.Empty, ShowPlayOptions);
         rulesButton.gameObject.SetActive(false);
         settingsButton.gameObject.SetActive(false);
         shopButton.gameObject.SetActive(false);
@@ -439,7 +458,7 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
-    private void ShowRules()
+    public void ShowRules()
     {
         ShowInfo("ZASADY GRY", "JAK GRAĆ", RulesText);
         PlayerProfileService.Data.RulesRead=true;PlayerProfileService.Save();
