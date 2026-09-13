@@ -26,7 +26,7 @@ public sealed class SpinRewardUI : MonoBehaviour
         RectTransform root=obj.transform as RectTransform; root.anchorMin=Vector2.zero;root.anchorMax=Vector2.one;root.offsetMin=root.offsetMax=Vector2.zero;PortraitMenuTopBar.ApplyOverlayInset(root);
         obj.GetComponent<Image>().color=new Color(0,0,0,.94f); Canvas c=obj.GetComponent<Canvas>();c.overrideSorting=true;c.sortingOrder=680;
         Button backdrop=obj.AddComponent<Button>();backdrop.transition=Selectable.Transition.None;
-        backdrop.onClick.AddListener(()=>{obj.SetActive(false);Destroy(obj);});
+        backdrop.onClick.AddListener(()=>obj.GetComponent<SpinRewardUI>().TryClose());
         // The panel Image catches clicks inside; only the surrounding backdrop dismisses.
         obj.GetComponent<SpinRewardUI>().Build();
     }
@@ -34,7 +34,11 @@ public sealed class SpinRewardUI : MonoBehaviour
     {
         if(owner==null)return;
         Transform overlay=owner.rootCanvas.transform.Find("SpinRewardOverlay");
-        if(overlay!=null){overlay.gameObject.SetActive(false);Destroy(overlay.gameObject);}
+        if(overlay!=null)
+        {
+            var ui=overlay.GetComponent<SpinRewardUI>();
+            if(ui==null||!ui.spinning){overlay.gameObject.SetActive(false);Destroy(overlay.gameObject);}
+        }
     }
     private RectTransform Box(string name,Transform parent,Vector2 pos,Vector2 size)
     {
@@ -59,7 +63,7 @@ public sealed class SpinRewardUI : MonoBehaviour
         panel=Box("UtilitySpinPanel",transform,Vector2.zero,new Vector2(820,1400));panel.gameObject.AddComponent<Image>().color=new Color(.025f,.045f,.04f,1f);
         Button panelHit=panel.gameObject.AddComponent<Button>();panelHit.transition=Selectable.Transition.None;
         Text(panel,"KOŁO NAGRÓD",new Vector2(0,630),new Vector2(590,76),40).characterSpacing=6;
-        Button close=Action(panel,"",new Vector2(355,630),new Vector2(96,96),()=>Destroy(gameObject));
+        Button close=Action(panel,"",new Vector2(355,630),new Vector2(96,96),TryClose);
         close.GetComponent<Image>().color=Color.clear;close.transition=Selectable.Transition.None;
         foreach(float angle in new[]{45f,-45f})
         {
@@ -90,6 +94,11 @@ public sealed class SpinRewardUI : MonoBehaviour
     {
         if(spinning)return;
         StartCoroutine(!PlayerProfileService.CanSpin && PlayerProfileService.Data.Wheel.PendingPrize==null ? WatchAd() : SpinWheel());
+    }
+    private void TryClose()
+    {
+        if(spinning)return;
+        gameObject.SetActive(false);Destroy(gameObject);
     }
     private IEnumerator WatchAd()
     {
@@ -148,8 +157,11 @@ public sealed class SpinRewardUI : MonoBehaviour
         rewardPreview.gameObject.SetActive(true);
         yield return Celebrate();
         PlayerProfileService.ClaimSpinPrize();
-
-        spinning=false; Refresh();
+        // Unlock dismissal only after the persisted prize has been applied and
+        // the wallet/inventory notification has refreshed the top bar.
+        yield return null;
+        spinning=PlayerProfileService.Data.Wheel.PendingPrize!=null;
+        Refresh();
     }
     private IEnumerator Celebrate()
     {

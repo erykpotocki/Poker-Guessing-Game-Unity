@@ -172,22 +172,21 @@ public sealed class GameUtilityBar : MonoBehaviour
         ticker.gameObject.AddComponent<RectMask2D>();
         var next=ShopUI.Button(box,"NASTĘPNY",468,108,172,58,CasinoAudio.NextTrack);next.name="UtilityNextTrack";next.interactable=CasinoAudio.CanSkip;
         var track=ShopUI.Text(ticker,"",0,0,600,58,26);track.enableAutoSizing=false;track.textWrappingMode=TextWrappingModes.NoWrap;track.overflowMode=TextOverflowModes.Overflow;track.alignment=TextAlignmentOptions.MidlineLeft;
-        AddSlider(box,"Muzyka",-195,GameAudioSettings.Music,GameAudioSettings.SetMusic);
-        var musicMute=SettingsAction(box,"MusicMute","",0,-302,GameAudioSettings.ToggleMusicMute);
-        AddSlider(box,"Efekty dźwiękowe",-365,GameAudioSettings.Effects,GameAudioSettings.SetEffects);
-        var effectsMute=SettingsAction(box,"EffectsMute","",0,-472,GameAudioSettings.ToggleEffectsMute);
-        var haptics=SettingsAction(box,"Haptics","",0,-557,GameAudioSettings.ToggleHaptics);
-        var mute=SettingsAction(box,"MasterMute","",0,-638,GameAudioSettings.ToggleMute);
+        AddSlider(box,"Muzyka",-200,GameAudioSettings.Music,GameAudioSettings.SetMusic);
+        var musicMute=SettingsAction(box,"MusicMute","",0,-350,GameAudioSettings.ToggleMusicMute);
+        AddSlider(box,"Efekty dźwiękowe",-445,GameAudioSettings.Effects,GameAudioSettings.SetEffects);
+        var effectsMute=SettingsAction(box,"EffectsMute","",0,-595,GameAudioSettings.ToggleEffectsMute);
+        var haptics=SettingsAction(box,"Haptics","",0,-690,GameAudioSettings.ToggleHaptics);
+        var mute=SettingsAction(box,"MasterMute","",0,-785,GameAudioSettings.ToggleMute);
         foreach(var button in new[]{musicMute,effectsMute,haptics,mute})((RectTransform)button.transform).sizeDelta=new Vector2(580,64);
         var menu=FindFirstObjectByType<MainMenuUI>();
-        if(menu!=null)SettingsAction(box,"Rules","ZASADY GRY",0,-730,()=>{Destroy(overlay.gameObject);menu.ShowRules();});
+        if(menu!=null)SettingsAction(box,"Rules","ZASADY GRY",0,-880,()=>{Destroy(overlay.gameObject);menu.ShowRules();});
         if(gameplay)
         {
-            AddSlider(box,"Wielkość przycisków",-745,PlayerPrefs.GetFloat("ui.handButtonScale",1f),v=>PlayerPrefs.SetFloat("ui.handButtonScale",v),.8f,1.6f);
-            SettingsAction(box,"ChatSettings","USTAWIENIA CZATU",0,-885,()=>{Destroy(overlay.gameObject);RoundLogUI.ShowOptions(canvas);});
+            AddSlider(box,"Wielkość przycisków",-900,PlayerPrefs.GetFloat("ui.handButtonScale",1f),v=>PlayerPrefs.SetFloat("ui.handButtonScale",v),.8f,1.6f);
+            SettingsAction(box,"ChatSettings","USTAWIENIA CZATU",0,-1050,()=>{Destroy(overlay.gameObject);RoundLogUI.ShowOptions(canvas);});
         }
         if(ProfileTestTools.Enabled)ProfileTestTools.AddSettingsButton(box,canvas);
-        else ProfileTestTools.AddCodeEntry(box);
         var state=overlay.gameObject.AddComponent<AudioSettingsPanelState>();
         state.Initialize(box,track,musicMute.GetComponentInChildren<TMP_Text>(),effectsMute.GetComponentInChildren<TMP_Text>(),haptics.GetComponentInChildren<TMP_Text>(),mute.GetComponentInChildren<TMP_Text>());
     }    private static Button SettingsAction(RectTransform box, string name, string caption, float x, float y, UnityEngine.Events.UnityAction action)

@@ -41,7 +41,8 @@ public static class ProfileTestTools
             ShopUI.Button(panel,"NIE, WRÓĆ DO GRY",60,530,600,80,()=>Object.Destroy(overlay.gameObject));
         });
         ShopUI.Button(panel,"WRÓĆ DO GRY",60,550,600,76,()=>Object.Destroy(overlay.gameObject));
-    }    private static int taps;
+    }
+    private static int taps;
     public static void ShowResumePrompt(Canvas canvas,AutoResumeRoom resume)
     {
         if(canvas.rootCanvas.transform.Find("ResumePrompt")!=null)return;
@@ -91,26 +92,39 @@ public static class ProfileTestTools
     }
     public static void AddCodeEntry(RectTransform parent)
     {
-        if(!CodesVisible)return;
-        var button=Action(parent,"WPROWADŹ KOD",0,35,420,()=>{});
-        button.onClick.AddListener(()=>{
-            button.gameObject.SetActive(false);
-            var r=Box(parent,"CodeInput",-45,35,330,62);r.gameObject.AddComponent<Image>().color=new Color(.1f,.1f,.1f);
-            var input=r.gameObject.AddComponent<TMP_InputField>();var label=Label(r,"",310,62);
-            input.textComponent=label;input.textViewport=label.rectTransform;input.characterLimit=5;
-            input.onValueChanged.AddListener(value=>input.SetTextWithoutNotify(value.ToUpperInvariant()));
-            var status=Label(parent,"",700,32);status.rectTransform.anchoredPosition=new Vector2(0,103);
-            var confirm=Action(parent,"",170,35,70,()=>{
-                string code=input.text.Trim().ToUpperInvariant();var data=PlayerProfileService.Data;
-                if(code=="KYRE"&&!data.Receipts.Contains("code:KYRE"))
-                {data.Receipts.Add("code:KYRE");data.Wallet.Coins+=500;data.Wallet.RewardCurrency+=25;PlayerProfileService.Save();status.text="Dodano 500 złota i 25 diamentów";}
-                else if(code=="41111") {PlayerPrefs.SetInt("test.enabled",1);PlayerPrefs.Save();status.text="Menu testowe odblokowane"; var owner=parent.GetComponentInParent<Canvas>(); if(owner!=null)Show(owner);}
-                else status.text=code=="KYRE"?"Ten kod został już wykorzystany":"Nieprawidłowy kod";
-            });
-            foreach(var part in new[]{new Vector3(-10,24,-45),new Vector3(8,30,45)})
-            {var stroke=Box(confirm.transform,"CheckStroke",part.x,part.y,part.x<0?19:34,4);stroke.localRotation=Quaternion.Euler(0,0,part.z);var ink=stroke.gameObject.AddComponent<Image>();ink.color=new Color(.2f,1,.4f);ink.raycastTarget=false;}
-            input.ActivateInputField();
-        });
+        var canvas=parent.GetComponentInParent<Canvas>();
+        Action(parent,"KODY PROMOCYJNE",0,35,420,()=>ShowPromoCode(canvas));
+    }
+    public static void ShowPromoCode(Canvas canvas)
+    {
+        if(canvas==null)return;canvas=canvas.rootCanvas;
+        var old=canvas.transform.Find("PromoCodeOverlay");if(old!=null){Object.Destroy(old.gameObject);return;}
+        var overlay=ShopUI.Overlay(canvas,"PromoCodeOverlay");overlay.GetComponent<Canvas>().sortingOrder=2300;
+        overlay.GetComponent<Image>().color=new Color(0,0,0,.8f);
+        var panel=ShopUI.Rect("UtilityPromoCodeCard",overlay,0,0,760,390);
+        panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(.5f,.5f);panel.anchoredPosition=new Vector2(0,90);
+        panel.localScale=Vector3.one*Mathf.Min(1,Mathf.Min((overlay.rect.width-36)/760,(overlay.rect.height-36)/390));
+        panel.gameObject.AddComponent<Image>().color=new Color(.015f,.055f,.043f,1);
+        var outline=panel.gameObject.AddComponent<Outline>();outline.effectColor=new Color(.72f,.5f,.16f);outline.effectDistance=new Vector2(2,-2);
+        ShopUI.Text(panel,"KOD PROMOCYJNY",40,28,580,62,36).alignment=TextAlignmentOptions.Left;
+        ShopUI.Button(panel,"×",660,24,64,58,()=>Object.Destroy(overlay.gameObject));
+        var inputRect=ShopUI.Rect("PromoCodeInput",panel,55,120,500,78);inputRect.gameObject.AddComponent<Image>().color=new Color(.08f,.1f,.09f);
+        var input=inputRect.gameObject.AddComponent<TMP_InputField>();input.characterLimit=5;input.lineType=TMP_InputField.LineType.SingleLine;input.richText=false;
+        var label=ShopUI.Text(inputRect,"",16,2,468,74,36);label.alignment=TextAlignmentOptions.Center;label.enableAutoSizing=false;
+        input.textComponent=label;input.textViewport=inputRect;
+        input.onValueChanged.AddListener(value=>{string upper=value.ToUpperInvariant();if(value!=upper)input.SetTextWithoutNotify(upper);});
+        var status=ShopUI.Text(panel,"Wpisz maksymalnie 5 znaków",50,218,660,46,24);status.color=new Color(.7f,.78f,.72f);
+        System.Action redeem=()=>
+        {
+            string code=input.text.Trim().ToUpperInvariant();var data=PlayerProfileService.Data;
+            if(code=="41111")
+            {PlayerPrefs.SetInt("test.enabled",1);PlayerPrefs.Save();status.text="Menu testowe odblokowane. Znajdziesz je w Ustawieniach.";status.color=new Color(.35f,1f,.55f);}
+            else if(code=="KYRE"&&!data.Receipts.Contains("code:KYRE"))
+            {data.Receipts.Add("code:KYRE");RewardRules.Gold(data,500);RewardRules.Diamonds(data,25);PlayerProfileService.Save();status.text="Odebrano 500 złota i 25 diamentów";status.color=new Color(.35f,1f,.55f);}
+            else {status.text=code=="KYRE"?"Ten kod został już wykorzystany":"Nieprawidłowy kod";status.color=new Color(1f,.48f,.38f);}
+        };
+        ShopUI.Button(panel,"ZATWIERDŹ",570,120,140,78,()=>redeem());
+        input.onSubmit.AddListener(_=>redeem());input.Select();input.ActivateInputField();
     }
     public static void AddSettingsButton(RectTransform parent,Canvas canvas)
     {if(Enabled)Action(parent,"MENU TESTOWE",0,18,330,()=>Show(canvas));}
@@ -127,9 +141,9 @@ public static class ProfileTestTools
         System.Action<System.Action> edit=change=>{change();PlayerProfileService.Save();refresh();};
         var data=PlayerProfileService.Data;
         Action(root,"−1000 złota",-185,720,340,()=>edit(()=>data.Wallet.Coins=System.Math.Max(0,data.Wallet.Coins-1000)));
-        Action(root,"+1000 złota",185,720,340,()=>edit(()=>data.Wallet.Coins+=1000));
+        Action(root,"+1000 złota",185,720,340,()=>edit(()=>RewardRules.Gold(data,1000)));
         Action(root,"−100 diamentów",-185,630,340,()=>edit(()=>data.Wallet.RewardCurrency=System.Math.Max(0,data.Wallet.RewardCurrency-100)));
-        Action(root,"+100 diamentów",185,630,340,()=>edit(()=>data.Wallet.RewardCurrency+=100));
+        Action(root,"+100 diamentów",185,630,340,()=>edit(()=>RewardRules.Diamonds(data,100)));
         int[] steps={1,10,100};for(int i=0;i<3;i++){int step=steps[i];Action(root,"+"+step+" LVL",(i-1)*245,540,225,()=>edit(()=>data.Progression.Experience=Progression.Threshold(data.Progression.Level+step)));}
         Action(root,"+1 wygrana",-185,450,340,()=>edit(()=>data.Statistics.GamesWon++));
         Action(root,"+1 ukończona gra",185,450,340,()=>edit(()=>data.Statistics.GamesPlayed++));

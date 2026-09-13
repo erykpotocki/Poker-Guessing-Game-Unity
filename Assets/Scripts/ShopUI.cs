@@ -23,6 +23,21 @@ public sealed class ShopUI : MonoBehaviour
         var r=Rect("Action",parent,x,y,w,h);var im=r.gameObject.AddComponent<Image>();var b=r.gameObject.AddComponent<Button>();b.targetGraphic=im;
         Text(r,caption,4,0,w-8,h,25).name="ResponsiveLabel";b.onClick.AddListener(()=>action());PokerButtonTheme.ApplyTo(b);return b;
     }
+    private static Button ShopTab(Transform parent,string caption,float x,float y,float w,float h,bool selected,Action action,bool secondary=false)
+    {
+        var r=Rect(secondary?"UtilityShopFilter":"UtilityShopTab",parent,x,y,w,h);
+        var background=r.gameObject.AddComponent<Image>();
+        background.color=selected?(secondary?new Color(.16f,.20f,.13f):new Color(.12f,.25f,.19f)):new Color(.035f,.07f,.06f);
+        var button=r.gameObject.AddComponent<Button>();button.targetGraphic=background;button.transition=Selectable.Transition.ColorTint;
+        button.onClick.AddListener(()=>action());
+        var label=Text(r,caption,6,0,w-12,h,secondary?22:26);label.color=selected?new Color(1f,.8f,.28f):new Color(.78f,.78f,.7f);
+        if(selected)
+        {
+            var line=Rect("Selection",r,secondary?18:10,h-4,w-(secondary?36:20),4).gameObject.AddComponent<Image>();
+            line.color=new Color(1f,.72f,.18f);line.raycastTarget=false;
+        }
+        return button;
+    }
     public static void Show(Canvas canvas)
     {
         if(canvas==null)return;
@@ -40,15 +55,15 @@ public sealed class ShopUI : MonoBehaviour
     {
         foreach(Transform child in transform){child.gameObject.SetActive(false);Destroy(child.gameObject);}
         var root=(RectTransform)transform;float w=root.rect.width,h=root.rect.height;
-        Text(root,"SKLEP",20,20,w-140,70,44);Button(root,"×",w-100,20,76,66,()=>Destroy(gameObject));
+        Text(root,"SKLEP",20,20,w-260,70,44);Button(root,"KODY",w-220,24,104,58,()=>ProfileTestTools.ShowPromoCode(root.GetComponentInParent<Canvas>()));Button(root,"×",w-100,20,76,66,()=>Destroy(gameObject));
         Text(root,$"Złoto: {PlayerProfileService.Data.Wallet.Coins}    Diamenty: {PlayerProfileService.Data.Wallet.RewardCurrency}",20,94,w-40,56,30);
         string[] ids={"avatar","back","frame"},labels={"AVATARY","REWERSY","RAMKI"};
-        for(int i=0;i<3;i++){string id=ids[i];Button(root,labels[i],20+i*(w-40)/3,164,(w-46)/3,60,()=>{category=id;Build();});}
+        for(int i=0;i<3;i++){string id=ids[i];ShopTab(root,labels[i],20+i*(w-40)/3,164,(w-46)/3,60,category==id,()=>{category=id;Build();});}
         float sx=w/Mathf.Max(1,Screen.width);
         float left=Screen.safeArea.xMin*sx+24;
         float width=Screen.safeArea.width*sx-48;
         string[] filters={"Wszystko","Złoto","Diamenty"};
-        for(int i=0;i<3;i++){int n=i;Button(root,(currency==i?"• ":"")+filters[i],left+i*width/3,242,width/3-6,58,()=>{currency=n;Build();});}
+        for(int i=0;i<3;i++){int n=i;ShopTab(root,filters[i],left+i*width/3,242,width/3-6,52,currency==i,()=>{currency=n;Build();},true);}
         var view=Rect("Products",root,left,320,width,Mathf.Max(100,h-346));view.gameObject.AddComponent<Image>().color=Color.clear;view.gameObject.AddComponent<RectMask2D>();
         var scroll=view.gameObject.AddComponent<ScrollRect>();scroll.horizontal=false;scroll.movementType=ScrollRect.MovementType.Clamped;
         int columns=category=="back"?3:4;
@@ -58,17 +73,25 @@ public sealed class ShopUI : MonoBehaviour
         var content=Rect("Content",view,0,0,width,Mathf.Max(120,Mathf.Ceil(items.Count/(float)columns)*rowHeight));scroll.viewport=view;scroll.content=content;
         for(int i=0;i<items.Count;i++)
         {
-            var offer=items[i];float x=8+i%columns*cell+(cell-artWidth)*.5f,y=i/columns*rowHeight;
+            var offer=items[i];bool allowed=category!="frame"||CosmeticCatalog.CanUnlockFrame(PlayerProfileService.Data,offer.Id);
+            float x=8+i%columns*cell+(cell-artWidth)*.5f,y=i/columns*rowHeight;
             var tile=Rect("UtilityShopProduct",content,x,y,artWidth,artHeight+118);
             var background=tile.gameObject.AddComponent<Image>();background.color=new Color(.07f,.055f,.035f,.85f);
-            var art=Rect("Preview",tile,5,5,artWidth-10,artHeight-10).gameObject.AddComponent<Image>();art.sprite=offer.Sprite;art.preserveAspect=true;art.enabled=offer.Sprite!=null;art.raycastTarget=false;
+            var art=Rect("Preview",tile,5,5,artWidth-10,artHeight-10).gameObject.AddComponent<Image>();art.sprite=offer.Sprite;art.preserveAspect=category!="back";art.enabled=offer.Sprite!=null;art.raycastTarget=false;
             if(offer.Sprite!=null&&category=="avatar")AvatarCircleUtility.Apply(art);
             if(offer.Sprite==null)Text(tile,"Brak podglądu",6,8,artWidth-12,artHeight-16,24);
-            if(offer.Purchasable)
+            if(!allowed)
             {
-                // Stack alternative prices in narrow grid cells to keep amounts readable.
-                if(offer.Gold>0)CurrencyAmount(tile,offer.Gold,false,8,artHeight+8,artWidth-16,38);
-                if(offer.Diamonds>0)CurrencyAmount(tile,offer.Diamonds,true,8,artHeight+(offer.Gold>0?48:8),artWidth-16,38);
+                art.color=new Color(.15f,.15f,.15f,.72f);
+                var shade=Rect("LockedShade",tile,5,5,artWidth-10,artHeight-10).gameObject.AddComponent<Image>();shade.color=new Color(.12f,.12f,.12f,.72f);shade.raycastTarget=false;
+                var lockRect=Rect("ModeLock",tile,artWidth*.18f,artHeight*.12f,artWidth*.64f,artHeight*.76f);GameModeSelectUI.DrawLock(lockRect);
+                Text(tile,"ZABLOKOWANA",4,artHeight+28,artWidth-8,52,22).color=new Color(.65f,.65f,.62f);
+            }
+            else if(offer.Purchasable)
+            {
+                // Diamonds are consistently shown above gold when both are required.
+                if(offer.Diamonds>0)CurrencyAmount(tile,offer.Diamonds,true,8,artHeight+8,artWidth-16,38);
+                if(offer.Gold>0)CurrencyAmount(tile,offer.Gold,false,8,artHeight+(offer.Diamonds>0?48:8),artWidth-16,38);
                 if(offer.Category=="frame")Text(tile,offer.Title.Replace("Ramka · ",""),4,artHeight+84,artWidth-8,30,20);
                 else if(offer.Gold>0&&offer.Diamonds>0)Text(tile,offer.Both?"Obie waluty":"Złoto lub diamenty",4,artHeight+84,artWidth-8,30,18);
             }
@@ -89,7 +112,10 @@ public sealed class ShopUI : MonoBehaviour
         float iconSize=height*.72f;
         var icon=Rect("UtilityCurrencyIcon",parent,x,y+(height-iconSize)/2,iconSize,iconSize).gameObject.AddComponent<Image>();
         icon.sprite=Resources.Load<Sprite>(gems?"WalletIcons/diament":"WalletIcons/złoto");icon.preserveAspect=true;icon.raycastTarget=false;
-        var label=Text(parent,amount.ToString("N0"),x+iconSize+8,y,width-iconSize-8,height,height*.62f);
+        float groupWidth=Mathf.Min(width,iconSize+8+Mathf.Max(50,amount.ToString("N0").Length*18));
+        x+=(width-groupWidth)*.5f;
+        icon.rectTransform.anchoredPosition=new Vector2(x,-(y+(height-iconSize)/2));
+        var label=Text(parent,amount.ToString("N0"),x+iconSize+8,y,groupWidth-iconSize-8,height,height*.62f);
         label.alignment=TextAlignmentOptions.MidlineLeft;label.fontStyle=FontStyles.Bold;
         label.color=gems?new Color(.3f,.78f,1f):new Color(1f,.75f,.2f);
     }
@@ -97,10 +123,9 @@ public sealed class ShopUI : MonoBehaviour
     {
         if(offer.Gold>0&&offer.Diamonds>0)
         {
-            float half=(width-42)/2;
-            CurrencyAmount(parent,offer.Gold,false,x,y,half,height);
-            Text(parent,offer.Both?"+":"lub",x+half,y,42,height,height*.42f);
-            CurrencyAmount(parent,offer.Diamonds,true,x+half+42,y,half,height);
+            CurrencyAmount(parent,offer.Diamonds,true,x,y,width,height);
+            Text(parent,offer.Both?"+":"LUB",x,y+height,width,32,20);
+            CurrencyAmount(parent,offer.Gold,false,x,y+height+30,width,height);
         }
         else CurrencyAmount(parent,offer.Gold>0?offer.Gold:offer.Diamonds,offer.Gold==0,x,y,width,height);
     }
@@ -124,8 +149,14 @@ public sealed class ShopUI : MonoBehaviour
         string detail=category=="frame"?(id=="classic_wood"?"Nagroda za pierwszą grę":offer.Title.Replace("Ramka · ","Odblokowanie za ")+" lub wcześniejszy zakup"):
             offer.Spin?(offer.Purchasable?"Dostępny także w kole nagród":"Do zdobycia w kole nagród"):"Dodaj do swojej kolekcji";
         Text(panel,detail,50,580,w-100,66,26).color=new Color(.72f,.8f,.74f);
-        if(offer.Purchasable)PriceDisplay(panel,offer,offer.Gold>0&&offer.Diamonds>0?100:245,665,offer.Gold>0&&offer.Diamonds>0?540:250,66);
         bool owned=CosmeticCatalog.Owned(category,id),allowed=category!="frame"||CosmeticCatalog.CanUnlockFrame(PlayerProfileService.Data,id);
+        if(!allowed)
+        {
+            art.color=new Color(.16f,.16f,.16f,.7f);
+            var shade=Rect("LockedShade",stage,30,20,360,340).gameObject.AddComponent<Image>();shade.color=new Color(.12f,.12f,.12f,.72f);shade.raycastTarget=false;
+            var lockRect=Rect("ModeLock",stage,105,55,210,270);GameModeSelectUI.DrawLock(lockRect);
+        }
+        else if(offer.Purchasable)PriceDisplay(panel,offer,offer.Gold>0&&offer.Diamonds>0?145:245,offer.Gold>0&&offer.Diamonds>0?638:665,offer.Gold>0&&offer.Diamonds>0?450:250,66);
         var status=Text(panel,"",44,852,w-88,64,25);
         Action<bool> buy=gems=>{if(PlayerProfileService.BuyCosmetic(category,id,gems)){Destroy(root.gameObject);changed?.Invoke();UnlockPresentationUI.ShowPending(canvas);}else{status.text="Za mało środków lub przedmiot już odblokowany.";status.color=new Color(1,.55f,.4f);}};
         if(owned)status.text="Przedmiot jest już w Twoim profilu.";

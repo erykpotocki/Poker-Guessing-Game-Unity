@@ -12,6 +12,8 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
     private Canvas owner;
     private RectTransform bar;
     private TMP_Text goldText, diamondText;
+    private TMP_Text calendarDay;
+    private GameObject dailyDot;
     private Image goldIcon, diamondIcon;
     private Image profileImage;
     private TMP_Text levelText, experienceText;
@@ -56,7 +58,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         RectTransform canvasRect = root.GetComponentInParent<Canvas>().rootCanvas.transform as RectTransform;
         float scaleY = canvasRect != null ? canvasRect.rect.height / Screen.height : 1f;
         float safeTop = (Screen.height - Screen.safeArea.yMax) * scaleY;
-        float panelHeight = safeTop + 100f;
+        float panelHeight = safeTop + 130f;
         root.offsetMin = Vector2.zero;
         root.offsetMax = new Vector2(0f, -panelHeight);
     }
@@ -77,6 +79,15 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         experienceFill.SetParent(experienceTrack,false);experienceFill.GetComponent<Image>().color=new Color(.12f,.72f,.29f);experienceFill.GetComponent<Image>().raycastTarget=false;
         experienceText.transform.SetAsLastSibling();
         CreateIconButton("Spin", CreateSpinSprite(), ShowSpin, out _);
+        CreateIconButton("DailyRewards", null, ()=>DailyRewardsUI.Show(owner), out var calendarIcon);
+        calendarIcon.color=new Color(.92f,.94f,.90f);
+        var calendar=transform.Find("DailyRewards");
+        var header=ShopUI.Rect("CalendarHeader",calendar,0,0,68,16);header.gameObject.AddComponent<Image>().color=new Color(.8f,.18f,.16f);
+        header.anchorMin=new Vector2(0,1);header.anchorMax=Vector2.one;header.sizeDelta=new Vector2(0,16);header.anchoredPosition=Vector2.zero;
+        calendarDay=ShopUI.Text(calendar,"",0,12,68,56,36);calendarDay.color=new Color(.03f,.10f,.06f);
+        calendarDay.rectTransform.anchorMin=Vector2.zero;calendarDay.rectTransform.anchorMax=Vector2.one;calendarDay.rectTransform.offsetMin=new Vector2(0,0);calendarDay.rectTransform.offsetMax=new Vector2(0,-12);
+        dailyDot=ShopUI.Rect("Available",calendar,0,0,18,18).gameObject;dailyDot.AddComponent<Image>().color=Color.red;
+        var dotRect=(RectTransform)dailyDot.transform;dotRect.anchorMin=dotRect.anchorMax=new Vector2(1,1);dotRect.anchoredPosition=new Vector2(-4,4);
         CreateIconButton("Profile", null, ShowProfile, out profileImage);
         PlayerProfileService.Changed += Refresh;
         Layout(); Refresh();
@@ -190,6 +201,8 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
 
     private void Update()
     {
+        if(calendarDay!=null)calendarDay.text=PlayerProfileService.RewardClock.UtcNow.Day.ToString();
+        if(dailyDot!=null)dailyDot.SetActive(PokerProfile.RewardRules.CanClaimDaily(PlayerProfileService.Data,PlayerProfileService.RewardClock.UtcNow));
         if (lastScreen != new Vector2Int(Screen.width, Screen.height) || lastSafeArea != Screen.safeArea) Layout();
         if(owner!=null && PlayerProfileService.PeekUnlock()?.Source=="level" &&
             owner.rootCanvas.transform.Find("SpinRewardOverlay")==null)
@@ -204,33 +217,36 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         float sx = canvasRect.rect.width / Screen.width, sy = canvasRect.rect.height / Screen.height;
         float safeTop = (Screen.height - Screen.safeArea.yMax) * sy;
         float safeLeft = Screen.safeArea.xMin * sx, safeRight = (Screen.width - Screen.safeArea.xMax) * sx;
-        float height = safeTop + 100f; bar.sizeDelta = new Vector2(0f, height);
+        float height = safeTop + 130f; bar.sizeDelta = new Vector2(0f, height);
         RectTransform spin = transform.Find("Spin") as RectTransform, profile = transform.Find("Profile") as RectTransform;
         float unit=(canvasRect.rect.width-safeLeft-safeRight)/1000f;
-        Place(profile,Vector2.one,Vector2.one,new Vector2(-safeRight-65*unit,-safeTop-50),new Vector2(94,94)*unit);
-        Place(spin,Vector2.one,Vector2.one,new Vector2(-safeRight-165*unit,-safeTop-50),new Vector2(68,68)*unit);
-        goldText.fontSize=diamondText.fontSize=34*unit;
+        const float growth=94f/72f;
+        float contentUnit=unit*growth;
+        Place(profile,Vector2.one,Vector2.one,new Vector2(-safeRight-65*unit,-safeTop-65),new Vector2(94,94)*unit);
+        Place(spin,Vector2.one,Vector2.one,new Vector2(-safeRight-178*unit,-safeTop-65),new Vector2(68,68)*contentUnit);
+        Place(transform.Find("DailyRewards") as RectTransform,Vector2.one,Vector2.one,new Vector2(-safeRight-285*unit,-safeTop-65),new Vector2(68,68)*unit);
+        goldText.fontSize=diamondText.fontSize=34*contentUnit;
         goldText.enableAutoSizing=diamondText.enableAutoSizing=true;
-        goldText.fontSizeMin=diamondText.fontSizeMin=22*unit;
-        goldText.fontSizeMax=diamondText.fontSizeMax=34*unit;
-        float goldWidth=Mathf.Clamp(goldText.GetPreferredValues(goldText.text,10000,100).x+4*unit,36*unit,130*unit);
-        float diamondWidth=Mathf.Clamp(diamondText.GetPreferredValues(diamondText.text,10000,100).x+4*unit,36*unit,130*unit);
+        goldText.fontSizeMin=diamondText.fontSizeMin=22*contentUnit;
+        goldText.fontSizeMax=diamondText.fontSizeMax=34*contentUnit;
+        float goldWidth=Mathf.Clamp(goldText.GetPreferredValues(goldText.text,10000,100).x+4*unit,36*contentUnit,100*contentUnit);
+        float diamondWidth=Mathf.Clamp(diamondText.GetPreferredValues(diamondText.text,10000,100).x+4*unit,36*contentUnit,100*contentUnit);
         float goldX=safeLeft+30*unit;
-        float goldValueX=goldX+35*unit;
-        float diamondX=goldValueX+goldWidth+48*unit;
-        float diamondValueX=diamondX+35*unit;
-        Place(goldIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(goldX,-safeTop-50),Vector2.one*42*unit);
-        PlaceLeft(goldText.rectTransform,new Vector2(goldValueX,-safeTop-50),new Vector2(goldWidth,70));
-        Place(diamondIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(diamondX,-safeTop-50),Vector2.one*42*unit);
-        PlaceLeft(diamondText.rectTransform,new Vector2(diamondValueX,-safeTop-50),new Vector2(diamondWidth,70));
-        float xpLeft=diamondValueX+diamondWidth+32*unit;
-        float xpRight=canvasRect.rect.width-safeRight-225*unit;
+        float goldValueX=goldX+35*contentUnit;
+        float diamondX=goldValueX+goldWidth+24*contentUnit;
+        float diamondValueX=diamondX+35*contentUnit;
+        Place(goldIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(goldX,-safeTop-65),Vector2.one*42*contentUnit);
+        PlaceLeft(goldText.rectTransform,new Vector2(goldValueX,-safeTop-65),new Vector2(goldWidth,70*growth));
+        Place(diamondIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(diamondX,-safeTop-65),Vector2.one*42*contentUnit);
+        PlaceLeft(diamondText.rectTransform,new Vector2(diamondValueX,-safeTop-65),new Vector2(diamondWidth,70*growth));
+        float xpLeft=safeLeft+490*unit;
+        float xpRight=canvasRect.rect.width-safeRight-335*unit;
         float xpWidth=Mathf.Max(120*unit,xpRight-xpLeft-28*unit);
-        xpLeft+=14*unit;
-        foreach(var text in new[]{levelText,experienceText}){text.fontSizeMin=14*unit;text.fontSizeMax=26*unit;}
-        PlaceLeft(levelText.rectTransform,new Vector2(xpLeft,-safeTop-34),new Vector2(xpWidth,26));
-        PlaceLeft(experienceTrack,new Vector2(xpLeft,-safeTop-62),new Vector2(xpWidth,24));
-        PlaceLeft(experienceText.rectTransform,new Vector2(xpLeft,-safeTop-62),new Vector2(xpWidth,26));
+        xpLeft+=14*contentUnit;
+        foreach(var text in new[]{levelText,experienceText}){text.fontSizeMin=14*contentUnit;text.fontSizeMax=26*contentUnit;}
+        PlaceLeft(levelText.rectTransform,new Vector2(xpLeft,-safeTop-65+16*growth),new Vector2(xpWidth,26*growth));
+        PlaceLeft(experienceTrack,new Vector2(xpLeft,-safeTop-65-12*growth),new Vector2(xpWidth,24*growth));
+        PlaceLeft(experienceText.rectTransform,new Vector2(xpLeft,-safeTop-65-12*growth),new Vector2(xpWidth,26*growth));
     }
 
     private static void Place(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size)
@@ -255,7 +271,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         overlay.GetComponent<Image>().color=new Color(0,0,0,.35f);
         var dismiss=overlay.gameObject.AddComponent<Button>();dismiss.transition=Selectable.Transition.None;dismiss.onClick.AddListener(()=>Destroy(overlay.gameObject));
         float width=Mathf.Min(460,overlay.rect.width-40);
-        var panel=ShopUI.Rect("UtilityProfileDropdownCard",overlay,0,0,width,380);
+        var panel=ShopUI.Rect("UtilityProfileDropdownCard",overlay,0,0,width,468);
         panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(1,1);panel.anchoredPosition=new Vector2(-20,-12);
         panel.gameObject.AddComponent<Image>().color=new Color(.02f,.065f,.05f,1);
         System.Action<System.Action> open=action=>{Destroy(overlay.gameObject);action();};
@@ -273,6 +289,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
             }
         }));
         ShopUI.Button(panel,"USTAWIENIA",18,282,width-36,72,()=>open(()=>GameUtilityBar.ShowSettings(owner)));
+        ShopUI.Button(panel,"KODY PROMOCYJNE",18,370,width-36,72,()=>open(()=>ProfileTestTools.ShowPromoCode(owner)));
     }
     private void ShowSpin() { if (owner != null) SpinRewardUI.Show(owner); }
     private void OnDestroy() { PlayerProfileService.Changed -= Refresh; }
