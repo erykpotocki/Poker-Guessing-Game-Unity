@@ -18,7 +18,7 @@ namespace PokerProfile
         public List<string> OwnedFrames = new List<string>();
         public List<string> OwnedCardBacks = new List<string> { "6" };
     }
-    [Serializable] public sealed class Statistics { public int GamesPlayed, GamesWon, RoundsPlayed, RoundsWon, Eliminations, AdsWatched, Spins; }
+    [Serializable] public sealed class Statistics { public int BotGames, OfflineGames; public int BotWins, OnlineWins, OnlineGames; public long TotalGoldEarned, TotalDiamondsEarned; public int GamesPlayed, GamesWon, RoundsPlayed, RoundsWon, Eliminations, AdsWatched, Spins; }
     [Serializable] public sealed class OpponentRecord
     {
         public string ProfileId = "";
@@ -67,7 +67,10 @@ namespace PokerProfile
     }
     [Serializable] public sealed class PlayerSave
     {
-        public int Version = 1;
+        public int Version = 2;
+        public DailyRewardState DailyRewards = new DailyRewardState();
+        public List<string> ClaimedCareerMissions = new List<string>(), OwnedBadges = new List<string>();
+        public int BonusSpins;
         public bool RulesRead;
         public List<string> ClaimedIntroMissions = new List<string>();
         public PlayerProfile Profile = new PlayerProfile();
@@ -107,8 +110,8 @@ namespace PokerProfile
         public static bool ClaimSpinPrize(PlayerSave data)
         {
             var prize=data.Wheel.PendingPrize;if(prize==null||!prize.IsValid){data.Wheel.PendingPrize=null;return false;}
-            if(prize.Category=="gold")data.Wallet.Coins+=prize.Amount;
-            else if(prize.Category=="diamonds")data.Wallet.RewardCurrency+=prize.Amount;
+            if(prize.Category=="gold")RewardRules.Gold(data,prize.Amount);
+            else if(prize.Category=="diamonds")RewardRules.Diamonds(data,prize.Amount);
             else if(prize.Category=="avatar"){Own(data.Inventory.OwnedAvatars,prize.ItemId);data.Wheel.AvatarsWon++;}
             else if(prize.Category=="back"){Own(data.Inventory.OwnedCardBacks,prize.ItemId);data.Wheel.AvatarsWon++;}
             else if(prize.Category=="frame"){data.Wheel.PendingPrize=null;return false;}
@@ -123,8 +126,8 @@ namespace PokerProfile
             if(mission<0||mission>=IntroMissionIds.Length||!IntroMissionReady(d,mission)||d.ClaimedIntroMissions.Contains(IntroMissionIds[mission]))return false;
             d.ClaimedIntroMissions.Add(IntroMissionIds[mission]);
             if(mission==0)Unlock(d,"frame","classic_wood","Ramka za pierwszą grę","mission");
-            else if(mission==1)d.Wallet.RewardCurrency+=10;
-            else d.Wallet.Coins+=mission==2?100:50;
+            else if(mission==1)RewardRules.Diamonds(d,10);
+            else RewardRules.Gold(d,mission==2?100:50);
             return true;
         }
         public static int MatchExperience(int placement,int total)
@@ -163,20 +166,20 @@ namespace PokerProfile
             if (!Receipt(data,"match:"+matchId)) return false;
             data.Statistics.GamesPlayed++;
             if (won) data.Statistics.GamesWon++;
-            data.Wallet.Coins += Math.Max(0,Math.Min(won&&advanced?230:200,coins));
+            RewardRules.Gold(data,Math.Max(0,Math.Min(won&&advanced?230:200,coins)));
             int previousLevel=data.Progression.Level;
             data.Progression.Experience += Math.Max(0,Math.Min(150,xp));
             for(int level=previousLevel+1;level<=data.Progression.Level;level++)
             {
-                data.Wallet.Coins+=Progression.LevelGold(level);
-                data.Wallet.RewardCurrency+=level;
+                RewardRules.Gold(data,Progression.LevelGold(level));
+                RewardRules.Diamonds(data,level);
                 data.PendingUnlocks.Add(new PendingUnlock {Source="level",Category="level",ItemId=data.Profile.SelectedAvatarId,
                     Title=data.Profile.Nickname+"\nGratulacje! Poziom "+level+"\n"+Progression.LevelGold(level)+" złota + "+level+" diamentów"});
             }
             foreach(int level in LevelFrameCatalog.Levels)
                 if(data.Progression.Level>=level&&!data.Inventory.OwnedFrames.Contains("level:"+level))
                     Unlock(data,"frame","level:"+level,"Ramka za poziom "+level,"level");
-            if (diamond) data.Wallet.RewardCurrency++;
+            if (diamond) RewardRules.Diamonds(data,1);
             Evaluate(data);
             return true;
         }
@@ -189,12 +192,12 @@ namespace PokerProfile
         public static void Evaluate(PlayerSave d)
         {
             // The first-game frame is claimed explicitly in Missions.
-            Award(d,"games_10",d.Statistics.GamesPlayed,10,()=>Own(d.Inventory.OwnedAvatars,"avatar_1"));
-            Award(d,"games_50",d.Statistics.GamesPlayed,50,()=>Own(d.Inventory.OwnedAvatars,"avatar_2"));
-            Award(d,"games_100",d.Statistics.GamesPlayed,100,()=>Own(d.Inventory.OwnedCardBacks,"HotSeatBack_RedDiamond"));
-            Award(d,"wins_10",d.Statistics.GamesWon,10,()=>d.Wallet.Coins += 150);
-            Award(d,"ads_10",d.Statistics.AdsWatched,10,()=>d.Wallet.RewardCurrency += 5);
-            Award(d,"spins_10",d.Statistics.Spins,10,()=>d.Wallet.Coins += 100);
+            Award(d,"games_10",d.Statistics.GamesPlayed,10,()=>Unlock(d,"avatar","avatar_1","Avatar za 10 gier","mission"));
+            Award(d,"games_50",d.Statistics.GamesPlayed,50,()=>Unlock(d,"avatar","avatar_2","Avatar za 50 gier","mission"));
+            Award(d,"games_100",d.Statistics.GamesPlayed,100,()=>Unlock(d,"back","HotSeatBack_RedDiamond","Rewers za 100 gier","mission"));
+            Award(d,"wins_10",d.Statistics.GamesWon,10,()=>RewardRules.Gold(d,150));
+            Award(d,"ads_10",d.Statistics.AdsWatched,10,()=>RewardRules.Diamonds(d,5));
+            Award(d,"spins_10",d.Statistics.Spins,10,()=>RewardRules.Gold(d,100));
         }
         public static void Own(List<string> inventory,string id) { if (!inventory.Contains(id)) inventory.Add(id); }
         public static void Unlock(PlayerSave data,string category,string id,string title,string source="")
@@ -219,7 +222,7 @@ namespace PokerProfile
             int target = kind == "wins" ? (weekly ? 3 : 1) : kind == "rounds" ? (weekly ? 30 : 5) : (weekly ? 10 : 2);
             int progress = kind == "wins" ? d.Statistics.GamesWon-period.WinsBaseline : kind == "rounds" ? d.Statistics.RoundsPlayed-period.RoundsBaseline : d.Statistics.GamesPlayed-period.GamesBaseline;
             if ((kind != "games" && kind != "wins" && kind != "rounds") || progress < target || period.Claimed.Contains(kind)) return false;
-            period.Claimed.Add(kind); d.Wallet.Coins += weekly ? 100 : 20; return true;
+            period.Claimed.Add(kind); RewardRules.Gold(d,weekly ? 100 : 20); return true;
         }
         public static bool CompleteAd(PlayerSave d,string requestId,AdOutcome outcome,AdReward reward,DateTime utc)
         {
@@ -227,7 +230,7 @@ namespace PokerProfile
             if (outcome != AdOutcome.Completed || (reward == AdReward.ExtraSpin && d.Wheel.ExtraUsed+d.Wheel.ExtraCredits >= MaxExtraSpins)) return false;
             if (!Receipt(d,"ad:"+requestId)) return false;
             d.Statistics.AdsWatched++;
-            if (reward == AdReward.ExtraSpin) d.Wheel.ExtraCredits++; else d.Wallet.RewardCurrency += 2;
+            if (reward == AdReward.ExtraSpin) d.Wheel.ExtraCredits++; else RewardRules.Diamonds(d,2);
             Evaluate(d); return true;
         }
         public static string Spin(PlayerSave d,int roll,DateTime utc)
@@ -242,8 +245,8 @@ namespace PokerProfile
             roll = Math.Max(0,Math.Min(999,roll));
             d.Statistics.Spins++;
             string reward;
-            if (roll < 5) { d.Wallet.RewardCurrency++; reward = "1 niebieski diament"; }
-            else { int coins = 10 + roll % 41; d.Wallet.Coins += coins; reward = coins + " monet"; }
+            if (roll < 5) { RewardRules.Diamonds(d,1); reward = "1 niebieski diament"; }
+            else { int coins = 10 + roll % 41; RewardRules.Gold(d,coins); reward = coins + " monet"; }
             Evaluate(d); return reward;
         }
     }

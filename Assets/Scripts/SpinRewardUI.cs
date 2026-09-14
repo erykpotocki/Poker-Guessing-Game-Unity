@@ -205,7 +205,7 @@ public sealed class SpinRewardUI : MonoBehaviour
         int charges=PlayerProfileService.SpinCharges;
         spinCount.text=$"{charges}/3 spiny";
         string countdown=$"{(int)left.TotalHours:00}:{left.Minutes:00}:{left.Seconds:00}";
-        timer.text=charges==3?"Wszystkie spiny dostępne":$"<size=28>Kolejny spin za</size>\n<size=40>{countdown}</size>";
+        timer.text=PlayerProfileService.Data.Wheel.Charges==3?"Wszystkie spiny dostępne":$"<size=28>Kolejny spin za</size>\n<size=40>{countdown}</size>";
         spinCaption.text=charges>0||PlayerProfileService.Data.Wheel.PendingPrize!=null?"Zakręć spinem":"Obejrzyj reklamę, by zakręcić już teraz!";
         spinCaption.fontSize=32;
         spinBackground.color=spin.interactable?new Color(1,.78f,.25f):new Color(.19f,.25f,.22f);

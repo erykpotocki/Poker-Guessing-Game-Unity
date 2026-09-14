@@ -125,6 +125,16 @@ public class ProfileLevelProgressionTests
             Assert.That(scroll.content.parent,Is.EqualTo(scroll.viewport));
             Assert.That(scroll.content.gameObject.activeSelf,Is.True);
             Assert.That(scroll.content.GetComponentsInChildren<UnityEngine.UI.Button>().Length,Is.EqualTo(9));
+            // Exercise the runtime layout: a transparent stencil image hid every button.
+            var layout=panel.gameObject.AddComponent<MultiplayerPanelLayout>();
+            typeof(MultiplayerPanelLayout).GetMethod("Start",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(layout,null);
+            Assert.That(scroll.viewport.GetComponent<UnityEngine.UI.Image>().color.a,Is.EqualTo(1));
+            Assert.That(scroll.viewport.GetComponent<UnityEngine.UI.Mask>().showMaskGraphic,Is.False);
+            // References must survive moving the active list out of its old wrapper.
+            typeof(HandRankPanelUI).GetMethod("ResolveReferences",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(panel,null);
+            panel.ShowCategories();
+            Assert.That(scroll.content.name,Is.EqualTo("CategoryList"));
+            Assert.That(scroll.content.GetComponentsInChildren<UnityEngine.UI.Button>().Length,Is.EqualTo(9));
         }
         finally{UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene,true);}
     }

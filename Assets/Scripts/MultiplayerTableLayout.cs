@@ -66,7 +66,9 @@ public sealed class MultiplayerTableLayout : MonoBehaviour
         float bottom=Screen.safeArea.yMin*sy+20;
         float width=Mathf.Max(300,canvasRoot.rect.width-left-right),height=Mathf.Max(240,canvasRoot.rect.height-top-bottom);
         board.anchorMin=board.anchorMax=new Vector2(.5f,.5f);
-        board.anchoredPosition=new Vector2((left-right)*.5f,(bottom-top)*.5f);
+        // Move the whole presentation (including seats and cards) down slightly.
+        float down=Mathf.Min(48f,height*.06f);
+        board.anchoredPosition=new Vector2((left-right)*.5f,(bottom-top)*.5f-down);
         board.localScale=Vector3.one*Mathf.Min(width/1800,height/1000);
         foreach(var binding in seats)PositionSeat(binding.seat,binding.angle);
     }

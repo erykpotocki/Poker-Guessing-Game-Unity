@@ -14,7 +14,7 @@ public sealed class UnlockPresentationUI : MonoBehaviour
         GameObject obj=new GameObject("UnlockPresentation",typeof(RectTransform),typeof(Image),typeof(Canvas),typeof(GraphicRaycaster),typeof(UnlockPresentationUI));
         obj.transform.SetParent(owner.rootCanvas.transform,false);RectTransform root=obj.transform as RectTransform;
         root.anchorMin=Vector2.zero;root.anchorMax=Vector2.one;root.offsetMin=root.offsetMax=Vector2.zero;
-        obj.GetComponent<Image>().color=new Color(0,0,0,.86f);Canvas c=obj.GetComponent<Canvas>();c.overrideSorting=true;c.sortingOrder=700;
+        obj.GetComponent<Image>().color=new Color(0,0,0,.86f);Canvas c=obj.GetComponent<Canvas>();c.overrideSorting=true;c.sortingOrder=1000;
         var fade=obj.AddComponent<CanvasGroup>();fade.alpha=0;fade.interactable=false;
         obj.GetComponent<UnlockPresentationUI>().Build(owner);
     }
@@ -38,7 +38,15 @@ public sealed class UnlockPresentationUI : MonoBehaviour
         panel.localScale=Vector3.one*Mathf.Min(1,Mathf.Min(bounds.width/730,bounds.height/840));
         Button accept=Rect("Continue",panel,new Vector2(0,-280),new Vector2(390,82)).gameObject.AddComponent<Button>();Image bg=accept.gameObject.AddComponent<Image>();accept.targetGraphic=bg;
         TMP_Text label=Text(accept.transform,"KONTYNUUJ",Vector2.zero,new Vector2(390,82),31);label.rectTransform.anchorMin=Vector2.zero;label.rectTransform.anchorMax=Vector2.one;label.rectTransform.offsetMin=label.rectTransform.offsetMax=Vector2.zero;
-        accept.onClick.AddListener(()=>{PlayerProfileService.AcceptUnlock();transform.SetParent(null);Destroy(gameObject);ShowPending(owner);});PokerButtonTheme.ApplyTo(accept);
+        bool accepted=false;
+        accept.onClick.AddListener(()=>
+        {
+            if(accepted)return;
+            accepted=true;accept.interactable=false;
+            PlayerProfileService.AcceptUnlock();
+            gameObject.SetActive(false);transform.SetParent(null);Destroy(gameObject);
+            ShowPending(owner);
+        });PokerButtonTheme.ApplyTo(accept);
     }
     private static Sprite Resolve(PendingUnlock item)
     {
@@ -46,7 +54,15 @@ public sealed class UnlockPresentationUI : MonoBehaviour
         if(item.Category=="avatar" && item.ItemId.StartsWith("download:")) return CosmeticCatalog.ResolveAvatar(item.ItemId);
         if(item.Category=="frame")return LevelFrameCatalog.Resolve(item.ItemId);
         if(item.Category=="avatar"){AvatarDatabase db=Resources.Load<AvatarDatabase>("ProfileAvatars");if(db!=null&&int.TryParse(item.ItemId.Replace("avatar_",""),out int i)&&db.avatars!=null&&i>=0&&i<db.avatars.Length)return db.avatars[i];}
-        if(item.Category=="back")return CardBackDatabase.FindOnline(item.ItemId);
+        if(item.Category=="back")
+        {
+            if((item.ItemId??"").StartsWith("HotSeatBack_"))
+            {
+                var texture=Resources.Load<Texture2D>("CardBacks/"+item.ItemId);
+                return texture!=null?Sprite.Create(texture,new UnityEngine.Rect(0,0,texture.width,texture.height),new Vector2(.5f,.5f)):null;
+            }
+            return CardBackDatabase.FindOnline(item.ItemId);
+        }
         return null;
     }
     private float animationTime;

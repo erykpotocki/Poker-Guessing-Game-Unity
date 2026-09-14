@@ -6,7 +6,7 @@ TextureImporter:
     enableMipMap: 0
   isReadable: 0
   textureType: 0
-  maxTextureSize: 2048
+  maxTextureSize: 1024
   alphaIsTransparency: 1
   textureSettings:
     filterMode: 1

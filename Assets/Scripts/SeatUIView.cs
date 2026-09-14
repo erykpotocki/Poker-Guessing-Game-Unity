@@ -5,6 +5,7 @@ using UnityEngine.Events;
 
 public class SeatUIView : MonoBehaviour
 {
+    public RectTransform ProfileAnchor => avatarImage!=null?avatarImage.rectTransform:transform as RectTransform;
     [SerializeField] private Image avatarImage;
     [SerializeField] private TMP_Text nickText;
     [SerializeField] private RectTransform activeTurnHighlight;

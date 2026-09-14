@@ -34,6 +34,7 @@ public static class CosmeticCatalog
         if(category=="avatar" && id.StartsWith("download:"))
         {
             string name=id.Substring(9); o.Sprite=ResolveAvatar(id);
+            if(name.StartsWith("reward_")){o.Title=name=="reward_beta_2026"?"Beta Tester 2026":"Avatar za reklamy · "+name.Substring(name.Length-1);return o;}
             int group=AvatarCategories.Category(10,name);
             o.Title=group==1?"Zwierzęta":group==2?"Halloween":group==3?"Wakacje":"Pokerzyści";
             if(group==1){o.Gold=5000;o.Spin=true;}

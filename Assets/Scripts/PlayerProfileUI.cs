@@ -183,15 +183,15 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
             underline.color=new Color(1f,.91f,.7f,.25f);
         });
 
-        RectTransform view = Rect("ProfileScroll",root,left,top+254,width,Mathf.Max(180,root.rect.height-top-290));
+        RectTransform view = Rect("ProfileScroll",root,left,top+222,width,Mathf.Max(180,root.rect.height-top-258));
         view.gameObject.AddComponent<Image>().color = Color.clear;
         view.gameObject.AddComponent<RectMask2D>();
         ProfileSwipeScroll scroll = view.gameObject.AddComponent<ProfileSwipeScroll>();
         scroll.Navigate=direction=>{
-            int page=section=="avatar"?avatarCategory:section=="frame"?6:7;
-            int next=Mathf.Clamp(page+direction,0,7);
+            int page=section=="avatar"?avatarCategory:section=="frame"?6:section=="back"?7:8;
+            int next=Mathf.Clamp(page+direction,0,8);
             if(next==page)return;
-            section=next<6?"avatar":next==6?"frame":"back";
+            section=next<6?"avatar":next==6?"frame":next==7?"back":"badge";
             if(next<6)avatarCategory=next;
             Build();
         };
@@ -199,13 +199,27 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
         scroll.horizontal = false; scroll.vertical = true; scroll.movementType = ScrollRect.MovementType.Clamped; scroll.scrollSensitivity = 65;
         float y = 0f;
         if (!string.IsNullOrEmpty(message)) { Text(body,message,8,y,width-16,72); y += 80; }
-        Text(body,$"Ukończone gry: {data.Statistics.GamesPlayed}   Wygrane: {data.Statistics.GamesWon}  ({(data.Statistics.GamesPlayed>0?100f*data.Statistics.GamesWon/data.Statistics.GamesPlayed:0):0}%)\nWygrane rundy: {data.Statistics.RoundsWon}   Eliminacje: {data.Statistics.Eliminations}",8,y,width-16,110,28); y += 122;
-        string[] tabIds={"avatar","frame","back"}; string[] tabNames={"AVATARY","RAMKI","REWERSY"};
-        float tabWidth=(width-20f)/3f;
-        for(int tab=0;tab<3;tab++)
+        long played=(long)data.Statistics.GamesPlayed+data.Statistics.OfflineGames;
+        string rate=data.Statistics.GamesPlayed>0&&data.Statistics.GamesWon<=data.Statistics.GamesPlayed
+            ? (100f*data.Statistics.GamesWon/data.Statistics.GamesPlayed).ToString("0")+"%":"—";
+        string[] values={played.ToString(),data.Statistics.GamesWon.ToString(),data.OwnedBadges.Count.ToString()};
+        string[] captions={"ROZEGRANE GRY","WYGRANE","ODZNAKI"};
+        float statWidth=(width-32)/3;
+        for(int i=0;i<3;i++)
+        {
+            var stat=Rect("UtilityProfileStat",body,8+i*(statWidth+8),y,statWidth,100);
+            stat.gameObject.AddComponent<Image>().color=new Color(.035f,.09f,.065f);
+            Text(stat,values[i],4,6,statWidth-8,52,36).alignment=TextAlignmentOptions.Center;
+            Text(stat,captions[i],4,60,statWidth-8,30,21).alignment=TextAlignmentOptions.Center;
+        }
+        y+=110;
+        Text(body,$"Z botami: {data.Statistics.BotGames}   Z ludźmi: {data.Statistics.OnlineGames}   Jeden telefon: {data.Statistics.OfflineGames}\nSkuteczność online / boty: {rate}   Wygrane rundy: {data.Statistics.RoundsWon}   Eliminacje: {data.Statistics.Eliminations}",8,y,width-16,72,24);y+=84;
+        string[] tabIds={"avatar","frame","back","badge"}; string[] tabNames={"AVATARY","RAMKI","REWERSY","ODZNAKI"};
+        float tabWidth=(width-20f)/4f;
+        for(int tab=0;tab<4;tab++)
         {
             string id=tabIds[tab];
-            Button(body,tabNames[tab],8+tab*tabWidth,y,tabWidth-6,64,()=>{section=id;Build();},section!=id);
+            ShopUI.ShopTab(body,tabNames[tab],8+tab*tabWidth,y,tabWidth-6,64,section==id,()=>{section=id;Build();});
         }
         y+=78;
         if(section=="avatar")
@@ -261,6 +275,29 @@ public sealed class PlayerProfileUI : MonoBehaviour, IPointerDownHandler
             y += Mathf.Ceil(ordered.Count/(float)columns)*(icon+18f)+12f;
             if(ordered.Count==0){Text(body,"Nie masz jeszcze avatarów w tej kategorii.\nNowe znajdziesz w sklepie.",8,y,width-16,110,28);y+=122;}
         }
+        }
+        if(section=="badge")
+        {
+            Text(body,"ZDOBYTE ODZNAKI · "+data.OwnedBadges.Count,8,y,width-16,48,28);y+=58;
+            const int columns=3;float cell=(width-16)/columns;float rowHeight=cell+78;
+            for(int i=0;i<data.OwnedBadges.Count;i++)
+            {
+                string id=data.OwnedBadges[i];var mission=PokerProfile.RewardRules.Missions.Find(m=>m.Id==id);
+                var tile=Rect("UtilityBadgeTile",body,8+i%columns*cell,y+i/columns*rowHeight,cell-10,rowHeight-12);
+                tile.gameObject.AddComponent<Image>().color=new Color(.035f,.09f,.065f);
+                var outline=tile.gameObject.AddComponent<Outline>();outline.effectColor=new Color(.5f,.4f,.15f,.5f);outline.effectDistance=new Vector2(1,-1);
+                var sprite=mission?.Icon!=null?Resources.Load<Sprite>("AchievementBadges/"+mission.Icon):null;
+                if(sprite!=null)
+                {
+                    var art=Rect("Badge",tile,14,12,cell-38,cell-38).gameObject.AddComponent<Image>();art.sprite=sprite;art.preserveAspect=true;art.raycastTarget=false;
+                }
+                else Text(tile,"★",12,12,cell-34,cell-38,70).alignment=TextAlignmentOptions.Center;
+                Text(tile,mission?.Name??"Odznaka",8,cell-14,cell-26,62,24).alignment=TextAlignmentOptions.Center;
+                Text(tile,"ZDOBYTO",8,cell+48,cell-26,24,18).color=new Color(.4f,.9f,.55f);
+            }
+            y+=Mathf.Ceil(data.OwnedBadges.Count/(float)columns)*rowHeight;
+            if(data.OwnedBadges.Count==0){Text(body,"Twoje odznaki pojawią się tutaj po odebraniu misji.",12,y,width-24,84,27);y+=94;}
+            ShopUI.ShopTab(body,"PRZEJDŹ DO MISJI",12,y,width-24,64,true,()=>MissionsUI.Show(GetComponent<Canvas>()));y+=78;
         }
         if(section=="frame")
         {

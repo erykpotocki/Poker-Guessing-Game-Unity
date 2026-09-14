@@ -261,10 +261,10 @@ public class HandRankPanelUI : MonoBehaviour
             return;
         }
 
-        categoryList = GetChildObject(content, "CategoryList");
-        rankOptionList = GetChildObject(content, "RankOptionList");
-        fullGroupList = GetChildObject(content, "FullGroupList");
-        fullDetailList = GetChildObject(content, "FullDetailList");
+        categoryList = GetChildObject(viewport, "CategoryList");
+        rankOptionList = GetChildObject(viewport, "RankOptionList");
+        fullGroupList = GetChildObject(viewport, "FullGroupList");
+        fullDetailList = GetChildObject(viewport, "FullDetailList");
 
         categoryButtonWysokaKarta = GetButton(categoryList, "CategoryButton_WysokaKarta");
         categoryButtonPara = GetButton(categoryList, "CategoryButton_Para");

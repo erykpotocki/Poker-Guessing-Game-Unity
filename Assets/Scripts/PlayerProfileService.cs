@@ -30,6 +30,34 @@ public static class PlayerProfileService
     }
     private static IProfileStore store = new PrefsStore();
     private static PlayerSave current;
+    public static IRewardClock RewardClock { get; set; } = new InternetRewardClock();
+    public static bool ClaimDailyReward() { if(!CanClaimDailyReward || !RewardRules.ClaimDaily(Data,RewardClock.UtcNow))return false; Save();return true; }
+    public static bool HasRewardTime => RewardClock is InternetRewardClock clock && clock.IsVerified;
+    public static bool CanClaimDailyReward => HasRewardTime && RewardRules.CanClaimDaily(Data,RewardClock.UtcNow);
+    public static void OnRewardTimeVerified()
+    {
+        var state=Data.DailyRewards;
+        if(state.CalendarVersion==0)
+        {
+            // Legacy saves stored only a UTC date, without the claim instant.
+            // Reserve today when that ambiguous date could fall on today's Polish date.
+            var utc=RewardClock.UtcNow;
+            if(state.Claims>0 && System.DateTime.TryParseExact(state.LastClaimDay,"yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture,System.Globalization.DateTimeStyles.None,out var old)
+                && old.Date>=utc.Date.AddDays(-1) && string.CompareOrdinal(state.LastClaimDay,RewardRules.DayKey(utc))<0)
+                state.LastClaimDay=RewardRules.DayKey(utc);
+            state.CalendarVersion=1;Save();
+        }
+    }
+    public static bool ClaimBetaTester2026()
+    {
+        if(!RewardRules.ClaimBeta(Data))return false;Save();return true;
+    }
+    public static void GrantBetaTester2026()=>ClaimBetaTester2026();
+    public static void CompleteOfflineMatch(string id)
+    {
+        if(RewardRules.CompleteOfflineMatch(Data,id))Save();
+    }
+    public static bool ClaimCareerMission(string id) { if(!RewardRules.Claim(Data,id))return false;Save();return true; }
     public static event Action Changed;
     public static event Action PurchaseCompleted;
     public static PlayerSave Data
@@ -52,6 +80,7 @@ public static class PlayerProfileService
             current.Inventory ??= new Inventory();
             current.Wallet ??= new Wallet();
             current.Statistics ??= new Statistics();
+            current.Statistics.BotGames=Math.Max(current.Statistics.BotGames,current.Statistics.BotWins);
             current.Progression ??= new Progression();
             if(current.Progression.CurveVersion==0)
             {
@@ -63,6 +92,11 @@ public static class PlayerProfileService
             current.Daily ??= new MissionPeriod();
             current.Weekly ??= new MissionPeriod();
             current.Wheel ??= new WheelState();
+            current.DailyRewards ??= new DailyRewardState();
+            current.ClaimedCareerMissions ??= new System.Collections.Generic.List<string>();
+            current.OwnedBadges ??= new System.Collections.Generic.List<string>();
+            // Pre-migration earnings cannot be reconstructed from a wallet. Start these counters at zero.
+            current.Version=2;
             if(current.Wheel.PendingPrize!=null && !current.Wheel.PendingPrize.IsValid)current.Wheel.PendingPrize=null;
             current.Achievements ??= new System.Collections.Generic.List<string>();
             current.Receipts ??= new System.Collections.Generic.List<string>();
@@ -120,6 +154,8 @@ public static class PlayerProfileService
         bool completed = ProgressionRules.CompleteMatch(Data,id,won,DateTime.UtcNow,coins,xp,humans>=2,advanced);
         if (completed)
         {
+            if(humans>=2) { Data.Statistics.OnlineGames++;if(won)Data.Statistics.OnlineWins++; }
+            else if(bots>0){Data.Statistics.BotGames++;if(won)Data.Statistics.BotWins++;}
             Save();
         }
         return completed;
@@ -176,7 +212,7 @@ public static class PlayerProfileService
             return ticks > 0 ? TimeSpan.FromTicks(ticks) : TimeSpan.Zero;
         }
     }
-    public static int SpinCharges { get { RefreshSpinCharges(DateTime.UtcNow); return Data.Wheel.Charges; } }
+    public static int SpinCharges { get { RefreshSpinCharges(DateTime.UtcNow); return Data.Wheel.Charges + Data.BonusSpins; } }
     public static bool CanSpin => SpinCharges > 0;
     public static float AvatarSpinChance => Data.Wheel.AvatarsWon==0?.10f:Data.Wheel.AvatarsWon==1?.05f:.10f/6f;
     public static string Spin() => Spin(out _);
@@ -205,7 +241,7 @@ public static class PlayerProfileService
         sector = -1;
         DateTime now = DateTime.UtcNow;
         RefreshSpinCharges(now);
-        if (Data.Wheel.Charges <= 0) return null;
+        if (Data.Wheel.Charges <= 0 && Data.BonusSpins <= 0) return null;
         // Clockwise from the top of the supplied wheel: ?, diamond, diamond
         // bag, gold, ?, diamond, gold bag, gold. One draw drives money AND art.
         float roll=UnityEngine.Random.value;
@@ -256,8 +292,8 @@ public static class PlayerProfileService
         Data.Wheel.FreeUsed = true;
         if (reward != null)
         {
-            if(Data.Wheel.Charges==3)Data.Wheel.NextFreeUtcTicks=now.AddHours(4).Ticks;
-            Data.Wheel.Charges--;
+            if(Data.BonusSpins>0)Data.BonusSpins--;
+            else { if(Data.Wheel.Charges==3)Data.Wheel.NextFreeUtcTicks=now.AddHours(4).Ticks; Data.Wheel.Charges--; }
             prize.Label=reward;Data.Wheel.PendingPrize=prize;
             Save();
         }
@@ -320,5 +356,61 @@ public static class PlayerProfileService
             });
         }
         catch (Exception) { adInFlight = false; if (!completed) done?.Invoke(AdOutcome.Failed); }
+    }
+}
+
+// HTTPS time plus a monotonic timer: phone clock changes never advance reward days.
+public sealed class InternetRewardClock : PokerProfile.IRewardClock
+{
+    private System.DateTime receivedUtc;
+    private double receivedAt;
+    private bool verified;
+    public bool IsVerified => verified && UnityEngine.Time.realtimeSinceStartupAsDouble-receivedAt < 300;
+    public System.DateTime UtcNow => verified ? receivedUtc.AddSeconds(System.Math.Max(0,UnityEngine.Time.realtimeSinceStartupAsDouble-receivedAt)) : System.DateTime.MinValue;
+    public void Invalidate()=>verified=false;
+    public void Accept(System.DateTime utc)
+    {receivedUtc=System.DateTime.SpecifyKind(utc,System.DateTimeKind.Utc);receivedAt=UnityEngine.Time.realtimeSinceStartupAsDouble;verified=true;}
+}
+public sealed class RewardTimeSync : UnityEngine.MonoBehaviour
+{
+    [System.Serializable] private sealed class TimeReply { public string dateTime; public string timeZone; }
+    private static RewardTimeSync instance;
+    private bool busy;
+    private double retryAt;
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void Install()
+    {
+        if(instance!=null)return;
+        instance=new UnityEngine.GameObject("RewardTimeSync").AddComponent<RewardTimeSync>();
+        DontDestroyOnLoad(instance.gameObject);
+    }
+    public static void Retry() { if(instance!=null)instance.retryAt=0; }
+    private void Update()
+    {
+        if(!busy && UnityEngine.Time.realtimeSinceStartupAsDouble>=retryAt)StartCoroutine(Sync());
+    }
+    private void OnApplicationPause(bool paused)
+    {
+        if(PlayerProfileService.RewardClock is InternetRewardClock clock)clock.Invalidate();
+        if(!paused)retryAt=0;
+    }
+    private System.Collections.IEnumerator Sync()
+    {
+        busy=true;
+        using(var request=UnityEngine.Networking.UnityWebRequest.Get("https://timeapi.io/api/time/current/zone?timeZone=UTC&nonce="+System.Guid.NewGuid().ToString("N")))
+        {
+            request.timeout=12;
+            yield return request.SendWebRequest();
+            if(request.result==UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                TimeReply reply=null;
+                try{reply=UnityEngine.JsonUtility.FromJson<TimeReply>(request.downloadHandler.text);}catch(System.Exception){}
+                if(reply!=null && reply.timeZone=="UTC" && System.DateTime.TryParse(reply.dateTime,System.Globalization.CultureInfo.InvariantCulture,System.Globalization.DateTimeStyles.AssumeUniversal|System.Globalization.DateTimeStyles.AdjustToUniversal,out var utc)
+                    && utc.Year>=2026 && PlayerProfileService.RewardClock is InternetRewardClock clock)
+                {clock.Accept(utc);PlayerProfileService.OnRewardTimeVerified();}
+            }
+        }
+        retryAt=UnityEngine.Time.realtimeSinceStartupAsDouble+(PlayerProfileService.HasRewardTime?120:30);
+        busy=false;
     }
 }

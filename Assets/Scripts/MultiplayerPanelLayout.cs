@@ -71,7 +71,11 @@ public sealed class MultiplayerPanelLayout : MonoBehaviour
                 scroll.movementType=ScrollRect.MovementType.Clamped;
                 var hit=scroll.viewport.GetComponent<Image>();
                 if(hit==null)hit=scroll.viewport.gameObject.AddComponent<Image>();
-                hit.color=Color.clear;hit.raycastTarget=true;
+                // Stencil masks need opaque pixels even when their own graphic is hidden.
+                var mask=scroll.viewport.GetComponent<Mask>();
+                if(mask!=null){mask.showMaskGraphic=false;hit.color=Color.white;}
+                else hit.color=Color.clear;
+                hit.raycastTarget=true;
                 scroll.viewport.anchorMin = Vector2.zero;
                 scroll.viewport.anchorMax = Vector2.one;
                 scroll.viewport.offsetMin = scroll.viewport.offsetMax = Vector2.zero;

@@ -247,6 +247,13 @@ public sealed class PokerButtonTheme : MonoBehaviour
             return;
 
         Transform existing = button.transform.Find("__MobileTouchTarget");
+        if(button.gameObject.scene.name=="MainMenu")
+        {
+            if(existing!=null)existing.gameObject.SetActive(false);
+            var image=button.GetComponent<Image>();if(image!=null)image.raycastPadding=Vector4.zero;
+            return;
+        }
+
         GameObject targetObject;
         if (existing == null)
         {
@@ -406,8 +413,9 @@ public sealed class PokerButtonTheme : MonoBehaviour
 
     private static bool IsExcludedFromTheme(Button button)
     {
-        if(button.GetComponentInParent<PortraitMenuTopBar>()!=null)return true;
+        if(button.GetComponentInParent<PortraitMenuTopBar>()!=null || button.GetComponentInParent<DailyRewardsUI>()!=null)return true;
         string name = button.name.ToLowerInvariant();
+        if(name=="publicplayerprofile")return true;
         if(name=="profiledropdown" || name=="category" || name=="avatartile" || name=="frametile")return true;
         if (name.StartsWith("utility") || name == "spinrewardoverlay" || name=="logo") return true;
 

@@ -91,7 +91,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         CreateIconButton("Profile", null, ShowProfile, out profileImage);
         PlayerProfileService.Changed += Refresh;
         Layout(); Refresh();
-        if(PlayerProfileService.PeekUnlock()?.Source=="level")UnlockPresentationUI.ShowPending(owner);
+        if(PlayerProfileService.PeekUnlock()!=null)UnlockPresentationUI.ShowPending(owner);
     }
 
     private Image CreateCurrencyIcon(string name, string resourcePath)
@@ -180,7 +180,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         AnimateCurrency(goldText,data.Wallet.Coins,ref lastGold,ref goldAnimation);
         AnimateCurrency(diamondText,data.Wallet.RewardCurrency,ref lastDiamonds,ref diamondAnimation);
         levelText.text="LVL "+data.Progression.Level;
-        experienceText.text=$"{data.Progression.CurrentExperience}/{data.Progression.RequiredExperience} EXP";
+        experienceText.gameObject.SetActive(false);
         float fraction=(float)((double)data.Progression.CurrentExperience/data.Progression.RequiredExperience);
         experienceFill.anchorMin=Vector2.zero;experienceFill.anchorMax=new Vector2(Mathf.Clamp01(fraction),1);
         experienceFill.offsetMin=experienceFill.offsetMax=Vector2.zero;
@@ -192,7 +192,7 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
 
     public static string FormatCurrency(long amount)
     {
-        if(amount<10000)return amount.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        if(amount<1000)return amount.ToString(System.Globalization.CultureInfo.InvariantCulture);
         decimal divisor=amount>=1000000000?1000000000m:amount>=1000000?1000000m:1000m;
         string suffix=amount>=1000000000?" mld":amount>=1000000?" mln":"k";
         decimal compact=decimal.Floor(amount/divisor*10)/10;
@@ -201,10 +201,10 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
 
     private void Update()
     {
-        if(calendarDay!=null)calendarDay.text=PlayerProfileService.RewardClock.UtcNow.Day.ToString();
-        if(dailyDot!=null)dailyDot.SetActive(PokerProfile.RewardRules.CanClaimDaily(PlayerProfileService.Data,PlayerProfileService.RewardClock.UtcNow));
+        if(calendarDay!=null)calendarDay.text=PlayerProfileService.HasRewardTime?PokerProfile.RewardRules.PolishTime(PlayerProfileService.RewardClock.UtcNow).Day.ToString():"—";
+        if(dailyDot!=null)dailyDot.SetActive(PlayerProfileService.CanClaimDailyReward);
         if (lastScreen != new Vector2Int(Screen.width, Screen.height) || lastSafeArea != Screen.safeArea) Layout();
-        if(owner!=null && PlayerProfileService.PeekUnlock()?.Source=="level" &&
+        if(owner!=null && PlayerProfileService.PeekUnlock()!=null &&
             owner.rootCanvas.transform.Find("SpinRewardOverlay")==null)
             UnlockPresentationUI.ShowPending(owner);
     }
@@ -225,28 +225,30 @@ public sealed class PortraitMenuTopBar : MonoBehaviour
         Place(profile,Vector2.one,Vector2.one,new Vector2(-safeRight-65*unit,-safeTop-65),new Vector2(94,94)*unit);
         Place(spin,Vector2.one,Vector2.one,new Vector2(-safeRight-178*unit,-safeTop-65),new Vector2(68,68)*contentUnit);
         Place(transform.Find("DailyRewards") as RectTransform,Vector2.one,Vector2.one,new Vector2(-safeRight-285*unit,-safeTop-65),new Vector2(68,68)*unit);
-        goldText.fontSize=diamondText.fontSize=34*contentUnit;
+        // Measure at the target font size, not the previous frame's auto-sized font.
+        // Cap each balance so even long abbreviated values leave room for EXP.
         goldText.enableAutoSizing=diamondText.enableAutoSizing=true;
-        goldText.fontSizeMin=diamondText.fontSizeMin=22*contentUnit;
-        goldText.fontSizeMax=diamondText.fontSizeMax=34*contentUnit;
-        float goldWidth=Mathf.Clamp(goldText.GetPreferredValues(goldText.text,10000,100).x+4*unit,36*contentUnit,100*contentUnit);
-        float diamondWidth=Mathf.Clamp(diamondText.GetPreferredValues(diamondText.text,10000,100).x+4*unit,36*contentUnit,100*contentUnit);
-        float goldX=safeLeft+30*unit;
-        float goldValueX=goldX+35*contentUnit;
-        float diamondX=goldValueX+goldWidth+24*contentUnit;
-        float diamondValueX=diamondX+35*contentUnit;
-        Place(goldIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(goldX,-safeTop-65),Vector2.one*42*contentUnit);
-        PlaceLeft(goldText.rectTransform,new Vector2(goldValueX,-safeTop-65),new Vector2(goldWidth,70*growth));
-        Place(diamondIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(diamondX,-safeTop-65),Vector2.one*42*contentUnit);
-        PlaceLeft(diamondText.rectTransform,new Vector2(diamondValueX,-safeTop-65),new Vector2(diamondWidth,70*growth));
-        float xpLeft=safeLeft+490*unit;
-        float xpRight=canvasRect.rect.width-safeRight-335*unit;
-        float xpWidth=Mathf.Max(120*unit,xpRight-xpLeft-28*unit);
-        xpLeft+=14*contentUnit;
-        foreach(var text in new[]{levelText,experienceText}){text.fontSizeMin=14*contentUnit;text.fontSizeMax=26*contentUnit;}
-        PlaceLeft(levelText.rectTransform,new Vector2(xpLeft,-safeTop-65+16*growth),new Vector2(xpWidth,26*growth));
-        PlaceLeft(experienceTrack,new Vector2(xpLeft,-safeTop-65-12*growth),new Vector2(xpWidth,24*growth));
-        PlaceLeft(experienceText.rectTransform,new Vector2(xpLeft,-safeTop-65-12*growth),new Vector2(xpWidth,26*growth));
+        goldText.fontSizeMin=diamondText.fontSizeMin=20*unit;
+        goldText.fontSize=diamondText.fontSize=42*unit;
+        goldText.fontSizeMax=diamondText.fontSizeMax=42*unit;
+        float goldWidth=Mathf.Clamp(goldText.GetPreferredValues(goldText.text,10000,100).x+4*unit,24*unit,150*unit);
+        float diamondWidth=Mathf.Clamp(diamondText.GetPreferredValues(diamondText.text,10000,100).x+4*unit,24*unit,150*unit);
+        float gap=28*unit,iconSize=48*unit,iconTextGap=12*unit;
+        float goldValueX=safeLeft+76*unit;
+        float diamondLeft=goldValueX+goldWidth+gap;
+        float diamondValueX=diamondLeft+iconSize+iconTextGap;
+        float xpLeft=diamondValueX+diamondWidth+gap;
+        float calendarLeft=canvasRect.rect.width-safeRight-319*unit;
+        float xpWidth=calendarLeft-gap-xpLeft;
+        Place(goldIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(safeLeft+40*unit,-safeTop-65),Vector2.one*iconSize);
+        PlaceLeft(goldText.rectTransform,new Vector2(goldValueX,-safeTop-65),new Vector2(goldWidth,64));
+        Place(diamondIcon.rectTransform,new Vector2(0,1),new Vector2(0,1),new Vector2(diamondLeft+iconSize/2,-safeTop-65),Vector2.one*iconSize);
+        PlaceLeft(diamondText.rectTransform,new Vector2(diamondValueX,-safeTop-65),new Vector2(diamondWidth,64));
+        levelText.fontSizeMin=18*unit;levelText.fontSizeMax=28*unit;
+        PlaceLeft(levelText.rectTransform,new Vector2(xpLeft,-safeTop-49),new Vector2(xpWidth,34));
+        PlaceLeft(experienceTrack,new Vector2(xpLeft,-safeTop-80),new Vector2(xpWidth,12));
+        experienceTrack.GetComponent<Image>().color=new Color(.08f,.22f,.13f);
+
     }
 
     private static void Place(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size)

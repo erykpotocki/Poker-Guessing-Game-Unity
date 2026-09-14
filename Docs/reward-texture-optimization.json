@@ -1,0 +1,826 @@
+[
+  {
+    "path": "Assets\\Art\\Avatars\\babsko1.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\babsko2.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\kot.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\man1.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\man10.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\man2.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\man3.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\man4.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\man5.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Avatars\\pies.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\classic.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\mainactivity.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Resources\\Cosmetics\\ClassicWood.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\DealerAvatars\\Dealer1.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\DealerAvatars\\Dealer2.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\DealerAvatars\\Dealer3.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\DealerAvatars\\Dealer4.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\DealerAvatars\\Dealer5.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\MultiplayerArt\\Room.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Resources\\MultiplayerArt\\Table1.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Resources\\UI\\Sparkles\\SparkleBurst.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\UI\\Sparkles\\SparkleCluster.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\UI\\Sparkles\\SparkleOrnate.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\ChatGPT Image 1 kwi 2026, 20_35_59.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\ChatGPT Image 1 kwi 2026, 20_36_16.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\gameroom.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\loading.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\lobby.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\logo.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\przyciemka_rules.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\rewersmatch.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\rules2wykres.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\zeton.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\10DZ.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\10SE.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\10TR.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\10WI.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\9DZ.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\9SE.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\9TR.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\9WI.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\ADZ.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\ASE.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\ATR.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\AWI.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\DDZ.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\DSE.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\DTR.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\DWI.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\JDZ.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\JSE.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\JTR.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\JWI.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\karty .png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\KDZ.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\KSE.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\KTR.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód\\KWI.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_47_05 (1).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_47_05 (2).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_47_05 (3).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_47_06 (4).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_47_06 (5).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_47_07 (6).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_58_10 (1).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_58_10 (2).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_58_11 (3).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_58_11 (4).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_58_11 (5).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 14_58_12 (6).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_16_23 (1).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_16_24 (2).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_16_24 (3).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_16_24 (4).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_16_25 (5).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_16_25 (6).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_21_56 (1).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_21_56 (2).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_21_56 (3).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_21_56 (4).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_21_57 (5).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty - przód 2\\ChatGPT Image 2 wrz 2026, 15_21_58 (6).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Karty -tył (rewers)\\rewersmatch.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\10Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\2Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\3Płonący ogień w kamiennym kominku — kopia (2).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\4Płonący ogień w kamiennym kominku — kopia (3).png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\5Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\6Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\7Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\8Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\9Płonący ogień w kamiennym kominku — kopia.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\KominekOgien\\Płonący ogień w kamiennym kominku.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Nowe tła\\main.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Przyciski\\P1.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Przyciski\\P2.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Przyciski\\P3.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Przyciski\\P4.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Stoły\\stol3.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Stoły\\stol4.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\1Widok.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\2gra.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\2luksusowe.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\2Widok.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\3gra.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\3Widok.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\4gra.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\4Widok.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\5gra.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\5Widok.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\gra.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\ja.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\Luksusowe wnętrze z stół pokerowym.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Art\\Backgrounds\\Tło\\test_Luksusowe wnętrze z stół pokerowym.png.meta",
+    "max": 1024
+  },
+  {
+    "path": "Assets\\Resources\\HotSeatCourt\\Jack.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\HotSeatCourt\\King.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\HotSeatCourt\\Queen.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\PokerUI\\PokerButtonWood.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_05.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_16.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_22.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_26.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_35.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_41.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_47.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_18_52.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_19_00.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_19_07.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_21_28.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_21_35.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_21_40.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_21_46.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_21_55.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_22_00.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_22_07.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_22_14.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_22_24.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_22_32.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_24_47.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_24_54.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_00.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_07.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_16.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_22.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_29.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_38.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_44.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_25_49.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_27_41.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_27_48.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_27_54.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_28_01.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_28_08.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_28_15.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_28_37.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_28_44.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_28_55.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_11.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_18.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_24.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_32.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_43.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_50.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_32_59.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_33_13.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_36_54.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_00.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_06.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_13.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_22.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_31.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_37.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_43.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopAvatars\\Obraz Codex 6 wrz 2026, 20_37_55.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_10_51.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_08.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_17.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_24.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_31.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_41.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_48.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_11_55.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_12_06.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopBacks\\Obraz Codex 6 wrz 2026, 20_12_14.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_53_27.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_53_58.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_54_07.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_54_15.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_54_28.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_54_37.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_54_51.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_55_00.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_55_07.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_57_02.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_57_12.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_57_28.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_57_39.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_57_51.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_58_04.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_58_11.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\Obraz Codex 6 wrz 2026, 19_58_22.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\ShopFrames\\ramka.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\SpinAssets\\spin kolo.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\WalletIcons\\Obraz Codex 6 wrz 2026, 20_01_55.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\Resources\\WalletIcons\\złoto.png.meta",
+    "max": 512
+  },
+  {
+    "path": "Assets\\WebGLTemplates\\PokerPWA\\PWA\\boot-background.png.meta",
+    "max": 1024
+  }
+]

@@ -1810,11 +1810,12 @@ public class HotSeatSetupUI : MonoBehaviour
             "NACIŚNIJ KARTĘ, ABY ZAGRAĆ PONOWNIE";
 
         // The reward is granted after the full hot-seat game, not after a round.
-        PlayerProfileService.CompleteMatch("hotseat:" + localMatchId, false);
+        PlayerProfileService.CompleteOfflineMatch(localMatchId);
     }
 
     private void RestartGame()
     {
+        localMatchId = System.Guid.NewGuid().ToString("N");
         roundNumber = 0;
         foreach (HotSeatPlayer player in players)
         {
